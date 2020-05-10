@@ -1,16 +1,18 @@
 package it.unibo.service.citizen
 
-import io.circe.Json
+import java.util.UUID
+
+import io.vertx.lang.scala.json.Json
 import io.vertx.scala.ext.web.Router
 import it.unibo.core.data.{Data, Storage}
 import it.unibo.core.dt.State
 import it.unibo.core.microservice.vertx.BaseVerticle
-import it.unibo.core.parser.JsonParser
-
+import it.unibo.core.parser.VertxJsonParser
+import it.unibo.core.microservice.vertx._
 class CitizenVerticle(authorizationFacade: AuthorizationFacade,
                       private var state : State,
                       dataStorage : Storage[Data, String],
-                      parsers : Seq[JsonParser],
+                      parsers : Seq[VertxJsonParser],
                       uri : String,
                       port : Int = 8080,
                       host : String = "localhost") extends BaseVerticle(port, host)  {
@@ -28,10 +30,18 @@ class CitizenVerticle(authorizationFacade: AuthorizationFacade,
         parser <- parsers
         json <- parser.encode(data)
       } yield json
-      val response = Json.obj("state" -> Json.arr(jsonData:_*))
-      context.response().end(response.toString())
-    })
 
+      val response = Json.arr(jsonData:_*)
+      context.response().end(response.encode())
+    })
+    import io.vertx.scala.core.json._
+    updateStateRouter.handler(context => {
+      val jsonArray = for {
+        body <- context.getBodyAsJson()
+        array <- body.getAsArray("state")
+      } yield array
+      //TODO
+    })
     router
   }
 

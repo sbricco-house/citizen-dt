@@ -6,8 +6,8 @@ import it.unibo.core.data.{Data, Feeder, LeafCategory, Resource, Sensor}
 /**
  * JSON parser skeleton
  */
-abstract class JsonParser extends DataParser[Json]{
-  import JsonParser._
+trait CirceJsonParser extends DataParser[Json]{
+  import CirceJsonParser._
 
   override def decode(rawData: Json, uri : String): Option[Data] = {
     val categoryOption = extractCategory(rawData, target)
@@ -46,7 +46,7 @@ abstract class JsonParser extends DataParser[Json]{
   protected def encodeStrategy(value : Any) : Option[Json]
 }
 
-object JsonParser {
+object CirceJsonParser {
   private def extractCategory(json: Json, leafCategory: LeafCategory) : Option[LeafCategory] = {
     val category = json.hcursor.downField("category").focus
     category.flatMap(_.asString).filter(leafCategory.name == _).map(_ => leafCategory)
@@ -60,11 +60,6 @@ object JsonParser {
       case None => feeder.downField("name").focus.flatMap(_.asString).map(name => Sensor(name))
       case Some(value) => feeder.downField("uri").focus.flatMap(_.asString).map(uri => Resource(uri))
     }
-  }
-
-  private def extractUri(json : Json) : Option[String] = {
-    val uri = json.hcursor.downField("uri").focus
-    uri.flatMap(_.asString)
   }
 
   private def extractTimestamp(json : Json) : Option[Long] = {

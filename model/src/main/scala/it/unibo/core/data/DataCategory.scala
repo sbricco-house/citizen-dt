@@ -19,7 +19,7 @@ case class GroupCategory(name : String, dataCategory: Set[DataCategory]) extends
  * @param name
  * @param TTL: a temporal information to the lifespan.
  */
-case class LeafCategory(name : String, TTL : Int) extends DataCategory
+case class LeafCategory(name : String, TTL : Long) extends DataCategory
 
 object DataCategoryOps {
   def allChild(dataCategory: DataCategory) : Set[LeafCategory] = dataCategory match {
