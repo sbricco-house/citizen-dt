@@ -12,7 +12,7 @@ class JsonParserTest extends FlatSpec with Matchers {
   "A json parser" should "decode a json string" in {
     val parsingResult = parser.parse(inputString) match {
       case Left(failure) => None
-      case Right(value) => integerParser.decode(value)
+      case Right(value) => integerParser.decode(value, uri)
     }
     assert(parsingResult.contains(inputData))
   }
@@ -28,7 +28,7 @@ class JsonParserTest extends FlatSpec with Matchers {
   "A json parser" should "parse a json string with resource feeder" in {
     val parsingResult = parser.parse(inputStringUri) match {
       case Left(failure) => None
-      case Right(value) => integerParser.decode(value)
+      case Right(value) => integerParser.decode(value, uri)
     }
 
     parsingResult.exists(_.feeder == feederResource)
@@ -51,6 +51,7 @@ object JsonParserTest {
 
     val target: LeafCategory = integerCategory
   }
+  val uri = "citizen"
   val inputString =
     """
       {

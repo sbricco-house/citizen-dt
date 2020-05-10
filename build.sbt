@@ -5,12 +5,17 @@ version := "0.1"
 scalaVersion := "2.13.2"
 
 val circeVersion = "0.7.0"
+val vertxVersion = "3.9.0"
+
+
 lazy val commonSetting = Seq(
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "3.1.1" % "test",
     "io.circe"  %% "circe-core"     % circeVersion,
     "io.circe"  %% "circe-generic"  % circeVersion,
-    "io.circe"  %% "circe-parser"   % circeVersion
+    "io.circe"  %% "circe-parser"   % circeVersion,
+    "io.vertx" %% "vertx-lang-scala" % vertxVersion,
+    "io.vertx" %% "vertx-web-scala" % vertxVersion,
   )
 )
 

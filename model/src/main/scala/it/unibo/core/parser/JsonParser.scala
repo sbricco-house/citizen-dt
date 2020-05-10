@@ -3,19 +3,20 @@ package it.unibo.core.parser
 import io.circe.Json
 import it.unibo.core.data.{Data, Feeder, LeafCategory, Resource, Sensor}
 
+/**
+ * JSON parser skeleton
+ */
 abstract class JsonParser extends DataParser[Json]{
   import JsonParser._
 
-  override def decode(rawData: Json): Option[Data] = {
+  override def decode(rawData: Json, uri : String): Option[Data] = {
     val categoryOption = extractCategory(rawData, target)
     val feederOption = extractFeeder(rawData)
-    val uriOption = extractUri(rawData)
     val timestampOption = extractTimestamp(rawData)
     val jsonValue = rawData.hcursor.downField("value").focus
     for {
       category <- categoryOption
       feeder <- feederOption
-      uri <- uriOption
       timestamp <- timestampOption
       value <- jsonValue
       data <- createDataFrom(uri, feeder, timestamp, value)
