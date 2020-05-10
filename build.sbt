@@ -4,8 +4,14 @@ version := "0.1"
 
 scalaVersion := "2.13.2"
 
+val circeVersion = "0.7.0"
 lazy val commonSetting = Seq(
-  libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.1" % "test"
+  libraryDependencies ++= Seq(
+    "org.scalatest" %% "scalatest" % "3.1.1" % "test",
+    "io.circe"  %% "circe-core"     % circeVersion,
+    "io.circe"  %% "circe-generic"  % circeVersion,
+    "io.circe"  %% "circe-parser"   % circeVersion
+  )
 )
 
 lazy val model = (project in file("model"))
