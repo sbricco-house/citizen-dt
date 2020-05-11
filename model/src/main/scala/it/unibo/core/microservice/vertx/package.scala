@@ -49,7 +49,7 @@ package object vertx {
   }
   implicit class RichJsonArray(json : JsonArray) {
     import collection.JavaConverters._
-    def asObjectSeq : Option[Seq[JsonObject]] = {
+    def getAsObjectSeq : Option[Seq[JsonObject]] = {
       val elems = json.size()
       try {
         val objects = (0 to elems).map {

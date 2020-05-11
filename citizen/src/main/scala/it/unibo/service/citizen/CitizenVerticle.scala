@@ -32,6 +32,7 @@ class CitizenVerticle(authorizationFacade: AuthorizationFacade,
       } yield json
 
       val response = Json.arr(jsonData:_*)
+      context.response().setStatusCode(200)
       context.response().end(response.encode())
     })
     import io.vertx.scala.core.json._
@@ -39,11 +40,22 @@ class CitizenVerticle(authorizationFacade: AuthorizationFacade,
       val jsonArray = for {
         body <- context.getBodyAsJson()
         array <- body.getAsArray("state")
-      } yield array
-      //TODO
+        elems <- array.getAsObjectSeq
+      } yield elems
+
+      val unmarshalData = jsonArray match {
+        case Some(seq) => for {
+          elem <- seq
+          parser <- parsers
+          data <- parser.decode(elem, UUID.randomUUID().toString)
+        } yield data
+        case _ => Seq() //TODO
+      }
+
+      unmarshalData.foreach { data => state = state.update(data)}
+      context.response().setStatusCode(200)
+      context.response().end()
     })
     router
   }
-
-
 }

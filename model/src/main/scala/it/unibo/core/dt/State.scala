@@ -44,4 +44,5 @@ object State {
     override def snapshot: Seq[Data] = map.values.toSeq
   }
   val empty : State = MapLikeState(Map.empty)
+
 }
