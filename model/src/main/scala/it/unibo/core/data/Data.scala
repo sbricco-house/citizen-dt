@@ -1,5 +1,7 @@
 package it.unibo.core.data
 
+import java.util.UUID
+
 /**
  * main abstraction to store information about a citizen, institution or someone else.
  * It is piece of information characterized by
@@ -11,7 +13,6 @@ package it.unibo.core.data
  */
 trait Data {
   def feeder : Feeder
-  def URI : String
   def category : LeafCategory
   def timestamp : Long
   def value : Any

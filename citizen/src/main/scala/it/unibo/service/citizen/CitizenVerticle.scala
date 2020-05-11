@@ -9,53 +9,34 @@ import it.unibo.core.dt.State
 import it.unibo.core.microservice.vertx.BaseVerticle
 import it.unibo.core.parser.VertxJsonParser
 import it.unibo.core.microservice.vertx._
-class CitizenVerticle(authorizationFacade: AuthorizationFacade,
-                      private var state : State,
-                      dataStorage : Storage[Data, String],
-                      parsers : Seq[VertxJsonParser],
-                      uri : String,
+import CitizenVerticle._
+import io.vertx.scala.ext.web.handler.BodyHandler
+import it.unibo.service.citizen.controller.CitizenController
+
+object CitizenVerticle {
+  private val CITIZEN_ENDPOINT = s"/citizens/%s/state"
+}
+
+//private var state : State, state could be cold bootstrapped from dataStorage?
+
+class CitizenVerticle(controller: CitizenController,
+                      citizenIdentifier: String, // could be a UUID or integer, or something else
                       port : Int = 8080,
                       host : String = "localhost") extends BaseVerticle(port, host)  {
 
   override def createRouter(): Router = {
     val router = Router.router(vertx)
-    val statePath = s"citizen/$uri/state"
 
-    val getStateRoute = router.get(statePath)
-    val updateStateRouter = router.patch(statePath)
+    val citizenStateEndpoint = CITIZEN_ENDPOINT.format(citizenIdentifier)
 
-    getStateRoute.handler(context => {
-      val jsonData = for {
-        data <- state.snapshot
-        parser <- parsers
-        json <- parser.encode(data)
-      } yield json
+    router.get(citizenStateEndpoint)
+      //.handler(context => authentication...(context))
+        .handler(context => controller.handleGetState(context))
 
-      val response = Json.arr(jsonData:_*)
-      context.response().setStatusCode(200)
-      context.response().end(response.encode())
-    })
-    import io.vertx.scala.core.json._
-    updateStateRouter.handler(context => {
-      val jsonArray = for {
-        body <- context.getBodyAsJson()
-        array <- body.getAsArray("state")
-        elems <- array.getAsObjectSeq
-      } yield elems
+    router.patch(citizenStateEndpoint)
+        .handler(BodyHandler.create())
+        .handler(context => controller.handlePatchState(context))
 
-      val unmarshalData = jsonArray match {
-        case Some(seq) => for {
-          elem <- seq
-          parser <- parsers
-          data <- parser.decode(elem, UUID.randomUUID().toString)
-        } yield data
-        case _ => Seq() //TODO
-      }
-
-      unmarshalData.foreach { data => state = state.update(data)}
-      context.response().setStatusCode(200)
-      context.response().end()
-    })
     router
   }
 }

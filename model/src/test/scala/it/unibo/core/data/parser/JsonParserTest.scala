@@ -12,7 +12,7 @@ class JsonParserTest extends FlatSpec with Matchers {
   "A json parser" should "decode a json string" in {
     val parsingResult = parser.parse(inputString) match {
       case Left(failure) => fail(failure)
-      case Right(value) => integerParser.decode(value, uri)
+      case Right(value) => integerParser.decode(value)
     }
     assert(parsingResult.contains(inputData))
   }
@@ -28,7 +28,7 @@ class JsonParserTest extends FlatSpec with Matchers {
   "A json parser" should "parse a json string with resource feeder" in {
     val parsingResult = parser.parse(inputStringUri) match {
       case Left(failure) => None
-      case Right(value) => integerParser.decode(value, uri)
+      case Right(value) => integerParser.decode(value)
     }
 
     parsingResult.exists(_.feeder == feederResource)
@@ -38,8 +38,8 @@ class JsonParserTest extends FlatSpec with Matchers {
 object JsonParserTest {
   import JsonElements._
   val integerParser = new CirceJsonParser {
-    override protected def createDataFrom(uri: String, feeder: Feeder, timestamp: Long, json: Json): Option[Data] = {
-      json.asNumber.map(_.truncateToInt).map(IntegerData(_, feeder, uri, timestamp))
+    override protected def createDataFrom(feeder: Feeder, timestamp: Long, json: Json): Option[Data] = {
+      json.asNumber.map(_.truncateToInt).map(IntegerData(_, feeder, timestamp))
     }
     override protected def encodeStrategy(value: Any): Option[Json] = value match {
       case x : Int => Some(Json.fromInt(x))

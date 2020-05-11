@@ -8,7 +8,7 @@ import it.unibo.core.data.{Data, LeafCategory}
  * @tparam Raw the type of codification used to store data externally (e.g. Json, Xml,String,..)
  */
 trait DataParser[Raw] {
-  def decode(rawData : Raw, uri : String) : Option[Data]
+  def decode(rawData : Raw) : Option[Data]
   def encode(data : Data) : Option[Raw]
   def target : LeafCategory
 }

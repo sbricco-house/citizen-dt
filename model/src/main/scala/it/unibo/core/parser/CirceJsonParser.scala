@@ -9,7 +9,7 @@ import it.unibo.core.data.{Data, Feeder, LeafCategory, Resource, Sensor}
 trait CirceJsonParser extends DataParser[Json]{
   import CirceJsonParser._
 
-  override def decode(rawData: Json, uri : String): Option[Data] = {
+  override def decode(rawData: Json): Option[Data] = {
     val categoryOption = extractCategory(rawData, target)
     val feederOption = extractFeeder(rawData)
     val timestampOption = extractTimestamp(rawData)
@@ -19,19 +19,19 @@ trait CirceJsonParser extends DataParser[Json]{
       feeder <- feederOption
       timestamp <- timestampOption
       value <- jsonValue
-      data <- createDataFrom(uri, feeder, timestamp, value)
+      data <- createDataFrom(feeder, timestamp, value)
     } yield data
   }
 
   override def encode(data: Data): Option[Json] = if(data.category == target) {
     val category = Json.fromString(data.category.name)
-    val uri = Json.fromString(data.URI)
+    //val uri = Json.fromString(data.URI)
     val timestamp = Json.fromLong(data.timestamp)
     val feeder = encodeFeeder(data.feeder)
     encodeStrategy(data.value).map(valueJson => {
       Json.obj(
         "category" -> category,
-        "uri" -> uri,
+        //"uri" -> uri,
         "timestamp" -> timestamp,
         "feeder" -> feeder,
         "value" -> valueJson
@@ -41,7 +41,7 @@ trait CirceJsonParser extends DataParser[Json]{
     None
   }
 
-  protected def createDataFrom(uri : String, feeder : Feeder, timestamp : Long, json: Json) : Option[Data]
+  protected def createDataFrom(feeder : Feeder, timestamp : Long, json: Json) : Option[Data]
 
   protected def encodeStrategy(value : Any) : Option[Json]
 }

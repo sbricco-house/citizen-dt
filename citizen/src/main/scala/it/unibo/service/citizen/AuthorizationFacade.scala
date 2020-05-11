@@ -7,6 +7,6 @@ import scala.concurrent.Future
 trait AuthorizationFacade {
   def authorizeRead(who : String, category : DataCategory) : Future[Unit]
   def authorizeWrite(who : String, category: DataCategory) : Future[Unit]
-  def authorizedReadCategory(who : String) : Future[Seq[DataCategory]]
-  def authorizedWriteCategory(who : String) : Future[Seq[DataCategory]]
+  def authorizedReadCategories(who : String) : Future[Seq[DataCategory]]
+  def authorizedWriteCategories(who : String) : Future[Seq[DataCategory]]
 }
