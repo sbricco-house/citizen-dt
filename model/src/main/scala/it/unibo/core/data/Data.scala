@@ -12,6 +12,7 @@ import java.util.UUID
  *  - value : the real data produced.
  */
 trait Data {
+  def id: UUID
   def feeder : Feeder
   def category : LeafCategory
   def timestamp : Long

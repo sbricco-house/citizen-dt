@@ -1,4 +1,6 @@
 package it.unibo.core.data.parser
+import java.util.UUID
+
 import io.circe.Json
 import io.circe.parser
 import it.unibo.core.data.{Data, Feeder, LeafCategory, Resource, Sensor}
@@ -38,8 +40,8 @@ class JsonParserTest extends FlatSpec with Matchers {
 object JsonParserTest {
   import JsonElements._
   val integerParser = new CirceJsonParser {
-    override protected def createDataFrom(feeder: Feeder, timestamp: Long, json: Json): Option[Data] = {
-      json.asNumber.map(_.truncateToInt).map(IntegerData(_, feeder, timestamp))
+    override protected def createDataFrom(id: String, feeder: Feeder, timestamp: Long, json: Json): Option[Data] = {
+      json.asNumber.map(_.truncateToInt).map(IntegerData(UUID.fromString(id), _, feeder, timestamp))
     }
     override protected def encodeStrategy(value: Any): Option[Json] = value match {
       case x : Int => Some(Json.fromInt(x))

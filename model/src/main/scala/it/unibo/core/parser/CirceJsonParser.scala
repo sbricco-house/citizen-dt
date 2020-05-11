@@ -13,25 +13,27 @@ trait CirceJsonParser extends DataParser[Json]{
     val categoryOption = extractCategory(rawData, target)
     val feederOption = extractFeeder(rawData)
     val timestampOption = extractTimestamp(rawData)
+    val idOption = rawData.hcursor.downField("id").focus.flatMap(_.asString)
     val jsonValue = rawData.hcursor.downField("value").focus
     for {
       category <- categoryOption
       feeder <- feederOption
       timestamp <- timestampOption
+      id <- idOption
       value <- jsonValue
-      data <- createDataFrom(feeder, timestamp, value)
+      data <- createDataFrom(id, feeder, timestamp, value)
     } yield data
   }
 
   override def encode(data: Data): Option[Json] = if(data.category == target) {
     val category = Json.fromString(data.category.name)
-    //val uri = Json.fromString(data.URI)
+    val id = Json.fromString(data.id.toString)
     val timestamp = Json.fromLong(data.timestamp)
     val feeder = encodeFeeder(data.feeder)
     encodeStrategy(data.value).map(valueJson => {
       Json.obj(
         "category" -> category,
-        //"uri" -> uri,
+        "id" -> id,
         "timestamp" -> timestamp,
         "feeder" -> feeder,
         "value" -> valueJson
@@ -41,7 +43,7 @@ trait CirceJsonParser extends DataParser[Json]{
     None
   }
 
-  protected def createDataFrom(feeder : Feeder, timestamp : Long, json: Json) : Option[Data]
+  protected def createDataFrom(id:String, feeder : Feeder, timestamp : Long, json: Json) : Option[Data]
 
   protected def encodeStrategy(value : Any) : Option[Json]
 }

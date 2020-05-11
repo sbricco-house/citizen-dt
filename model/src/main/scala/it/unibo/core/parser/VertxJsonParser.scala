@@ -9,11 +9,13 @@ trait VertxJsonParser extends DataParser[JsonObject]{
     val categoryOption = rawData.getAsString("category").filter(_ == target.name)
     val timestampOption = rawData.getAsLong("timestamp")
     val feederOption = rawData.getAsObject("feeder").flatMap(extractFeeder)
+    val idOption = rawData.getAsString("id")
     for {
       category <- categoryOption
       timestamp <- timestampOption
       feeder <- feederOption
-      data <- createDataFrom(feeder, timestamp, rawData)
+      id <- idOption
+      data <- createDataFrom(id, feeder, timestamp, rawData)
     } yield data
   }
 
@@ -26,13 +28,13 @@ trait VertxJsonParser extends DataParser[JsonObject]{
         obj => obj
           .put("category", data.category.name)
           .put("timestamp", data.timestamp)
-          //.put("id", data.id)
+          .put("id", data.id.toString)
           .put("feeder", encodeFeeder(data.feeder))
       }
     }
   }
 
-  protected def createDataFrom(feeder : Feeder, timestamp : Long, json: JsonObject) : Option[Data]
+  protected def createDataFrom(id: String, feeder : Feeder, timestamp : Long, json: JsonObject) : Option[Data]
 
   protected def encodeStrategy(value : Any) : Option[JsonObject]
 

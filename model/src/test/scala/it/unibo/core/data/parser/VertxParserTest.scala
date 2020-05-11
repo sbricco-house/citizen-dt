@@ -1,5 +1,7 @@
 package it.unibo.core.data.parser
 
+import java.util.UUID
+
 import io.circe.parser
 import io.vertx.lang.scala.json.{Json, JsonObject}
 import it.unibo.core.data.{Data, Feeder, LeafCategory}
@@ -36,8 +38,8 @@ object VertxParserTest {
   import JsonElements._
   import it.unibo.core.microservice.vertx._
   val integerParser = new VertxJsonParser {
-    override protected def createDataFrom(feeder: Feeder, timestamp: Long, json: JsonObject): Option[Data] = {
-      json.getAsInt("value").map(IntegerData(_, feeder, timestamp))
+    override protected def createDataFrom(id: String, feeder: Feeder, timestamp: Long, json: JsonObject): Option[Data] = {
+      json.getAsInt("value").map(IntegerData(UUID.fromString(id), _, feeder, timestamp))
     }
 
     override protected def encodeStrategy(value: Any): Option[JsonObject] = value match {
