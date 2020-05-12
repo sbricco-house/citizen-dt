@@ -4,13 +4,12 @@ import java.util.UUID
 
 import io.vertx.lang.scala.json.{Json, JsonObject}
 import io.vertx.scala.core.Vertx
-import it.unibo.core.data.{Data, Feeder, InMemoryStorage, LeafCategory, Sensor}
+import it.unibo.core.data._
 import it.unibo.core.dt.State
-import it.unibo.core.parser.{DataParserRegistry, VertxJsonParser}
-import it.unibo.service.citizen.CitizenVerticle
-import it.unibo.service.citizen.controller.DefaultCitizenController
 import it.unibo.core.microservice.vertx._
+import it.unibo.core.parser.{DataParserRegistry, VertxJsonParser}
 import it.unibo.service.HeartBeat.HeartBeatData
+import it.unibo.service.citizen.CitizenVerticle
 import it.unibo.service.citizen.authorization.MockAuthorization
 
 object CitizenApp extends App {
@@ -21,8 +20,7 @@ object CitizenApp extends App {
   val authorizationFacade = MockAuthorization(HeartBeat.category)
 
   val state = State.empty.update(HeartBeatData(UUID.randomUUID(), 1232343L, 20, Sensor("mi_band_4")))
-  val controller = new DefaultCitizenController(authorizationFacade, store, parser, state)
-  val citizenVerticle = new CitizenVerticle(controller, "50")
+  val citizenVerticle = new CitizenVerticle(authorizationFacade, store, parser,"50", state)
   vertx.deployVerticle(citizenVerticle)
 }
 

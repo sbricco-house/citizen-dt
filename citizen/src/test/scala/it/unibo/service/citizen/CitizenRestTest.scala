@@ -2,14 +2,12 @@ package it.unibo.service.citizen
 
 import java.util.UUID
 
-import io.vertx.core.http.HttpMethod
 import io.vertx.lang.scala.json.{Json, JsonObject}
 import io.vertx.scala.core.Vertx
-import io.vertx.scala.core.http.{HttpClient, RequestOptions}
+import io.vertx.scala.core.http.HttpClient
 import it.unibo.core.data.{Data, Feeder, InMemoryStorage, LeafCategory}
 import it.unibo.core.parser.{DataParserRegistry, VertxJsonParser}
 import it.unibo.service.citizen.authorization.MockAuthorization
-import it.unibo.service.citizen.controller.DefaultCitizenController
 import org.scalatest._
 
 class CitizenRestTest extends FlatSpec with Matchers with BeforeAndAfter {
@@ -42,9 +40,9 @@ class CitizenRestTest extends FlatSpec with Matchers with BeforeAndAfter {
     parserRegistry = DataParserRegistry(new HeartBeat.HearBeatParser())
     val store = InMemoryStorage[Data, String]()
     val authorizationFacade = MockAuthorization(HeartBeat.category)
-    val controller = new DefaultCitizenController(authorizationFacade, store, parserRegistry)
-    val citizenVerticle = new CitizenVerticle(controller, citizenIdVerticle)
-    vertx.deployVerticle(citizenVerticle)
+    //val controller = new DefaultCitizenController(authorizationFacade, store, parserRegistry)
+    //val citizenVerticle = new CitizenVerticle(controller, citizenIdVerticle)
+    //vertx.deployVerticle(citizenVerticle)
   }
 
   after {
