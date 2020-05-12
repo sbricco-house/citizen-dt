@@ -18,6 +18,10 @@ class InMemoryStorage[D, ID] private() extends Storage [D, ID]{
   override def find(policy: D => Boolean): Either[Option[D], Failure[Unit]] = {
     Left(memory.values.find(policy))
   }
+
+  override def findMany(policy: D => Boolean): Either[Seq[D], Failure[Unit]] = {
+    Left(memory.values.filter(policy).toSeq)
+  }
 }
 
 object InMemoryStorage {

@@ -29,5 +29,7 @@ trait Storage[D, ID] {
    * @return Left(Some(_)) if there is a data that satisfy the policy, Right(Failure(_)) otherwise
    */
   def find(policy : D => Boolean) : Either[Option[D], Failure[Unit]]
+
+  def findMany(policy : D => Boolean) : Either[Seq[D], Failure[Unit]]
 }
 

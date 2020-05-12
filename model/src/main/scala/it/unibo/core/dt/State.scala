@@ -40,7 +40,6 @@ object State {
         .toSeq
     }
     override def update(data: Data): State = MapLikeState(map + (data.category -> data))
-
     override def snapshot: Seq[Data] = map.values.toSeq
   }
   val empty : State = MapLikeState(Map.empty)

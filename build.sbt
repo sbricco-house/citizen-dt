@@ -19,10 +19,17 @@ lazy val commonSetting = Seq(
   )
 )
 
+lazy val testSetting = Seq(
+  libraryDependencies ++= Seq(
+    "org.scalatest" %% "scalatest" % "3.1.1" % "test"
+  )
+)
+
 lazy val model = (project in file("model"))
   .settings(commonSetting)
 
 lazy val citizen_service = (project in file("citizen"))
+  .settings(testSetting)
   .dependsOn(model)
 
 lazy val permission_service = (project in file("permission"))

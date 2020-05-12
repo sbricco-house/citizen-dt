@@ -13,16 +13,16 @@ import CitizenVerticle._
 import io.vertx.scala.ext.web.handler.BodyHandler
 import it.unibo.service.citizen.controller.CitizenController
 
+import scala.concurrent.Future
+
 object CitizenVerticle {
   private val CITIZEN_ENDPOINT = s"/citizens/%s/state"
 }
 
-//private var state : State, state could be cold bootstrapped from dataStorage?
-
 class CitizenVerticle(controller: CitizenController,
                       citizenIdentifier: String, // could be a UUID or integer, or something else
                       port : Int = 8080,
-                      host : String = "localhost") extends BaseVerticle(port, host)  {
+                      host : String = "localhost") extends BaseVerticle(controller, port, host)  {
 
   override def createRouter(): Router = {
     val router = Router.router(vertx)
