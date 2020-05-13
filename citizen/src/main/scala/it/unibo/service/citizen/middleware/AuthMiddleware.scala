@@ -4,14 +4,14 @@ import io.vertx.core.Handler
 import io.vertx.lang.scala.VertxExecutionContext
 import io.vertx.scala.ext.web.RoutingContext
 import it.unibo.core.microservice.vertx._
-import it.unibo.service.citizen.AuthService
+import it.unibo.service.authentication.AuthService
 
 import scala.util.Success
 
 object AuthMiddleware {
   private val AUTHORIZATION_HEADER = "Authorization"
   val AUTHENTICATED_USER = "authenticated_user"
-  def create(authService: AuthService) = new AuthMiddleware(authService)
+  def apply(authService: AuthService) = new AuthMiddleware(authService)
 }
 
 class AuthMiddleware private(private val auth: AuthService) extends Handler[RoutingContext] {

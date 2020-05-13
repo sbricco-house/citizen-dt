@@ -1,4 +1,4 @@
-package it.unibo.service.citizen
+package it.unibo.service.authentication
 
 import scala.concurrent.Future
 

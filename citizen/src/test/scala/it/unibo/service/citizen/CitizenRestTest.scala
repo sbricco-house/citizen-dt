@@ -55,14 +55,14 @@ object HeartBeat {
 
   val category: LeafCategory = LeafCategory("heartbeat", 100)
 
-  case class HeartBeatData(id: UUID, timestamp: Long, value: Double, feeder: Feeder) extends Data {
+  case class HeartBeatData(identifier: String, timestamp: Long, value: Double, feeder: Feeder) extends Data {
     override def category: LeafCategory = HeartBeat.category
   }
 
   class HearBeatParser extends VertxJsonParser {
     import it.unibo.core.microservice.vertx._
     override protected def createDataFrom(id:String, feeder: Feeder, timestamp: Long, json: JsonObject): Option[Data] = {
-      json.getAsInt("value").map(v => HeartBeatData(UUID.fromString(id), timestamp, v, feeder))
+      json.getAsInt("value").map(v => HeartBeatData(UUID.fromString(id).toString, timestamp, v, feeder))
     }
     override protected def encodeStrategy(value: Any): Option[JsonObject] = value match {
       case x: Double =>Some(Json.emptyObj().put("value", x))

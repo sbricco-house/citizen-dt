@@ -14,7 +14,7 @@ trait VertxJsonParser extends DataParser[JsonObject]{
       category <- categoryOption
       timestamp <- timestampOption
       feeder <- feederOption
-      id <- idOption
+      id <- idOption.orElse(Some(""))
       data <- createDataFrom(id, feeder, timestamp, rawData)
     } yield data
   }
@@ -28,13 +28,13 @@ trait VertxJsonParser extends DataParser[JsonObject]{
         obj => obj
           .put("category", data.category.name)
           .put("timestamp", data.timestamp)
-          .put("id", data.id.toString)
+          .put("id", data.identifier)
           .put("feeder", encodeFeeder(data.feeder))
       }
     }
   }
 
-  protected def createDataFrom(id: String, feeder : Feeder, timestamp : Long, json: JsonObject) : Option[Data]
+  protected def createDataFrom(identifier: String, feeder : Feeder, timestamp : Long, json: JsonObject) : Option[Data]
 
   protected def encodeStrategy(value : Any) : Option[JsonObject]
 

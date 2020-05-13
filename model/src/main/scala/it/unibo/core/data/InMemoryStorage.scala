@@ -8,9 +8,9 @@ import scala.util.{Failure, Success, Try}
  */
 class InMemoryStorage[D, ID] private() extends Storage [D, ID]{
   var memory : Map[ID, D] = Map.empty[ID, D]
-  override def store(id : ID, data: D): Try[Unit] = {
+  override def store(id : ID, data: D): Try[D] = {
     memory += id -> data
-    Success()
+    Success(data)
   }
 
   override def get(id: ID): Either[Option[D], Failure[Unit]] = Left(memory.get(id))

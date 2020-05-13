@@ -7,7 +7,7 @@ object MockAuthorization {
   def apply(authorizedCategories: DataCategory*): MockAuthorization = new MockAuthorization(authorizedCategories)
 }
 
-class MockAuthorization private(private val authorizedCategories: Seq[DataCategory]) extends AuthorizationFacade {
+class MockAuthorization private(private val authorizedCategories: Seq[DataCategory]) extends AuthorizationService {
 
   override def authorizeRead(authenticated: String, citizen: String, category: DataCategory): Future[Option[DataCategory]] = mockAuthorize(authenticated, citizen, category)
   override def authorizeWrite(authenticated: String, citizen: String, category: DataCategory): Future[Option[DataCategory]] = mockAuthorize(authenticated, citizen, category)

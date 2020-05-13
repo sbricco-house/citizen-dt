@@ -14,7 +14,7 @@ trait Storage[D, ID] {
    * @param data
    * @return Success() if the operation has success, Failure otherwise
    */
-  def store(id : ID, data : D) : Try[Unit]
+  def store(id : ID, data : D) : Try[D]
 
   /**
    * get the data associated to an ID in the storage, if it is already stored.

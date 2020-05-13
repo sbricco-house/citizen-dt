@@ -41,7 +41,7 @@ object JsonParserTest {
   import JsonElements._
   val integerParser = new CirceJsonParser {
     override protected def createDataFrom(id: String, feeder: Feeder, timestamp: Long, json: Json): Option[Data] = {
-      json.asNumber.map(_.truncateToInt).map(IntegerData(UUID.fromString(id), _, feeder, timestamp))
+      json.asNumber.map(_.truncateToInt).map(IntegerData(UUID.fromString(id).toString, _, feeder, timestamp))
     }
     override protected def encodeStrategy(value: Any): Option[Json] = value match {
       case x : Int => Some(Json.fromInt(x))

@@ -6,7 +6,7 @@ import it.unibo.core.data.{Data, Feeder, LeafCategory, Resource, Sensor}
 
 object JsonElements {
   val integerCategory = LeafCategory("integer", 100)
-  case class IntegerData(id: UUID, value : Int, feeder : Feeder, timestamp : Long) extends Data {
+  case class IntegerData(identifier: String, value : Int, feeder : Feeder, timestamp : Long) extends Data {
     val category: LeafCategory = integerCategory
   }
   val uri = "citizen"
@@ -36,7 +36,7 @@ object JsonElements {
         "value" : 10
       }
       """.stripMargin
-  val inputData = IntegerData(UUID.randomUUID(), 10, Sensor("health"), 102)
+  val inputData = IntegerData(UUID.randomUUID().toString, 10, Sensor("health"), 102)
 
   val feederResource = Resource("health")
 }

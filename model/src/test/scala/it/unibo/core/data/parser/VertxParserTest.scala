@@ -39,7 +39,7 @@ object VertxParserTest {
   import it.unibo.core.microservice.vertx._
   val integerParser = new VertxJsonParser {
     override protected def createDataFrom(id: String, feeder: Feeder, timestamp: Long, json: JsonObject): Option[Data] = {
-      json.getAsInt("value").map(IntegerData(UUID.fromString(id), _, feeder, timestamp))
+      json.getAsInt("value").map(IntegerData(UUID.fromString(id).toString, _, feeder, timestamp))
     }
 
     override protected def encodeStrategy(value: Any): Option[JsonObject] = value match {
