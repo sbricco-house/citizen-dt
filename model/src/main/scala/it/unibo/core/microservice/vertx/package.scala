@@ -1,9 +1,7 @@
 package it.unibo.core.microservice
 
-import io.vertx.lang.scala.json.{Json, JsonArray, JsonObject}
+import io.vertx.lang.scala.json.{JsonArray, JsonObject}
 import io.vertx.scala.core.http.HttpServerResponse
-
-import scala.util.Try
 
 package object vertx {
   implicit class RichJson(json : JsonObject) {
@@ -49,7 +47,6 @@ package object vertx {
     }
   }
   implicit class RichJsonArray(json : JsonArray) {
-    import collection.JavaConverters._
     def getAsObjectSeq : Option[Seq[JsonObject]] = {
       val elems = json.size() - 1
       try {

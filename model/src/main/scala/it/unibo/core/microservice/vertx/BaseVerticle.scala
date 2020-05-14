@@ -1,6 +1,7 @@
 package it.unibo.core.microservice.vertx
 
 import io.vertx.lang.scala.ScalaVerticle
+import io.vertx.scala.core.http.ServerWebSocket
 import io.vertx.scala.ext.web.Router
 
 import scala.concurrent.Future

@@ -10,6 +10,8 @@ import it.unibo.core.parser.DataParser
 import it.unibo.service.authentication.{AuthService, SystemUser}
 import it.unibo.service.citizen.RestCitizenVerticle._
 import it.unibo.service.citizen.middleware.AuthMiddleware
+import it.unibo.core.microservice._
+import it.unibo.core.utils.ServiceError.{MissingResource, Unauthorized}
 
 import scala.util.{Failure, Success}
 
@@ -24,12 +26,12 @@ class RestCitizenVerticle(citizenService: CitizenService,
                           port : Int = 8080,
                           host : String = "localhost") extends BaseVerticle(port, host) {
 
+  private val citizenStateEndpoint = CITIZEN_ENDPOINT.format(citizenIdentifier)
+  private val historyEndpoint = HISTORY_ENDPOINT.format(citizenIdentifier)
+
   override def createRouter(): Router = {
     val router = Router.router(vertx)
-
     val authenticationMiddleware = AuthMiddleware(AuthService())
-    val citizenStateEndpoint = CITIZEN_ENDPOINT.format(citizenIdentifier)
-    val historyEndpoint = HISTORY_ENDPOINT.format(citizenIdentifier)
 
     router.get(citizenStateEndpoint)
         .handler(authenticationMiddleware)
@@ -53,19 +55,19 @@ class RestCitizenVerticle(citizenService: CitizenService,
 
   private def handleGetState(context: RoutingContext): Unit = {
     val user = context.get(AuthMiddleware.AUTHENTICATED_USER).asInstanceOf[SystemUser]
-    citizenService.readState(user, citizenIdentifier).onComplete {
-      case Success(data) => context.response().setOk(stateToJson(data))
+    citizenService.readState(user, citizenIdentifier).whenComplete {
+      case Response(data) => context.response().setOk(stateToJson(data))
       case _ => context.response().setInternalError()
     }
   }
 
   private def handlePatchState(context: RoutingContext): Unit = {
     val user = context.get(AuthMiddleware.AUTHENTICATED_USER).asInstanceOf[SystemUser]
-    context.getBodyAsJson().map(jsonToState).map(newData => citizenService.updateState(user, citizenIdentifier, newData)) match {
-      case Some(value) => value.onComplete {
-        case Success(_) => context.response().setNoContent()
-        case Failure(_: IllegalAccessException) => context.response().setForbidden()
-        case _ => context.response().setInternalError()
+    context.getBodyAsJson().map(jsonToState).map(newState => citizenService.updateState(user, citizenIdentifier, newState)) match {
+      case Some(op) => op.whenComplete {
+        case Response(_) => context.response().setNoContent()
+        case Fail(Unauthorized(m)) => context.response().setForbidden(m)
+        case Fail(_) => context.response().setInternalError()
       }
       case None => context.response().setBadRequest()
     }
@@ -74,25 +76,25 @@ class RestCitizenVerticle(citizenService: CitizenService,
   private def handleGetHistoryData(context: RoutingContext): Unit = {
     val user = context.get(AuthMiddleware.AUTHENTICATED_USER).asInstanceOf[SystemUser]
     val dataIdentifier = context.pathParam("data_id").get
-    citizenService.readHistoryData(user, citizenIdentifier, dataIdentifier).onComplete {
-      case Success(Some(data)) => context.response().setOk(parser.encode(data).get)
-      case Success(None) => context.response().setNotFound()
-      case Failure(_:IllegalAccessException) => context.response().setForbidden()
+
+    citizenService.readHistoryData(user, citizenIdentifier, dataIdentifier).whenComplete {
+      case Response(Some(data)) => context.response().setOk(parser.encode(data).get)
+      case Fail(MissingResource(m)) => context.response().setNotFound(m)
+      case Fail(Unauthorized(m)) => context.response().setForbidden(m)
       case _ => context.response().setInternalError()
     }
   }
 
   private def handleGetHistoryDataFromCategory(context: RoutingContext): Unit = {
     val user = context.get(AuthMiddleware.AUTHENTICATED_USER).asInstanceOf[SystemUser]
-    // TODO: datacategory need to be a concrete DataCategory not string, create a placeholder category or registry
     val dataCategory = context.queryParams().get("data_category")
     val limit = context.queryParams().get("limit").getOrElse("1").toInt
 
-    dataCategory.map(LeafCategory(_, -1)).map(category => citizenService.readHistory(user, citizenIdentifier, category, limit)) match {
-      case Some(value) => value.onComplete {
-        case Success(value) => context.response().setOk(dataArrayToJson(value))
-        case Failure(e:IllegalAccessException) => context.response().setForbidden(e.getMessage)
-        case Failure(e) => context.response().setInternalError(e.getMessage)
+    dataCategory.map(LeafCategory(_, -1)).map(citizenService.readHistory(user, citizenIdentifier, _, limit)) match {
+      case Some(future) => future.whenComplete {
+        case Response(value) => context.response().setOk(dataArrayToJson(value))
+        case Fail(Unauthorized(m)) => context.response().setForbidden(m)
+        case _ => context.response().setInternalError()
       }
       case None => context.response().setBadRequest()
     }

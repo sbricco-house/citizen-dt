@@ -16,7 +16,7 @@ object CitizenClient {
 }
 
 // TODO: finish testing
-class CitizenClient(private val baseUri: String) extends CitizenService {
+/*class CitizenClient(private val baseUri: String) extends CitizenService {
 
   private val vertx = Vertx.vertx()
   private val httpClient = WebClient.create(vertx, WebClientOptions().setDefaultPort(8080))
@@ -47,4 +47,4 @@ object A extends App {
     case Failure(exception) => println(exception)
     case Success(value) => println(value)
   }(ExecutionContext.global)
-}
+}*/

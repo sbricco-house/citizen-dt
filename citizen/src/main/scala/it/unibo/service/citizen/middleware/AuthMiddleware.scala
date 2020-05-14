@@ -22,7 +22,7 @@ class AuthMiddleware private(private val auth: AuthService) extends Handler[Rout
     val pendingResponse = context.request().headers().get(AUTHORIZATION_HEADER).map(auth.getAuthenticatedUser)
     pendingResponse match  {
       case Some(response) => response.onComplete {
-        case Success(Some(user)) => context.put(AUTHENTICATED_USER, user); context.next()
+        case Success(user) => context.put(AUTHENTICATED_USER, user); context.next()
         case _ => context.response().setNotAuthorized("Invalid Authorization Token")
       }
       case _ => context.response().setNotAuthorized("Invalid Authorization Header")

@@ -26,6 +26,12 @@ lazy val testSetting = Seq(
   )
 )
 
+lazy val authenticationSettings = Seq(
+  libraryDependencies ++= Seq(
+    "io.vertx" %% "vertx-auth-jwt-scala" % vertxVersion
+  )
+)
+
 lazy val model = (project in file("model"))
   .settings(commonSetting)
 
@@ -39,3 +45,4 @@ lazy val permission_service = (project in file("permission"))
 
 lazy val authentication_service = (project in file("authentication"))
   .dependsOn(model)
+  .settings(authenticationSettings)

@@ -8,18 +8,18 @@ trait SystemUser {
 }
 
 trait AuthService {
-  def getAuthenticatedUser(identifier: String) : Future[Option[SystemUser]]
+  def getAuthenticatedUser(identifier: String) : Future[SystemUser]
 }
 
 object AuthService {
   def apply() : AuthService = new Mock()
 
   private class Mock extends AuthService {
-    override def getAuthenticatedUser(identifier: String): Future[Option[SystemUser]] = {
+    override def getAuthenticatedUser(identifier: String): Future[SystemUser] = {
       if(identifier == MockUser.identifier)
-        Future.successful(Some(MockUser))
+        Future.successful(MockUser)
       else
-        Future.successful(None)
+        Future.failed(new Exception())
     }
   }
   case object MockUser extends SystemUser {

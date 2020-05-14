@@ -2,24 +2,26 @@ package it.unibo.service.citizen
 
 import java.util.UUID
 
-import it.unibo.core.data.{Data, DataCategory, Storage}
+import it.unibo.core.data._
 import it.unibo.core.dt.History.History
 import it.unibo.core.dt.State
+import it.unibo.core.microservice.{FutureService, Response}
+import it.unibo.core.utils.ServiceError.{MissingResource, Unauthorized}
 import it.unibo.service.authentication.SystemUser
 import it.unibo.service.citizen.authorization.AuthorizationService
-import it.unibo.service.citizen.utils._
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
+import scala.util.{Failure, Success}
 
 /**
  * The interface for access to services provided by Citizen Service, expressed as main domain concept.
  * It allow to expose the same service through different technology/interface, e.g. websocket, rest api, ecc...
  */
 trait CitizenService {
-  def updateState(who: SystemUser, citizenId: String, data: Seq[Data]): Future[Seq[Data]]
-  def readState(who: SystemUser, citizenId: String): Future[Seq[Data]]
-  def readHistory(who: SystemUser, citizenId: String, dataCategory: DataCategory, maxSize: Int = 1): Future[History]
-  def readHistoryData(who: SystemUser, citizenId: String, dataIdentifier: String): Future[Option[Data]]
+  def updateState(who: SystemUser, citizenId: String, data: Seq[Data]): FutureService[Seq[Data]]
+  def readState(who: SystemUser, citizenId: String): FutureService[Seq[Data]]
+  def readHistory(who: SystemUser, citizenId: String, dataCategory: DataCategory, maxSize: Int = 1): FutureService[History]
+  def readHistoryData(who: SystemUser, citizenId: String, dataIdentifier: String): FutureService[Option[Data]]
 }
 
 object CitizenService {
@@ -43,28 +45,44 @@ class CitizenServiceLogic(authorizationService: AuthorizationService,
 
   implicit val executionContext: ExecutionContextExecutor = ExecutionContext.global
 
-  override def readState(who: SystemUser, citizenId: String): Future[Seq[Data]] = {
+  override def readState(who: SystemUser, citizenId: String): FutureService[Seq[Data]] = {
     authorizationService.authorizedReadCategories(who.identifier, citizenId)
-      .map(authorizedCategories => state.get(authorizedCategories))
+      .map(categories => state.get(categories))
   }
 
-  override def updateState(who: SystemUser, citizenId: String, data: Seq[Data]): Future[Seq[Data]] = {
+  override def updateState(who: SystemUser, citizenId: String, data: Seq[Data]): FutureService[Seq[Data]] = {
     val categoriesToUpdate = data.map(_.category)
-    authorizationService.authorizedWriteCategories(who.identifier, citizenId).map {
-      case categories if categories == categoriesToUpdate => save(data)
+    authorizationService.authorizedWriteCategories(who.identifier, citizenId)
+      .flatMap {
+          case categories if categories == categoriesToUpdate => FutureService.response(save(data))
+          case _ => FutureService.fail(Unauthorized())
+        }
+  }
+
+  override def readHistory(who: SystemUser, citizenId: String, dataCategory: DataCategory, maxSize: Int): FutureService[History] = {
+    authorizationService.authorizeRead(who.identifier, citizenId, dataCategory)
+        .map(category => findHistoryInStorage(category, maxSize))
+  }
+
+  override def readHistoryData(who: SystemUser, citizenId: String, dataIdentifier: String): FutureService[Option[Data]] = {
+    FutureService(Future.successful(Response(None)))
+    findDataInStorage(dataIdentifier)
+      .flatMap(data => authorizationService.authorizeRead(who.identifier, citizenId, data.category).map(_ => Option(data)))
+  }
+
+  // TODO: TRY TO LAUNCH EXCEPTION INSIDE FIND MANY
+  private def findHistoryInStorage(category: DataCategory, maxSize: Int): Seq[Data] = {
+    dataStorage.findMany(_.category == category, Some(maxSize)) match {
+      case Success(value) => value
+      case _ => Seq()
     }
   }
 
-  override def readHistory(who: SystemUser, citizenId: String, dataCategory: DataCategory, maxSize: Int): Future[History] = {
-    authorizationService.authorizeRead(who.identifier, citizenId, dataCategory)
-        .flatMap(category => Future.fromTry(dataStorage.findMany(_.category == category, Some(maxSize))))
-  }
-
-  override def readHistoryData(who: SystemUser, citizenId: String, dataIdentifier: String): Future[Option[Data]] = {
-    Future.fromTry(dataStorage.get(dataIdentifier))
-      .toFutureOption
-      .flatMap(data => authorizationService.authorizeRead(who.identifier, citizenId, data.category).map(_ => Some(data)).toFutureOption)
-      .future
+  private def findDataInStorage(dataIdentifier: String): FutureService[Data] = {
+    dataStorage.get(dataIdentifier) match {
+      case Success(Some(value)) => FutureService.response(value)
+      case Success(None) => FutureService.fail(MissingResource(s"Data $dataIdentifier not found"))
+    }
   }
 
   private def save(dataSequence: Seq[Data]): Seq[Data] = {
