@@ -15,13 +15,14 @@ lazy val commonSetting = Seq(
     "io.circe"  %% "circe-generic"  % circeVersion,
     "io.circe"  %% "circe-parser"   % circeVersion,
     "io.vertx" %% "vertx-lang-scala" % vertxVersion,
-    "io.vertx" %% "vertx-web-scala" % vertxVersion,
+    "io.vertx" %% "vertx-web-scala" % vertxVersion
   )
 )
 
 lazy val testSetting = Seq(
   libraryDependencies ++= Seq(
-    "org.scalatest" %% "scalatest" % "3.1.1" % "test"
+    "org.scalatest" %% "scalatest" % "3.1.1" % "test",
+    "io.vertx" %% "vertx-web-client-scala" % vertxVersion
   )
 )
 
@@ -29,9 +30,9 @@ lazy val model = (project in file("model"))
   .settings(commonSetting)
 
 lazy val citizen_service = (project in file("citizen"))
-  .settings(testSetting)
   .dependsOn(model)
   .dependsOn(authentication_service)
+  .settings(testSetting)
 
 lazy val permission_service = (project in file("permission"))
   .dependsOn(model)

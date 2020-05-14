@@ -21,11 +21,9 @@ object AuthService {
       else
         Future.successful(None)
     }
-
-    case object MockUser extends SystemUser {
-      override def role: String = "citizen"
-      override def identifier: String = "50"
-    }
   }
-
+  case object MockUser extends SystemUser {
+    override def role: String = "citizen"
+    override def identifier: String = "50"
+  }
 }

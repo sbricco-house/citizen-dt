@@ -78,6 +78,7 @@ package object vertx {
     def setConflict(message: String = "Conflict") = setResponse(409, message)
     def setCreated(obj: JsonObject) = setResponse(201, obj)
     def setOk (obj: JsonObject) = setResponse(200, obj)
+    def setOk (obj: JsonArray) = setResponse(200, obj.encode())
     def setNoContent() = setResponse(204, "")
   }
 }

@@ -13,14 +13,14 @@ class InMemoryStorage[D, ID] private() extends Storage [D, ID]{
     Success(data)
   }
 
-  override def get(id: ID): Either[Option[D], Failure[Unit]] = Left(memory.get(id))
+  override def get(id: ID): Try[Option[D]] = Success(memory.get(id))
 
-  override def find(policy: D => Boolean): Either[Option[D], Failure[Unit]] = {
-    Left(memory.values.find(policy))
+  override def find(policy: D => Boolean): Try[Option[D]] = {
+    Success(memory.values.find(policy))
   }
 
-  override def findMany(policy: D => Boolean): Either[Seq[D], Failure[Unit]] = {
-    Left(memory.values.filter(policy).toSeq)
+  override def findMany(policy: D => Boolean, maxElements: Option[Int] = None): Try[Seq[D]] = {
+    Success(memory.values.filter(policy).take(maxElements.getOrElse(-1)).toSeq)
   }
 }
 

@@ -1,6 +1,6 @@
 package it.unibo.core.data
 
-import scala.util.{Failure, Try}
+import scala.util.Try
 
 /**
  * an abstraction that defines a generic storage in winch save some data.
@@ -21,15 +21,15 @@ trait Storage[D, ID] {
    * @param id
    * @return Left(Some(_)) if the data is present, Right(Failure(_)) otherwise
    */
-  def get(id : ID) : Either[Option[D], Failure[Unit]]
+  def get(id : ID) : Try[Option[D]]
 
   /**
    * get a data that satisfy some logic
    * @param policy: the policy used to find a data
    * @return Left(Some(_)) if there is a data that satisfy the policy, Right(Failure(_)) otherwise
    */
-  def find(policy : D => Boolean) : Either[Option[D], Failure[Unit]]
+  def find(policy : D => Boolean) : Try[Option[D]]
 
-  def findMany(policy : D => Boolean) : Either[Seq[D], Failure[Unit]]
+  def findMany(policy : D => Boolean, maxElements: Option[Int] = None) : Try[Seq[D]]
 }
 
