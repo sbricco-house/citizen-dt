@@ -1,21 +1,19 @@
 package it.unibo.service
 
-import java.util.UUID
-
 import io.vertx.lang.scala.json.{Json, JsonObject}
 import io.vertx.scala.core.Vertx
 import it.unibo.core.data._
-import it.unibo.core.dt.State
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.{DataParserRegistry, VertxJsonParser}
-import it.unibo.service.HeartBeat.HeartBeatData
-import it.unibo.service.citizen.{CitizenService, RestCitizenVerticle}
 import it.unibo.service.citizen.authorization.MockAuthorization
+import it.unibo.service.citizen.{CitizenService, RestCitizenVerticle}
 
 object CitizenApp extends App {
   val vertx = Vertx.vertx()
 
-  val authorizationFacade = MockAuthorization(HeartBeat.category)
+  val authorizationFacade = MockAuthorization(Map(
+    ("50", "50") -> Seq(HeartBeat.category)
+  ))
   val store = InMemoryStorage[Data, String]()
   val citizenService = CitizenService(authorizationFacade, store)
 

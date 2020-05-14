@@ -65,7 +65,6 @@ class CitizenServiceLogic(authorizationService: AuthorizationService,
   }
 
   override def readHistoryData(who: SystemUser, citizenId: String, dataIdentifier: String): FutureService[Option[Data]] = {
-    FutureService(Future.successful(Response(None)))
     findDataInStorage(dataIdentifier)
       .flatMap(data => authorizationService.authorizeRead(who.identifier, citizenId, data.category).map(_ => Option(data)))
   }

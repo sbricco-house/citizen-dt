@@ -57,6 +57,7 @@ class RestCitizenVerticle(citizenService: CitizenService,
     val user = context.get(AuthMiddleware.AUTHENTICATED_USER).asInstanceOf[SystemUser]
     citizenService.readState(user, citizenIdentifier).whenComplete {
       case Response(data) => context.response().setOk(stateToJson(data))
+      case Fail(Unauthorized(m)) => context.response().setForbidden(m)
       case _ => context.response().setInternalError()
     }
   }
@@ -66,6 +67,7 @@ class RestCitizenVerticle(citizenService: CitizenService,
     context.getBodyAsJson().map(jsonToState).map(newState => citizenService.updateState(user, citizenIdentifier, newState)) match {
       case Some(op) => op.whenComplete {
         case Response(_) => context.response().setNoContent()
+        case Fail(MissingResource(m)) => context.response().setBadRequest(m)
         case Fail(Unauthorized(m)) => context.response().setForbidden(m)
         case Fail(_) => context.response().setInternalError()
       }
