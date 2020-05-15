@@ -1,15 +1,4 @@
 package it.unibo.service.citizen
-import io.vertx.scala.core.Vertx
-import it.unibo.core.data.{Data, DataCategory}
-import it.unibo.core.dt.History.History
-import it.unibo.service.authentication.SystemUser
-import CitizenClient._
-import io.vertx.lang.scala.VertxExecutionContext
-import io.vertx.scala.ext.web.client.{WebClient, WebClientOptions}
-import it.unibo.service.authentication.AuthService.MockUser
-
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
 
 object CitizenClient {
   private val STATE_PATH = s"/citizens/%s/state"
