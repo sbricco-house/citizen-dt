@@ -3,7 +3,9 @@ package it.unibo.service.citizen.middleware
 import io.vertx.core.Handler
 import io.vertx.lang.scala.VertxExecutionContext
 import io.vertx.scala.ext.web.RoutingContext
+import it.unibo.core.microservice.{Fail, FutureService, Response}
 import it.unibo.core.microservice.vertx._
+import it.unibo.core.utils.ServiceError.Unauthorized
 import it.unibo.service.authentication.AuthService
 
 import scala.util.Success
@@ -19,13 +21,13 @@ class AuthMiddleware private(private val auth: AuthService) extends Handler[Rout
     import AuthMiddleware._
     implicit val executionContext = VertxExecutionContext(context.vertx().getOrCreateContext())
 
-    val pendingResponse = context.request().headers().get(AUTHORIZATION_HEADER).map(auth.getAuthenticatedUser)
-    pendingResponse match  {
-      case Some(response) => response.onComplete {
-        case Success(user) => context.put(AUTHENTICATED_USER, user); context.next()
-        case _ => context.response().setNotAuthorized("Invalid Authorization Token")
-      }
-      case _ => context.response().setNotAuthorized("Invalid Authorization Header")
+    val pending = context.request().headers().get(AUTHORIZATION_HEADER).map(auth.getAuthenticatedUser)
+        .getOrElse(FutureService.fail(Unauthorized("Invalid Authorization Header")))
+
+    pending.whenComplete {
+      case Response(user) => context.put(AUTHENTICATED_USER, user); context.next()
+      case Fail(Unauthorized(m)) => context.response().setNotAuthorized(m)
+      case _ => context.response().setInternalError()
     }
   }
 }

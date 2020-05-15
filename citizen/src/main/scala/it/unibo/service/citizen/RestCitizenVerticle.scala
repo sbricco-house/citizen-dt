@@ -11,7 +11,7 @@ import it.unibo.service.authentication.{AuthService, SystemUser}
 import it.unibo.service.citizen.RestCitizenVerticle._
 import it.unibo.service.citizen.middleware.AuthMiddleware
 import it.unibo.core.microservice._
-import it.unibo.core.utils.ServiceError.{MissingResource, Unauthorized}
+import it.unibo.core.utils.ServiceError.{BadParameter, MissingParameter, MissingResource, Unauthorized}
 
 import scala.util.{Failure, Success}
 
@@ -20,7 +20,8 @@ object RestCitizenVerticle {
   private val HISTORY_ENDPOINT = s"/citizens/%s/history"
 }
 
-class RestCitizenVerticle(citizenService: CitizenService,
+class RestCitizenVerticle(authService: AuthService,
+                          citizenService: CitizenService,
                           parser : DataParser[JsonObject],
                           citizenIdentifier: String, // could be a UUID or integer, or something else
                           port : Int = 8080,
@@ -31,7 +32,7 @@ class RestCitizenVerticle(citizenService: CitizenService,
 
   override def createRouter(): Router = {
     val router = Router.router(vertx)
-    val authenticationMiddleware = AuthMiddleware(AuthService())
+    val authenticationMiddleware = AuthMiddleware(authService)
 
     router.get(citizenStateEndpoint)
         .handler(authenticationMiddleware)
@@ -64,14 +65,15 @@ class RestCitizenVerticle(citizenService: CitizenService,
 
   private def handlePatchState(context: RoutingContext): Unit = {
     val user = context.get(AuthMiddleware.AUTHENTICATED_USER).asInstanceOf[SystemUser]
-    context.getBodyAsJson().map(jsonToState).map(newState => citizenService.updateState(user, citizenIdentifier, newState)) match {
-      case Some(op) => op.whenComplete {
-        case Response(_) => context.response().setNoContent()
-        case Fail(MissingResource(m)) => context.response().setBadRequest(m)
-        case Fail(Unauthorized(m)) => context.response().setForbidden(m)
-        case Fail(_) => context.response().setInternalError()
-      }
-      case None => context.response().setBadRequest()
+    val pending = context.getBodyAsJson().map(jsonToState)
+      .map(newState => citizenService.updateState(user, citizenIdentifier, newState))
+        .getOrElse(FutureService.fail(BadParameter(s"Invalid json body")))
+
+    pending.whenComplete {
+      case Response(_) => context.response().setNoContent()
+      case Fail(MissingParameter(m)) => context.response().setBadRequest(m)
+      case Fail(Unauthorized(m)) => context.response().setForbidden(m)
+      case _ => context.response().setInternalError()
     }
   }
 
@@ -92,13 +94,14 @@ class RestCitizenVerticle(citizenService: CitizenService,
     val dataCategory = context.queryParams().get("data_category")
     val limit = context.queryParams().get("limit").getOrElse("1").toInt
 
-    dataCategory.map(LeafCategory(_, -1)).map(citizenService.readHistory(user, citizenIdentifier, _, limit)) match {
-      case Some(future) => future.whenComplete {
-        case Response(value) => context.response().setOk(dataArrayToJson(value))
-        case Fail(Unauthorized(m)) => context.response().setForbidden(m)
-        case _ => context.response().setInternalError()
-      }
-      case None => context.response().setBadRequest()
+    val pending = dataCategory.map(LeafCategory(_, -1)).map(citizenService.readHistory(user, citizenIdentifier, _, limit))
+      .getOrElse(FutureService.fail(BadParameter(s"Missing data_category query parameter")))
+
+    pending.whenComplete {
+      case Response(value) => context.response().setOk(dataArrayToJson(value))
+      case Fail(BadParameter(m)) => context.response().setBadRequest(m)
+      case Fail(Unauthorized(m)) => context.response().setForbidden(m)
+      case _ => context.response().setInternalError()
     }
   }
 
