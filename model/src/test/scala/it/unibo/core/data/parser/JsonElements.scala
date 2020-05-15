@@ -16,7 +16,7 @@ object JsonElements {
         "feeder" : {
           "name" : "health"
         },
-        "uri" : "citizen",
+        "id" : "4ea103ea-0edb-4994-8fa6-e2609b7f610d",
         "timestamp" : 102,
         "category" : "integer",
         "value" : 10
@@ -30,13 +30,13 @@ object JsonElements {
           "uri" : "health",
           "isResource" : "true"
         },
-        "uri" : "citizen",
+        "id" : "4ea103ea-0edb-4994-8fa6-e2609b7f610d",
         "timestamp" : 102,
         "category" : "integer",
         "value" : 10
       }
       """.stripMargin
-  val inputData = IntegerData(UUID.randomUUID().toString, 10, Sensor("health"), 102)
+  val inputData = IntegerData("4ea103ea-0edb-4994-8fa6-e2609b7f610d", 10, Sensor("health"), 102)
 
   val feederResource = Resource("health")
 }
