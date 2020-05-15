@@ -1,0 +1,5 @@
+language: scala
+install: true
+branches:
+  only:
+    - master
