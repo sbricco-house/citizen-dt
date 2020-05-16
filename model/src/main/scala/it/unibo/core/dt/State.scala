@@ -15,6 +15,8 @@ trait State {
    */
   def get(category : DataCategory) : Seq[Data]
 
+  def get(dataCategories: Seq[DataCategory]): Seq[Data] = dataCategories.flatMap(this.get).distinct
+
   /**
    * update the current state of DT with a new Data
    * @param data
