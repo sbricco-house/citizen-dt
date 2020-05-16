@@ -8,7 +8,7 @@ import it.unibo.core.dt.State
 import it.unibo.core.microservice.FutureService
 import it.unibo.core.utils.ServiceError.{MissingParameter, MissingResource, Unauthorized}
 import it.unibo.service.authentication.SystemUser
-import it.unibo.service.citizen.authorization.AuthorizationService
+import it.unibo.service.permission.AuthorizationService
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.util.Success
@@ -36,16 +36,10 @@ class BackendCitizenService(authorizationService: AuthorizationService,
       case Nil => FutureService.fail(MissingParameter(s"Invalid set of data"))
       case categoriesToUpdate => authorizationService.authorizedWriteCategories(who.identifier, citizenId)
         .flatMap {
-          case categories if _flatGroupCategories(categories) == categoriesToUpdate => FutureService.response(save(data))
+          case categories if categories.flatten == categoriesToUpdate.flatten => FutureService.response(save(data))
           case _ => FutureService.fail(Unauthorized())
         }
     }
-  }
-  def _flatGroupCategories(categories: Seq[DataCategory]): Seq[DataCategory] = {
-    categories.flatMap {
-      case GroupCategory(_, dataCategory) => dataCategory
-      case cat @ LeafCategory(_, _) => Seq(cat)
-    }.distinct
   }
 
   override def readHistory(who: SystemUser, citizenId: String, dataCategory: DataCategory, maxSize: Int): FutureService[History] = {
@@ -55,12 +49,13 @@ class BackendCitizenService(authorizationService: AuthorizationService,
 
   override def readHistoryData(who: SystemUser, citizenId: String, dataIdentifier: String): FutureService[Option[Data]] = {
     findDataInStorage(dataIdentifier)
-      .flatMap(data => authorizationService.authorizeRead(who.identifier, citizenId, data.category).map(_ => Option(data)))
+      .flatMap(data => authorizationService.authorizeRead(who.identifier, citizenId, data.category)
+      .map(_ => Some(data)))
   }
 
   // TODO: TRY TO LAUNCH EXCEPTION INSIDE FIND MANY
   private def findHistoryInStorage(category: DataCategory, maxSize: Int): Seq[Data] = {
-    dataStorage.findMany(_.category == category, Some(maxSize)) match {
+    dataStorage.findMany(_.category == category, maxSize) match {
       case Success(value) => value
       case _ => Seq()
     }

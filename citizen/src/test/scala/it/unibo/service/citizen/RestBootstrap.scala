@@ -6,8 +6,9 @@ import io.vertx.scala.ext.web.client.{HttpRequest, WebClient, WebClientOptions}
 import it.unibo.core.data._
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.{DataParserRegistry, VertxJsonParser}
-import it.unibo.service.authentication.{AuthService, SystemUser}
-import it.unibo.service.citizen.authorization.MockAuthorization
+import it.unibo.service.authentication.{AuthService, AuthenticationVerticle, SystemUser}
+import it.unibo.service.citizen.authentication.MockAuthenticationClient
+import it.unibo.service.permission.MockAuthorization
 
 import scala.concurrent.Future
 
@@ -19,25 +20,27 @@ object RestBootstrap {
   val STAKEHOLDER_AUTHORIZED_HEADER = "Authorization" -> "46"
   val HISTORY_LIMIT = 5
   val HISTORY_CATEGORY = "heartbeat"
+  val HISTORY_GROUP_CATEGORY = "medical"
 
   def boot(): Future[String] = {
-    val vertx = Vertx.vertx(VertxOptions().setWorkerPoolSize(3))
+    val vertx = Vertx.vertx()
 
-    val authorizationService = AuthService(Seq(
+    val authenticationService = MockAuthenticationClient(Seq(
       SystemUser("50" -> "citizen"),
       SystemUser("47" -> "stakeholder"),
       SystemUser("46" -> "doctor")
     ))
-    val authorizationFacade = MockAuthorization(Map(
+
+    val authorizationService = MockAuthorization(Map(
       ("50", "50") -> Seq(HeartBeat.medicalDataCategory),
       ("46", "50") -> Seq(HeartBeat.medicalDataCategory)
     ))
 
     val store = InMemoryStorage[Data, String]()
-    val citizenService = CitizenService(authorizationFacade, store)
+    val citizenService = CitizenService(authorizationService, store)
 
     val parser = DataParserRegistry(new HeartBeat.HearBeatParser())
-    vertx.deployVerticleFuture(new RestCitizenVerticle(authorizationService, citizenService, parser, "50"))
+    vertx.deployVerticleFuture(new RestCitizenVerticle(authenticationService, citizenService, parser, "50"))
   }
 
   def webClient(): WebClient = {

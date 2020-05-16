@@ -5,6 +5,7 @@ import it.unibo.core.data.{Data, Feeder, Resource, Sensor}
 import it.unibo.core.microservice.vertx._
 
 trait VertxJsonParser extends DataParser[JsonObject]{
+
   override def decode(rawData: JsonObject): Option[Data] = {
     val categoryOption = rawData.getAsString("category").filter(_ == target.name)
     val timestampOption = rawData.getAsLong("timestamp")
@@ -51,3 +52,21 @@ trait VertxJsonParser extends DataParser[JsonObject]{
     case Resource(uri) => new JsonObject().put("uri", uri).put("isResource", true)
   }
 }
+
+// TODO: ....
+/*object VertxJsonParser {
+  type EncodeFunction = Any => Option[JsonObject]
+  type DecodeFunction[T] = JsonObject => Option[T]
+
+  private class FunctionalVertxJsonParser[T](decodeFunction: DecodeFunction[T]) extends VertxJsonParser {
+
+    override protected def createDataFrom(identifier: String, feeder: Feeder, timestamp: Long, json: JsonObject): Option[Data] = {
+
+      decodeFunction(json).map(content =>)
+    }
+
+    override protected def encodeStrategy(value: Any): Option[JsonObject] = ???
+
+    override def target: LeafCategory = ???
+  }
+}*/

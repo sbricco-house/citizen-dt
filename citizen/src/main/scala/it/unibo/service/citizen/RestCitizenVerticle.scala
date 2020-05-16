@@ -5,15 +5,14 @@ import io.vertx.lang.scala.json.{Json, JsonObject}
 import io.vertx.scala.ext.web.handler.BodyHandler
 import io.vertx.scala.ext.web.{Router, RoutingContext}
 import it.unibo.core.data.{Data, LeafCategory}
+import it.unibo.core.microservice._
 import it.unibo.core.microservice.vertx.{BaseVerticle, _}
 import it.unibo.core.parser.DataParser
+import it.unibo.core.utils.ServiceError.{BadParameter, MissingParameter, MissingResource, Unauthorized}
 import it.unibo.service.authentication.{AuthService, SystemUser}
 import it.unibo.service.citizen.RestCitizenVerticle._
 import it.unibo.service.citizen.middleware.AuthMiddleware
-import it.unibo.core.microservice._
-import it.unibo.core.utils.ServiceError.{BadParameter, MissingParameter, MissingResource, Unauthorized}
-
-import scala.util.{Failure, Success}
+import it.unibo.service.permission.AuthorizationService
 
 object RestCitizenVerticle {
   private val CITIZEN_ENDPOINT = s"/citizens/%s/state"
@@ -65,9 +64,10 @@ class RestCitizenVerticle(authService: AuthService,
 
   private def handlePatchState(context: RoutingContext): Unit = {
     val user = context.get(AuthMiddleware.AUTHENTICATED_USER).asInstanceOf[SystemUser]
-    val pending = context.getBodyAsJson().map(jsonToState)
+    val pending = context.getBodyAsJson()
+      .map(jsonToState)
       .map(newState => citizenService.updateState(user, citizenIdentifier, newState))
-        .getOrElse(FutureService.fail(BadParameter(s"Invalid json body")))
+      .getOrElse(FutureService.fail(BadParameter(s"Invalid json body")))
 
     pending.whenComplete {
       case Response(_) => context.response().setNoContent()
@@ -93,8 +93,9 @@ class RestCitizenVerticle(authService: AuthService,
     val user = context.get(AuthMiddleware.AUTHENTICATED_USER).asInstanceOf[SystemUser]
     val dataCategory = context.queryParams().get("data_category")
     val limit = context.queryParams().get("limit").getOrElse("1").toInt
-
-    val pending = dataCategory.map(LeafCategory(_, -1)).map(citizenService.readHistory(user, citizenIdentifier, _, limit))
+    val pending = dataCategory
+      .map(LeafCategory(_, -1))
+      .map(citizenService.readHistory(user, citizenIdentifier, _, limit))
       .getOrElse(FutureService.fail(BadParameter(s"Missing data_category query parameter")))
 
     pending.whenComplete {
@@ -111,15 +112,13 @@ class RestCitizenVerticle(authService: AuthService,
   }
 
   private def dataArrayToJson(dataSeq: Seq[Data]): JsonArray = {
-    val json = for { data <- dataSeq; encoded <- parser.encode(data) } yield encoded
-    Json.arr(json:_*)
+    Json.arr(dataSeq.flatMap(parser.encode):_*)
   }
 
   private def jsonToState(jsonObject: JsonObject): Seq[Data] = {
-    val newData = for { array <- jsonObject.getAsArray("data"); elems <- array.getAsObjectSeq } yield elems
-    newData match {
-      case Some(data) => for { elem <- data; decoded <- parser.decode(elem) } yield decoded
-      case _ => Seq()
-    }
+    jsonObject.getAsArray("data")
+      .flatMap(_.getAsObjectSeq)
+      .map(jsonData => jsonData.flatMap(parser.decode))
+      .getOrElse(Seq())
   }
 }

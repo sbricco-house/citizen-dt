@@ -15,7 +15,7 @@ import scala.concurrent.duration.Duration
 
 class RestApiTest extends AsyncFlatSpec with BeforeAndAfterAll with Matchers with ScalaFutures {
 
-  implicit val defaultPatience = PatienceConfig(timeout = Span(5, Seconds), interval = Span(100, Millis))
+  implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(5, Seconds), interval = Span(100, Millis))
   private var client: WebClient = _
 
   "Citizen state" should " be hidden by unauthenticated user" in {
@@ -66,12 +66,21 @@ class RestApiTest extends AsyncFlatSpec with BeforeAndAfterAll with Matchers wit
     }
   }
 
-  // TODO: complete history test
-/*
-  "History " should " read from citizen " in {
+  "History" should " be readable from citizen" in {
     whenReady(client.get(HISTORY_ENDPOINT)
       .putHeader(CITIZEN_AUTHORIZED_HEADER)
       .addQueryParam("data_category", HISTORY_CATEGORY)
+      .addQueryParam("limit", HISTORY_LIMIT.toString).sendFuture())
+    {
+      result => result.statusCode() shouldBe 200; result.bodyAsJsonArray().get shouldBe Useful.postState.getJsonArray("data")
+    }
+  }
+
+  //"History" should " be readable only for a valid data category"
+  "History" should " read with a group of category" in {
+    whenReady(client.get(HISTORY_ENDPOINT)
+      .putHeader(CITIZEN_AUTHORIZED_HEADER)
+      .addQueryParam("data_category", HISTORY_GROUP_CATEGORY)
       .addQueryParam("limit", HISTORY_LIMIT.toString).sendFuture())
     {
       result => result.statusCode() shouldBe 200; result.bodyAsJsonArray().get shouldBe Useful.postState.getJsonArray("data")
@@ -83,7 +92,7 @@ class RestApiTest extends AsyncFlatSpec with BeforeAndAfterAll with Matchers wit
     whenReady(client.get(s"$HISTORY_ENDPOINT/$dataIdentifier").putHeader(CITIZEN_AUTHORIZED_HEADER).sendFuture()) {
       result => result.statusCode() shouldBe 200
     }
-  }*/
+  }
 
 
 
