@@ -30,8 +30,6 @@ trait Storage[D, ID] {
    */
   def find(policy : D => Boolean) : Try[Option[D]]
 
-  def findMany(policy : D => Boolean) : Try[Seq[D]]
-
   def findMany(policy : D => Boolean, maxElements: Int) : Try[Seq[D]]
 }
 

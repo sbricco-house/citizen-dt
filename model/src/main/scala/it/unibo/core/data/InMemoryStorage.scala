@@ -19,10 +19,7 @@ class InMemoryStorage[D, ID] private() extends Storage [D, ID]{
     Success(memory.values.find(policy))
   }
 
-
-  override def findMany(policy: D => Boolean): Try[Seq[D]] = findMany(policy, InMemoryStorage.NO_LIMIT)
-
-  override def findMany(policy: D => Boolean, maxElements: Int): Try[Seq[D]] = {
+  override def findMany(policy: D => Boolean, maxElements: Int = InMemoryStorage.NO_LIMIT): Try[Seq[D]] = {
     Success(memory.values.filter(policy).take(maxElements).toSeq)
   }
 }
