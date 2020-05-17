@@ -9,52 +9,53 @@ import it.unibo.core.microservice._
 import it.unibo.core.microservice.vertx.{BaseVerticle, _}
 import it.unibo.core.parser.DataParser
 import it.unibo.core.utils.ServiceError.{BadParameter, MissingParameter, MissingResource, Unauthorized}
-import it.unibo.service.authentication.{AuthService, SystemUser}
-import it.unibo.service.citizen.RestCitizenVerticle._
-import it.unibo.service.citizen.middleware.AuthMiddleware
-import it.unibo.service.permission.AuthorizationService
+import it.unibo.service.citizen.middleware.UserMiddleware
 
 object RestCitizenVerticle {
   private val CITIZEN_ENDPOINT = s"/citizens/%s/state"
   private val HISTORY_ENDPOINT = s"/citizens/%s/history"
+
+  implicit class RichContext(contet: RoutingContext) {
+    def getString(key: String): String = contet.get[String](key)
+  }
 }
 
-class RestCitizenVerticle(authService: AuthService,
-                          citizenService: CitizenService,
+class RestCitizenVerticle(citizenService: CitizenService,
                           parser : DataParser[JsonObject],
                           citizenIdentifier: String, // could be a UUID or integer, or something else
                           port : Int = 8080,
                           host : String = "localhost") extends BaseVerticle(port, host) {
-
+  import RestCitizenVerticle._
   private val citizenStateEndpoint = CITIZEN_ENDPOINT.format(citizenIdentifier)
   private val historyEndpoint = HISTORY_ENDPOINT.format(citizenIdentifier)
 
   override def createRouter(): Router = {
     val router = Router.router(vertx)
-    val authenticationMiddleware = AuthMiddleware(authService)
+    val userMiddleware = UserMiddleware()
 
     router.get(citizenStateEndpoint)
-        .handler(authenticationMiddleware)
+        .handler(userMiddleware)
         .handler(handleGetState)
 
     router.patch(citizenStateEndpoint)
         .handler(BodyHandler.create())
-        .handler(authenticationMiddleware)
+        .handler(userMiddleware)
         .handler(handlePatchState)
 
     router.get(s"$historyEndpoint")
-        .handler(authenticationMiddleware)
+        .handler(userMiddleware)
         .handler(handleGetHistoryDataFromCategory)
 
     router.get(s"$historyEndpoint/:data_id")
-        .handler(authenticationMiddleware)
+        .handler(userMiddleware)
         .handler(handleGetHistoryData)
 
     router
   }
 
   private def handleGetState(context: RoutingContext): Unit = {
-    val user = context.get(AuthMiddleware.AUTHENTICATED_USER).asInstanceOf[SystemUser]
+    val user = context.getString(UserMiddleware.AUTHENTICATED_USER)
+
     citizenService.readState(user, citizenIdentifier).whenComplete {
       case Response(data) => context.response().setOk(stateToJson(data))
       case Fail(Unauthorized(m)) => context.response().setForbidden(m)
@@ -63,7 +64,7 @@ class RestCitizenVerticle(authService: AuthService,
   }
 
   private def handlePatchState(context: RoutingContext): Unit = {
-    val user = context.get(AuthMiddleware.AUTHENTICATED_USER).asInstanceOf[SystemUser]
+    val user = context.getString(UserMiddleware.AUTHENTICATED_USER)
     val pending = context.getBodyAsJson()
       .map(jsonToState)
       .map(newState => citizenService.updateState(user, citizenIdentifier, newState))
@@ -78,11 +79,11 @@ class RestCitizenVerticle(authService: AuthService,
   }
 
   private def handleGetHistoryData(context: RoutingContext): Unit = {
-    val user = context.get(AuthMiddleware.AUTHENTICATED_USER).asInstanceOf[SystemUser]
+    val user = context.getString(UserMiddleware.AUTHENTICATED_USER)
     val dataIdentifier = context.pathParam("data_id").get
 
     citizenService.readHistoryData(user, citizenIdentifier, dataIdentifier).whenComplete {
-      case Response(Some(data)) => context.response().setOk(parser.encode(data).get)
+      case Response(data) => context.response().setOk(parser.encode(data).get)
       case Fail(MissingResource(m)) => context.response().setNotFound(m)
       case Fail(Unauthorized(m)) => context.response().setForbidden(m)
       case _ => context.response().setInternalError()
@@ -90,7 +91,7 @@ class RestCitizenVerticle(authService: AuthService,
   }
 
   private def handleGetHistoryDataFromCategory(context: RoutingContext): Unit = {
-    val user = context.get(AuthMiddleware.AUTHENTICATED_USER).asInstanceOf[SystemUser]
+    val user = context.getString(UserMiddleware.AUTHENTICATED_USER)
     val dataCategory = context.queryParams().get("data_category")
     val limit = context.queryParams().get("limit").getOrElse("1").toInt
     val pending = dataCategory

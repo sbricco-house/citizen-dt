@@ -37,10 +37,10 @@ object RestBootstrap {
     ))
 
     val store = InMemoryStorage[Data, String]()
-    val citizenService = CitizenService(authorizationService, store)
+    val citizenService = CitizenService(authorizationService, authenticationService, store)
 
     val parser = DataParserRegistry(new HeartBeat.HearBeatParser())
-    vertx.deployVerticleFuture(new RestCitizenVerticle(authenticationService, citizenService, parser, "50"))
+    vertx.deployVerticleFuture(new RestCitizenVerticle(citizenService, parser, "50"))
   }
 
   def webClient(): WebClient = {

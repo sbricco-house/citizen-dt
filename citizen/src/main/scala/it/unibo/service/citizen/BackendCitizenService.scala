@@ -2,12 +2,12 @@ package it.unibo.service.citizen
 
 import java.util.UUID
 
-import it.unibo.core.data.{Data, DataCategory, GroupCategory, LeafCategory, Storage}
+import it.unibo.core.data.{Data, DataCategory, Storage}
 import it.unibo.core.dt.History.History
 import it.unibo.core.dt.State
 import it.unibo.core.microservice.FutureService
 import it.unibo.core.utils.ServiceError.{MissingParameter, MissingResource, Unauthorized}
-import it.unibo.service.authentication.SystemUser
+import it.unibo.service.authentication.{AuthService, SystemUser}
 import it.unibo.service.permission.AuthorizationService
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
@@ -21,36 +21,38 @@ import scala.util.Success
  * @param state Current state of citizen, the default is empty.
  */
 class BackendCitizenService(authorizationService: AuthorizationService,
+                            authenticationService : AuthService,
                             dataStorage : Storage[Data, String],
                             private var state: State = State.empty) extends CitizenService {
+  self =>
+  private var channels : Map[SourceChannel, SystemUser] = Map.empty
 
   implicit val executionContext: ExecutionContextExecutor = ExecutionContext.global
 
-  override def readState(who: SystemUser, citizenId: String): FutureService[Seq[Data]] = {
-    authorizationService.authorizedReadCategories(who.identifier, citizenId)
-      .map(categories => state.get(categories))
+  override def readState(who: String, citizenId: String): FutureService[Seq[Data]] = {
+    authenticationService.getAuthenticatedUser(who).flatMap(user => readState(user, citizenId))
   }
 
-  override def updateState(who: SystemUser, citizenId: String, data: Seq[Data]): FutureService[Seq[Data]] = {
-    data.map(_.category) match {
-      case Nil => FutureService.fail(MissingParameter(s"Invalid set of data"))
-      case categoriesToUpdate => authorizationService.authorizedWriteCategories(who.identifier, citizenId)
-        .flatMap {
-          case categories if categories.flatten == categoriesToUpdate.flatten => FutureService.response(save(data))
-          case _ => FutureService.fail(Unauthorized())
-        }
-    }
+  override def updateState(who: String, citizenId: String, data: Seq[Data]): FutureService[Seq[Data]] = {
+    authenticationService.getAuthenticatedUser(who).flatMap(user => updateState(user, citizenId, data))
   }
 
-  override def readHistory(who: SystemUser, citizenId: String, dataCategory: DataCategory, maxSize: Int): FutureService[History] = {
-    authorizationService.authorizeRead(who.identifier, citizenId, dataCategory)
+  override def readHistory(who: String, citizenId: String, dataCategory: DataCategory, maxSize: Int): FutureService[History] = {
+    authenticationService.getAuthenticatedUser(who)
+      .flatMap(user => authorizationService.authorizeRead(user.identifier, citizenId, dataCategory))
       .map(category => findHistoryInStorage(category, maxSize))
   }
 
-  override def readHistoryData(who: SystemUser, citizenId: String, dataIdentifier: String): FutureService[Option[Data]] = {
-    findDataInStorage(dataIdentifier)
-      .flatMap(data => authorizationService.authorizeRead(who.identifier, citizenId, data.category)
-      .map(_ => Some(data)))
+  override def readHistoryData(who: String, citizenId: String, dataIdentifier: String): FutureService[Data] = {
+    authenticationService.getAuthenticatedUser(who)
+        .map(user => (user, findDataInStorage(dataIdentifier)))
+        .flatMap {
+          case (user, pendingData) => pendingData.flatMap {
+            data => {
+              authorizationService.authorizeRead(user.identifier, citizenId, data.category).map(_ => data)
+            }
+          }
+        }
   }
 
   // TODO: TRY TO LAUNCH EXCEPTION INSIDE FIND MANY
@@ -65,14 +67,53 @@ class BackendCitizenService(authorizationService: AuthorizationService,
     dataStorage.get(dataIdentifier) match {
       case Success(Some(value)) => FutureService.response(value)
       case Success(None) => FutureService.fail(MissingResource(s"Data $dataIdentifier not found"))
+      case _ => FutureService.fail()
     }
   }
 
   private def save(dataSequence: Seq[Data]): Seq[Data] = {
+    //TODO FIX
+    this.channels.keys.foreach(_.emit(dataSequence))
     dataSequence.foreach { data =>
       dataStorage.store(UUID.randomUUID().toString, data)
       state = state.update(data)
     }
     dataSequence
+  }
+
+  protected def updateState(who : SystemUser, citizenId : String, data : Seq[Data]) : FutureService[Seq[Data]] ={
+    data.map(_.category) match {
+      case Nil => FutureService.fail(MissingParameter(s"Invalid set of data"))
+      case categoriesToUpdate => authorizationService.authorizedWriteCategories(who.identifier, citizenId)
+        .flatMap {
+          case categories if categories.flatten == categoriesToUpdate.flatten => FutureService.response(save(data))
+          case _ => FutureService.fail(Unauthorized())
+        }
+    }
+  }
+
+  protected def readState(who : SystemUser, citizenId : String) : FutureService[Seq[Data]] = {
+    authorizationService.authorizedReadCategories(who.identifier, citizenId)
+      .map(categories => state.get(categories))
+  }
+
+  private class SourceImpl(callback : Data => Unit, user : SystemUser, citizen : String, categories : Seq[DataCategory]) extends SourceChannel {
+    self.channels += this -> user
+
+    override def emit(data: Seq[Data]): Unit = data foreach callback
+
+    override def updateState(data: Seq[Data]): FutureService[Seq[Data]] = self.updateState(user, citizen, data)
+
+    override def readState(): FutureService[Seq[Data]] = self.readState(user, citizen)
+
+    override def close(): Unit = self.channels -= this
+  }
+
+  override def observeState(who: String, citizenId: String, callback: Data => Unit): FutureService[Channel] = {
+    authenticationService.getAuthenticatedUser(who)
+      .flatMap(user => {
+        authorizationService.authorizedReadCategories(user.identifier, citizenId)
+          .map(categories => new SourceImpl(callback, user, citizenId, categories))
+      })
   }
 }

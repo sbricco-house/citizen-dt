@@ -20,7 +20,7 @@ class RestApiTest extends AsyncFlatSpec with BeforeAndAfterAll with Matchers wit
 
   "Citizen state" should " be hidden by unauthenticated user" in {
     whenReady(client.get(STATE_ENDPOINT).sendFuture()) {
-      result => result.statusCode() shouldBe 401
+      result => result.statusCode() shouldBe 400
     }
   }
 
