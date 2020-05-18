@@ -1,11 +1,10 @@
 package it.unibo.service.citizen
 
-import java.io.{FileOutputStream, PrintStream}
 import java.util.concurrent.TimeUnit
 
 import io.vertx.core.json.JsonObject
 import io.vertx.scala.ext.web.client.WebClient
-import it.unibo.service.citizen.RestBootstrap._
+import it.unibo.service.citizen.HttpBootstrap._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{AsyncFlatSpec, BeforeAndAfterAll, Matchers}
@@ -137,8 +136,8 @@ class RestApiTest extends AsyncFlatSpec with BeforeAndAfterAll with Matchers wit
   }
 
   override def beforeAll(): Unit = {
-    Await.result(RestBootstrap.boot(), Duration(5000, TimeUnit.MILLISECONDS))
-    client = RestBootstrap.webClient()
+    Await.result(HttpBootstrap.boot(), Duration(5000, TimeUnit.MILLISECONDS))
+    client = HttpBootstrap.webClient()
   }
 
   override def afterAll(): Unit = {

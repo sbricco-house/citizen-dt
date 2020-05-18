@@ -1,11 +1,24 @@
 package it.unibo.core.microservice
 
+import io.vertx.core.buffer.Buffer
+import io.vertx.lang.scala.json.{Json, JsonArray, JsonObject}
+import io.vertx.scala.core.http.{HttpServerResponse, ServerWebSocket}
 import io.vertx.lang.scala.json.{JsonArray, JsonObject}
 import io.vertx.scala.core.http.HttpServerResponse
 import it.unibo.core.protocol.ServiceResponseMapping
 
 package object vertx {
+  object JsonConversion {
+    def objectFromString(buffer : String) : Option[JsonObject] = tryOrNone(Json.fromObjectString(buffer))
+
+    protected[vertx] def tryOrNone[E](some : => E) : Option[E] = try {
+      Some(some)
+    } catch {
+      case e : Exception => None
+    }
+  }
   implicit class RichJson(json : JsonObject) {
+    import JsonConversion._
     def getAsString(s : String) : Option[String] = if(json.containsKey(s)) {
       tryOrNone { json.getString(s) }
     } else {
@@ -41,12 +54,9 @@ package object vertx {
     } else {
       None
     }
-    private def tryOrNone[E](some : => E) : Option[E] = try {
-      Some(some)
-    } catch {
-      case e : Exception => None
-    }
+
   }
+
   implicit class RichJsonArray(json : JsonArray) {
     def getAsObjectSeq : Option[Seq[JsonObject]] = {
       val elems = json.size() - 1
@@ -68,19 +78,6 @@ package object vertx {
       response.setStatusCode(statusCode).end(body)
     }
 
-    /*
-    def setSuccessOrDefault[T, C](response: ServiceResponse[T], serializeBody: T => (Int, String)) = {
-      val httpResponse = response match {
-        case Response(content: T) => serializeBody(content)
-        case other => ServiceResponseMapping.serviceResponseToHttp(other)
-      }
-      setResponse(httpResponse)
-    }
-
-    def setResponse(httpResponse: (Int, String)): Unit = {
-      response.setStatusCode(httpResponse._1).end(httpResponse._2)
-    }*/
-
     def setInternalError(message: String = "Internal Error") = setResponse(500, message)
     def setNotFound(message: String = "Not Found") = setResponse(400, message)
     def setForbidden(message: String = "Forbidden") = setResponse(403, message)
@@ -92,5 +89,14 @@ package object vertx {
     def setOk (obj: JsonObject) = setResponse(200, obj)
     def setOk (obj: JsonArray) = setResponse(200, obj.encode())
     def setNoContent() = setResponse(204, "")
+  }
+
+  implicit class RichServerWebSocket(webSocket : ServerWebSocket) {
+    def rejectInternalError() = webSocket.reject(500)
+    def rejectForbidden() = webSocket.reject(403)
+    def rejectNotAuthorized() = webSocket.reject(401)
+    def rejectBadContent() = webSocket.reject(400)
+    def writeTextJsonObject(json : JsonObject) = webSocket.writeTextMessage(json.encode())
+    def writeTextJsonArray(json : JsonArray) = webSocket.writeTextMessage(json.encode())
   }
 }
