@@ -3,3 +3,4 @@ install: true
 branches:
   only:
     - master
+    - develop
