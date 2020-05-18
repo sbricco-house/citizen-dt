@@ -8,6 +8,7 @@ import it.unibo.core.data.{Data, LeafCategory}
 import it.unibo.core.microservice._
 import it.unibo.core.microservice.vertx.{BaseVerticle, _}
 import it.unibo.core.parser.DataParser
+import it.unibo.core.registry.DataCategoryRegistry
 import it.unibo.core.utils.ServiceError.{BadParameter, MissingParameter, MissingResource, Unauthorized}
 import it.unibo.service.citizen.middleware.UserMiddleware
 
@@ -22,9 +23,11 @@ object RestCitizenVerticle {
 
 class RestCitizenVerticle(citizenService: CitizenService,
                           parser : DataParser[JsonObject],
+                          dataCategoryRegistry: DataCategoryRegistry,
                           citizenIdentifier: String, // could be a UUID or integer, or something else
                           port : Int = 8080,
                           host : String = "localhost") extends BaseVerticle(port, host) {
+
   import RestCitizenVerticle._
   private val citizenStateEndpoint = CITIZEN_ENDPOINT.format(citizenIdentifier)
   private val historyEndpoint = HISTORY_ENDPOINT.format(citizenIdentifier)
@@ -95,9 +98,9 @@ class RestCitizenVerticle(citizenService: CitizenService,
     val dataCategory = context.queryParams().get("data_category")
     val limit = context.queryParams().get("limit").getOrElse("1").toInt
     val pending = dataCategory
-      .map(LeafCategory(_, -1))
-      .map(citizenService.readHistory(user, citizenIdentifier, _, limit))
-      .getOrElse(FutureService.fail(BadParameter(s"Missing data_category query parameter")))
+        .flatMap(dataCategoryRegistry.get)
+        .map(citizenService.readHistory(user, citizenIdentifier, _, limit))
+        .getOrElse(FutureService.fail(BadParameter(s"Missing or invalid data_category query parameter")))
 
     pending.whenComplete {
       case Response(value) => context.response().setOk(dataArrayToJson(value))

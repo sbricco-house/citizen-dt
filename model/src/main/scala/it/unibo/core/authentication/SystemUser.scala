@@ -1,14 +1,8 @@
-package it.unibo.service.authentication
-
-import it.unibo.core.microservice.FutureService
+package it.unibo.core.authentication
 
 trait SystemUser {
   def identifier: String
   def role: String
-}
-
-trait AuthService {
-  def getAuthenticatedUser(identifier: String) : FutureService[SystemUser]
 }
 
 object SystemUser {

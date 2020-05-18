@@ -3,7 +3,7 @@ package it.unibo.service.citizen
 import it.unibo.core.data._
 import it.unibo.core.dt.History.History
 import it.unibo.core.microservice.FutureService
-import it.unibo.service.authentication.{AuthService, SystemUser}
+import it.unibo.service.authentication.{AuthenticationService}
 import it.unibo.service.permission.AuthorizationService
 
 /**
@@ -33,13 +33,14 @@ object CitizenService {
 
   /**
    * Create the default BackendService
+   * @param authenticationService Service that provide authentication
    * @param authorizationService Service that provide authorization check
    * @param dataStorage Storage where save the citizen data
    * @return A Citizen Service backend instance
    */
-  def apply(authorizationService: AuthorizationService,
-            authenticationService : AuthService,
-            dataStorage: Storage[Data, String]): CitizenService = new BackendCitizenService(authorizationService, authenticationService, dataStorage)
+  def apply(authenticationService : AuthenticationService,
+            authorizationService: AuthorizationService,
+            dataStorage: Storage[Data, String]): CitizenService = new BackendCitizenService(authenticationService, authorizationService, dataStorage)
 
   // the same interface could be used for create the client counterpart. Useful for test the backend.
   // e.g. a client could use vertx http client, but expose the same interface to the user.

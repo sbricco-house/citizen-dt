@@ -1,12 +1,13 @@
 package it.unibo.service.citizen
 
 import io.vertx.lang.scala.json.{Json, JsonObject}
-import io.vertx.scala.core.{Vertx, VertxOptions}
+import io.vertx.scala.core.Vertx
 import io.vertx.scala.ext.web.client.{HttpRequest, WebClient, WebClientOptions}
+import it.unibo.core.authentication.SystemUser
 import it.unibo.core.data._
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.{DataParserRegistry, VertxJsonParser}
-import it.unibo.service.authentication.{AuthService, AuthenticationVerticle, SystemUser}
+import it.unibo.core.registry.DataCategoryRegistry
 import it.unibo.service.citizen.authentication.MockAuthenticationClient
 import it.unibo.service.permission.MockAuthorization
 
@@ -25,6 +26,10 @@ object RestBootstrap {
   def boot(): Future[String] = {
     val vertx = Vertx.vertx()
 
+    val categoriesRegistry = DataCategoryRegistry()
+    categoriesRegistry.register(Categories.medicalDataCategory)
+    categoriesRegistry.register(Categories.bloodPressureCategory)
+
     val authenticationService = MockAuthenticationClient(Seq(
       SystemUser("50" -> "citizen"),
       SystemUser("47" -> "stakeholder"),
@@ -32,15 +37,15 @@ object RestBootstrap {
     ))
 
     val authorizationService = MockAuthorization(Map(
-      ("50", "50") -> Seq(HeartBeat.medicalDataCategory),
-      ("46", "50") -> Seq(HeartBeat.medicalDataCategory)
+      ("50", "50") -> Seq(Categories.medicalDataCategory),
+      ("46", "50") -> Seq(Categories.medicalDataCategory, Categories.bloodPressureCategory)
     ))
 
     val store = InMemoryStorage[Data, String]()
-    val citizenService = CitizenService(authorizationService, authenticationService, store)
+    val citizenService = CitizenService(authenticationService, authorizationService, store)
 
-    val parser = DataParserRegistry(new HeartBeat.HearBeatParser())
-    vertx.deployVerticleFuture(new RestCitizenVerticle(citizenService, parser, "50"))
+    val parser = DataParserRegistry(new Categories.HearBeatParser())
+    vertx.deployVerticleFuture(new RestCitizenVerticle(citizenService, parser, categoriesRegistry, "50"))
   }
 
   def webClient(): WebClient = {
@@ -53,12 +58,13 @@ object RestBootstrap {
   }
 }
 
-object HeartBeat {
-  val category: LeafCategory = LeafCategory("heartbeat", 100)
-  val medicalDataCategory = GroupCategory("medical", Set(category))
+object Categories {
+  val hearBeatCategory = LeafCategory("heartbeat", 100)
+  val bloodPressureCategory = LeafCategory("blood_pressure", 100)
+  val medicalDataCategory = GroupCategory("medical", Set(hearBeatCategory, bloodPressureCategory))
 
   case class HeartBeatData(identifier: String, timestamp: Long, value: Double, feeder: Feeder) extends Data {
-    override def category: LeafCategory = HeartBeat.category
+    override def category: LeafCategory = Categories.hearBeatCategory
   }
   class HearBeatParser extends VertxJsonParser {
     override protected def createDataFrom(identifier: String, feeder: Feeder, timestamp: Long, json: JsonObject): Option[Data] = {
@@ -67,6 +73,6 @@ object HeartBeat {
     override protected def encodeStrategy(value: Any): Option[JsonObject] = value match {
       case x: Double =>Some(Json.emptyObj().put("value", x))
     }
-    override def target: LeafCategory = category
+    override def target: LeafCategory = hearBeatCategory
   }
 }

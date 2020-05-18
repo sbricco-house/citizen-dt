@@ -4,9 +4,10 @@ import io.vertx.lang.scala.VertxExecutionContext
 import io.vertx.lang.scala.json.JsonObject
 import io.vertx.scala.core.Vertx
 import io.vertx.scala.ext.web.client.WebClient
+import it.unibo.core.authentication.SystemUser
 import it.unibo.core.microservice.{Fail, FutureService, Response}
 import it.unibo.core.utils.ServiceError.Unauthorized
-import it.unibo.service.authentication.{AuthService, SystemUser}
+import it.unibo.service.authentication.AuthenticationService
 import it.unibo.service.citizen.authentication.AuthenticationClient._
 
 import scala.concurrent.ExecutionContext
@@ -15,7 +16,7 @@ object AuthenticationClient {
   val VERIFY = s"/verify"
 }
 
-class AuthenticationClient(serviceUri: String) extends AuthService {
+class AuthenticationClient(serviceUri: String) extends AuthenticationService {
 
   private val vertx = Vertx.vertx()
   private val client = WebClient.create(vertx)

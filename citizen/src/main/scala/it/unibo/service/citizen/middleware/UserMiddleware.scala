@@ -6,9 +6,10 @@ import io.vertx.scala.ext.web.RoutingContext
 import it.unibo.core.microservice.{Fail, FutureService, Response}
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.utils.ServiceError.Unauthorized
-import it.unibo.service.authentication.AuthService
+import it.unibo.service.authentication.AuthenticationService
 
 import scala.util.Success
+import UserMiddleware._
 
 object UserMiddleware {
   private val AUTHORIZATION_HEADER = "Authorization"
@@ -18,8 +19,6 @@ object UserMiddleware {
 
 class UserMiddleware private() extends Handler[RoutingContext] {
   override def handle(context: RoutingContext): Unit = {
-    import UserMiddleware._
-    implicit val executionContext = VertxExecutionContext(context.vertx().getOrCreateContext())
 
     val pending = context.request().headers().get(AUTHORIZATION_HEADER)
     pending match  {

@@ -26,5 +26,11 @@ object DataCategoryOps {
     case value : LeafCategory => Set(value)
     case GroupCategory(name, categories) => categories.flatMap(allChild)
   }
+  def contains(category1: DataCategory, category2: DataCategory): Option[DataCategory] = (category1, category2) match {
+    case (GroupCategory(_, set), LeafCategory(name, _)) => set find(_.name == name)
+    case (GroupCategory(name1, set1), GroupCategory(name2, _)) if name1 == name2 => Some(GroupCategory(name1, set1))
+    case (LeafCategory(name1, ttl), LeafCategory(name2, _)) if name1 == name2 => Some(LeafCategory(name1, ttl))
+    case _ => None
+  }
 }
 

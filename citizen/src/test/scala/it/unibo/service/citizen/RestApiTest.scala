@@ -94,8 +94,6 @@ class RestApiTest extends AsyncFlatSpec with BeforeAndAfterAll with Matchers wit
     }
   }
 
-
-
   override def beforeAll(): Unit = {
     Console.setOut(new PrintStream(new FileOutputStream("console.txt")))
     Await.result(RestBootstrap.boot(), Duration(5000, TimeUnit.MILLISECONDS))

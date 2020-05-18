@@ -2,12 +2,13 @@ package it.unibo.service.citizen
 
 import java.util.UUID
 
-import it.unibo.core.data.{Data, DataCategory, Storage}
+import it.unibo.core.authentication.SystemUser
+import it.unibo.core.data.{Data, DataCategory, DataCategoryOps, LeafCategory, Storage}
 import it.unibo.core.dt.History.History
 import it.unibo.core.dt.State
 import it.unibo.core.microservice.FutureService
 import it.unibo.core.utils.ServiceError.{MissingParameter, MissingResource, Unauthorized}
-import it.unibo.service.authentication.{AuthService, SystemUser}
+import it.unibo.service.authentication.AuthenticationService
 import it.unibo.service.permission.AuthorizationService
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
@@ -16,15 +17,17 @@ import scala.util.Success
 /**
  * Implementation of backend CitizenService
  *
+ * @param authenticationService Service for authenticate the user of system
  * @param authorizationService Service for authorize the system user to do some action
  * @param dataStorage Storage where save the data of citizen
  * @param state Current state of citizen, the default is empty.
  */
-class BackendCitizenService(authorizationService: AuthorizationService,
-                            authenticationService : AuthService,
+class BackendCitizenService(authenticationService : AuthenticationService,
+                            authorizationService: AuthorizationService,
                             dataStorage : Storage[Data, String],
                             private var state: State = State.empty) extends CitizenService {
   self =>
+
   private var channels : Map[SourceChannel, SystemUser] = Map.empty
 
   implicit val executionContext: ExecutionContextExecutor = ExecutionContext.global
@@ -39,7 +42,7 @@ class BackendCitizenService(authorizationService: AuthorizationService,
 
   override def readHistory(who: String, citizenId: String, dataCategory: DataCategory, maxSize: Int): FutureService[History] = {
     authenticationService.getAuthenticatedUser(who)
-      .flatMap(user => authorizationService.authorizeRead(user.identifier, citizenId, dataCategory))
+      .flatMap(user => authorizationService.authorizeRead(user, citizenId, dataCategory))
       .map(category => findHistoryInStorage(category, maxSize))
   }
 
@@ -49,15 +52,14 @@ class BackendCitizenService(authorizationService: AuthorizationService,
         .flatMap {
           case (user, pendingData) => pendingData.flatMap {
             data => {
-              authorizationService.authorizeRead(user.identifier, citizenId, data.category).map(_ => data)
+              authorizationService.authorizeRead(user, citizenId, data.category).map(_ => data)
             }
           }
         }
   }
 
-  // TODO: TRY TO LAUNCH EXCEPTION INSIDE FIND MANY
   private def findHistoryInStorage(category: DataCategory, maxSize: Int): Seq[Data] = {
-    dataStorage.findMany(_.category == category, maxSize) match {
+    dataStorage.findMany(data => DataCategoryOps.contains(category, data.category).isDefined, maxSize) match {
       case Success(value) => value
       case _ => Seq()
     }
@@ -84,16 +86,23 @@ class BackendCitizenService(authorizationService: AuthorizationService,
   protected def updateState(who : SystemUser, citizenId : String, data : Seq[Data]) : FutureService[Seq[Data]] ={
     data.map(_.category) match {
       case Nil => FutureService.fail(MissingParameter(s"Invalid set of data"))
-      case categoriesToUpdate => authorizationService.authorizedWriteCategories(who.identifier, citizenId)
+      case categoriesToUpdate => authorizationService.authorizedWriteCategories(who, citizen = citizenId)
         .flatMap {
-          case categories if categories.flatten == categoriesToUpdate.flatten => FutureService.response(save(data))
+          case categories if checkPermission(categoriesToUpdate, categories) == categoriesToUpdate => FutureService.response(save(data))
           case _ => FutureService.fail(Unauthorized())
         }
     }
   }
 
+  // TODO: move from here
+  private def checkPermission(categoriesToUpdate: Seq[LeafCategory], authorizedCategories: Seq[DataCategory]): Seq[LeafCategory] = {
+    categoriesToUpdate.filter {
+      leaf => authorizedCategories.exists(DataCategoryOps.allChild(_).contains(leaf))
+    }
+  }
+
   protected def readState(who : SystemUser, citizenId : String) : FutureService[Seq[Data]] = {
-    authorizationService.authorizedReadCategories(who.identifier, citizenId)
+    authorizationService.authorizedReadCategories(who, citizen = citizenId)
       .map(categories => state.get(categories))
   }
 
@@ -112,7 +121,7 @@ class BackendCitizenService(authorizationService: AuthorizationService,
   override def observeState(who: String, citizenId: String, callback: Data => Unit): FutureService[Channel] = {
     authenticationService.getAuthenticatedUser(who)
       .flatMap(user => {
-        authorizationService.authorizedReadCategories(user.identifier, citizenId)
+        authorizationService.authorizedReadCategories(user, citizenId)
           .map(categories => new SourceImpl(callback, user, citizenId, categories))
       })
   }

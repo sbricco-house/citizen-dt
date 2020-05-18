@@ -1,13 +1,14 @@
 package it.unibo.service.authentication
 import io.vertx.core.json.JsonObject
 import io.vertx.scala.ext.auth.jwt.JWTAuth
+import it.unibo.core.authentication.SystemUser
 import it.unibo.core.data.Storage
 import it.unibo.core.microservice.{FutureService, Response}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class VertxJwtAuthService(val provider: JWTAuth,
-                          val storage: Storage[String, SystemUser]) extends AuthService {
+class VertxJwtAuthenticationService(val provider: JWTAuth,
+                                    val storage: Storage[String, SystemUser]) extends AuthenticationService {
 
   private implicit val executionContext = ExecutionContext.global
 

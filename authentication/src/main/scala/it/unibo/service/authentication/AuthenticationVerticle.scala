@@ -3,6 +3,7 @@ package it.unibo.service.authentication
 import io.vertx.lang.scala.json.JsonObject
 import io.vertx.scala.ext.auth.jwt.JWTAuth
 import io.vertx.scala.ext.web.{Router, RoutingContext}
+import it.unibo.core.authentication.SystemUser
 import it.unibo.core.microservice.vertx.BaseVerticle
 import it.unibo.core.microservice.vertx._
 
