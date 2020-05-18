@@ -1,16 +1,14 @@
 package it.unibo.service.citizen
 import java.util.concurrent.TimeUnit
 
-import io.vertx.core.http.{UpgradeRejectedException, WebsocketRejectedException}
-import io.vertx.scala.core.http.{HttpClient, WebSocket, WebSocketConnectOptions}
-import io.vertx.scala.ext.web.client.WebClient
-import it.unibo.service.citizen.HttpBootstrap.STATE_ENDPOINT
-import org.scalatest.flatspec.AsyncFlatSpec
-import org.scalatest.{Assertion, BeforeAndAfterAll, FlatSpec}
+import io.vertx.scala.core.http.HttpClient
+import it.unibo.service.citizen.HttpBootstrap.{STATE_ENDPOINT, _}
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
-import HttpBootstrap._
+
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success}

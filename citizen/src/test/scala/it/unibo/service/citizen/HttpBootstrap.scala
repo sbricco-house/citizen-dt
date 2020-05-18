@@ -70,16 +70,16 @@ object HttpBootstrap {
     def putHeader(value: (String, String)): HttpRequest[T] = request.putHeader(value._1, value._2)
   }
 
-}
-
-object MockSystemUser {
-  def apply(name: String, identifier: String, role: String): SystemUser = SystemUser("", name, "", identifier, role)
+  def wsOptions(uri : String) : WebSocketConnectOptions = WebSocketConnectOptions().setURI(uri)
 
   implicit class RichWebsocketOptions[T](request: WebSocketConnectOptions) {
     def putHeader(value: (String, String)): WebSocketConnectOptions = request.addHeader(value._1, value._2)
   }
 
-  def wsOptions(uri : String) : WebSocketConnectOptions = WebSocketConnectOptions().setURI(uri)
+}
+
+object MockSystemUser {
+  def apply(name: String, identifier: String, role: String): SystemUser = SystemUser("", name, "", identifier, role)
 }
 
 object Categories {
