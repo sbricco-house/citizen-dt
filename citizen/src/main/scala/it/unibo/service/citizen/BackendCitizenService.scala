@@ -12,7 +12,7 @@ import it.unibo.service.authentication.AuthenticationService
 import it.unibo.service.permission.AuthorizationService
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
-import scala.util.Success
+import scala.util.{Failure, Success}
 
 /**
  * Implementation of backend CitizenService
@@ -76,11 +76,10 @@ class BackendCitizenService(authenticationService : AuthenticationService,
   private def save(dataSequence: Seq[Data]): Seq[Data] = {
     //TODO FIX
     this.channels.keys.foreach(_.emit(dataSequence))
-    dataSequence.foreach { data =>
-      dataStorage.store(UUID.randomUUID().toString, data)
-      state = state.update(data)
-    }
-    dataSequence
+    val savedData = dataSequence.map(data => dataStorage.store(data.identifier, data))
+        .filter(result => result.isSuccess).map(_.get)
+    savedData.foreach(data => state = state.update(data))
+    savedData
   }
 
   protected def updateState(who : SystemUser, citizenId : String, data : Seq[Data]) : FutureService[Seq[Data]] ={

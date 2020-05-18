@@ -1,5 +1,7 @@
 package it.unibo.service.citizen
 
+import java.util.UUID
+
 import io.vertx.core.json.JsonArray
 import io.vertx.lang.scala.json.{Json, JsonObject}
 import io.vertx.scala.ext.web.handler.BodyHandler
@@ -74,7 +76,7 @@ class RestCitizenVerticle(citizenService: CitizenService,
       .getOrElse(FutureService.fail(BadParameter(s"Invalid json body")))
 
     pending.whenComplete {
-      case Response(_) => context.response().setNoContent()
+      case Response(newData) => context.response().setCreated(stateToJson(newData))
       case Fail(MissingParameter(m)) => context.response().setBadRequest(m)
       case Fail(Unauthorized(m)) => context.response().setForbidden(m)
       case _ => context.response().setInternalError()
@@ -122,6 +124,7 @@ class RestCitizenVerticle(citizenService: CitizenService,
   private def jsonToState(jsonObject: JsonObject): Seq[Data] = {
     jsonObject.getAsArray("data")
       .flatMap(_.getAsObjectSeq)
+      .map(json => json.map(_.put("id", UUID.randomUUID().toString))) // assign unique data identifier
       .map(jsonData => jsonData.flatMap(parser.decode))
       .getOrElse(Seq())
   }
