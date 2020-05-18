@@ -8,6 +8,7 @@ import it.unibo.core.data._
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.{DataParserRegistry, VertxJsonParser}
 import it.unibo.core.registry.DataCategoryRegistry
+import it.unibo.service.authentication.JWToken
 import it.unibo.service.citizen.authentication.MockAuthenticationClient
 import it.unibo.service.permission.MockAuthorization
 
@@ -31,9 +32,9 @@ object RestBootstrap {
     categoriesRegistry.register(Categories.bloodPressureCategory)
 
     val authenticationService = MockAuthenticationClient(Seq(
-      SystemUser("50" -> "citizen"),
-      SystemUser("47" -> "stakeholder"),
-      SystemUser("46" -> "doctor")
+      JWToken("50") -> MockSystemUser("pippo", "50", "citizen"),
+      JWToken("47") -> MockSystemUser("pluto", "47", "stakeholder"),
+      JWToken("46") -> MockSystemUser("paperino", "46", "doctor")
     ))
 
     val authorizationService = MockAuthorization(Map(
@@ -56,6 +57,11 @@ object RestBootstrap {
   implicit class RichHttpRequest[T](request: HttpRequest[T]) {
     def putHeader(value: (String, String)): HttpRequest[T] = request.putHeader(value._1, value._2)
   }
+  
+}
+
+object MockSystemUser {
+  def apply(name: String, identifier: String, role: String): SystemUser = SystemUser("", name, "", identifier, role)
 }
 
 object Categories {

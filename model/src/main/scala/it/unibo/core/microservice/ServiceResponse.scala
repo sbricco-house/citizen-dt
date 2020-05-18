@@ -4,6 +4,7 @@ sealed trait ServiceResponse[+T] {
   def flatMap[U](f: T => ServiceResponse[U]): ServiceResponse[U]
   def map[U](f: T => U): ServiceResponse[U]
 }
+
 case class Response[+T](content: T) extends ServiceResponse[T] {
   override def flatMap[U](f: T => ServiceResponse[U]): ServiceResponse[U] = this match {
     case Response(v) => f(v)

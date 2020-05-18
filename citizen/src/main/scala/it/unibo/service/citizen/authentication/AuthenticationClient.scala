@@ -1,21 +1,60 @@
 package it.unibo.service.citizen.authentication
 
-import io.vertx.lang.scala.VertxExecutionContext
-import io.vertx.lang.scala.json.JsonObject
-import io.vertx.scala.core.Vertx
-import io.vertx.scala.ext.web.client.WebClient
-import it.unibo.core.authentication.SystemUser
-import it.unibo.core.microservice.{Fail, FutureService, Response}
-import it.unibo.core.utils.ServiceError.Unauthorized
-import it.unibo.service.authentication.AuthenticationService
-import it.unibo.service.citizen.authentication.AuthenticationClient._
+import java.net.URI
 
-import scala.concurrent.ExecutionContext
+import io.vertx.lang.scala.VertxExecutionContext
+import io.vertx.lang.scala.json.{Json, JsonObject}
+import io.vertx.scala.core.Vertx
+import io.vertx.scala.ext.web.client.{WebClient, WebClientOptions}
+import it.unibo.core.authentication.SystemUser
+import it.unibo.core.client.RestApiClient
+import it.unibo.core.microservice.vertx._
+import it.unibo.core.microservice.{FutureService, Response}
+import it.unibo.service.authentication.{AuthenticationService, TokenIdentifier}
+import it.unibo.service.citizen.authentication.AuthenticationClient._
+import it.unibo.core.client._
 
 object AuthenticationClient {
-  val VERIFY = s"/verify"
+  val VERIFY = s"/verify?token=%s"
 }
 
+class AuthenticationClient(serviceUri: URI) extends AuthenticationService with RestApiClient {
+
+  private val clientOptions =  WebClientOptions()
+    .setFollowRedirects(true)
+
+  private val vertx = Vertx.vertx()
+  private val client: WebClient = WebClient.create(vertx, clientOptions)
+  private implicit val executionContext: VertxExecutionContext = VertxExecutionContext(vertx.getOrCreateContext())
+
+  override def login(email: String, password: String): FutureService[TokenIdentifier] = ???
+
+  override def getAuthenticatedUser(identifier: TokenIdentifier): FutureService[SystemUser] = {
+    val request = s"${serviceUri.toString}$VERIFY".format(identifier.token)
+    client.get(request).sendFuture()
+      .map(response => response.mapToServiceResponse {
+        case (200, body) => Response(parseLoginUser(Json.fromObjectString(body)).get)
+      }).toFutureService
+  }
+
+  override def refresh(authenticated: SystemUser): FutureService[SystemUser] = ???
+
+  override def logout(identifier: TokenIdentifier): FutureService[Boolean] = ???
+
+  protected def parseLoginUser(jsonObject: JsonObject): Option[SystemUser] = {
+    val emailOption = jsonObject.getAsString("email")
+    val username = jsonObject.getAsString("username")
+    val passwordOption = jsonObject.getAsString("password")
+    val identifierOption = jsonObject.getAsString("identifier")
+    val roleOption = jsonObject.getAsString("role")
+    for {
+      email <- emailOption
+      password <- passwordOption
+    } yield SystemUser(email, username.getOrElse(""), password, identifierOption.getOrElse(""), roleOption.getOrElse(""))
+  }
+}
+
+/*
 class AuthenticationClient(serviceUri: String) extends AuthenticationService {
 
   private val vertx = Vertx.vertx()
@@ -34,3 +73,4 @@ class AuthenticationClient(serviceUri: String) extends AuthenticationService {
     SystemUser(obj.getString("identifier"), obj.getString("role"))
   }
 }
+*/

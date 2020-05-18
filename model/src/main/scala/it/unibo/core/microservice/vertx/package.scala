@@ -2,6 +2,7 @@ package it.unibo.core.microservice
 
 import io.vertx.lang.scala.json.{JsonArray, JsonObject}
 import io.vertx.scala.core.http.HttpServerResponse
+import it.unibo.core.protocol.ServiceResponseMapping
 
 package object vertx {
   implicit class RichJson(json : JsonObject) {
@@ -67,6 +68,19 @@ package object vertx {
       response.setStatusCode(statusCode).end(body)
     }
 
+    /*
+    def setSuccessOrDefault[T, C](response: ServiceResponse[T], serializeBody: T => (Int, String)) = {
+      val httpResponse = response match {
+        case Response(content: T) => serializeBody(content)
+        case other => ServiceResponseMapping.serviceResponseToHttp(other)
+      }
+      setResponse(httpResponse)
+    }
+
+    def setResponse(httpResponse: (Int, String)): Unit = {
+      response.setStatusCode(httpResponse._1).end(httpResponse._2)
+    }*/
+
     def setInternalError(message: String = "Internal Error") = setResponse(500, message)
     def setNotFound(message: String = "Not Found") = setResponse(400, message)
     def setForbidden(message: String = "Forbidden") = setResponse(403, message)
@@ -74,6 +88,7 @@ package object vertx {
     def setBadRequest(message: String = "Bad request") = setResponse(400, message)
     def setConflict(message: String = "Conflict") = setResponse(409, message)
     def setCreated(obj: JsonObject) = setResponse(201, obj)
+    def setCreated(obj: String) = setResponse(201, obj)
     def setOk (obj: JsonObject) = setResponse(200, obj)
     def setOk (obj: JsonArray) = setResponse(200, obj.encode())
     def setNoContent() = setResponse(204, "")

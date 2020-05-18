@@ -2,9 +2,10 @@ package it.unibo.service.citizen
 
 import io.vertx.scala.core.http.ServerWebSocket
 import it.unibo.core.data.Data
-import it.unibo.core.microservice.{Fail, Response}
 import it.unibo.core.microservice.vertx.WebSocketApi
-import it.unibo.core.utils.ServiceError.Unauthorized
+import it.unibo.core.microservice.{Fail, Response}
+import it.unibo.core.protocol.ServiceError.Unauthorized
+import it.unibo.service.authentication.JWToken
 import it.unibo.service.citizen.middleware.UserMiddleware
 
 import scala.util.{Failure, Success, Try}
@@ -13,9 +14,10 @@ trait WebSocketCitizenApi extends WebSocketApi {
   self : RestCitizenVerticle =>
 
   override def webSocketHandler(websocket: ServerWebSocket): Unit = {
-    val userOption = websocket.headers().get(UserMiddleware.AUTHORIZATION_HEADER)
+    val tokenOption = websocket.headers().get(UserMiddleware.AUTHORIZATION_HEADER)
+      .map(JWToken)
     val pathCorrectness = evalPath(websocket)
-    (userOption, pathCorrectness) match {
+    (tokenOption, pathCorrectness) match {
       case (None, _) => websocket.reject(401)
       case (_, Failure(_)) => websocket.reject(400)
       case (Some(user), Success(_)) =>
@@ -28,7 +30,7 @@ trait WebSocketCitizenApi extends WebSocketApi {
     }
     websocket.path() match {
       case self.citizenStateEndpoint =>
-        userOption
+        tokenOption
           .map(user => citizenService.observeState(user, citizenIdentifier, createWebsocketCallback(websocket)))
 
       case _ => websocket.reject(400) //TODO put right cose

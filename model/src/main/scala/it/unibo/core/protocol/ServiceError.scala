@@ -1,4 +1,4 @@
-package it.unibo.core.utils
+package it.unibo.core.protocol
 
 /**
  * Abstraction to generic error provided by a service
@@ -21,6 +21,7 @@ object ServiceError {
   case class MissingResource(message: String = "not found") extends MissingError
 
   case class BadParameter(message: String = "bad value of parameter") extends ServiceError
+
 }
 
 

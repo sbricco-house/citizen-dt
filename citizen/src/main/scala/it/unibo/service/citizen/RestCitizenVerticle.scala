@@ -9,13 +9,14 @@ import it.unibo.core.data.Data
 import it.unibo.core.microservice.vertx.{BaseVerticle, _}
 import it.unibo.core.parser.DataParser
 import it.unibo.core.registry.DataCategoryRegistry
+import it.unibo.service.authentication.TokenIdentifier
 
 object RestCitizenVerticle {
   private val CITIZEN_ENDPOINT = s"/citizens/%s/state"
   private val HISTORY_ENDPOINT = s"/citizens/%s/history"
 
   implicit class RichContext(contet: RoutingContext) {
-    def getString(key: String): String = contet.get[String](key)
+    def getToken(key: String): TokenIdentifier = contet.get[TokenIdentifier](key)
   }
 }
 

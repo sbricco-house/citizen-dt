@@ -1,38 +1,32 @@
 package it.unibo.service.authentication
 
-import io.vertx.lang.scala.json.JsonObject
-import io.vertx.scala.ext.auth.jwt.JWTAuth
-import io.vertx.scala.ext.web.{Router, RoutingContext}
+import io.vertx.core.json.JsonObject
 import it.unibo.core.authentication.SystemUser
 import it.unibo.core.microservice.vertx.BaseVerticle
 import it.unibo.core.microservice.vertx._
 
-class AuthenticationVerticle(port : Int = 8081,
-                             host : String = "0.0.0.0") extends BaseVerticle(port, host) with RestApi {
+class AuthenticationVerticle(protected val authenticationService: AuthenticationService,
+                             port : Int = 8080,
+                             host : String = "0.0.0.0") extends BaseVerticle(port, host) {
 
-  override def createRouter(): Router = {
-    val router = Router.router(vertx)
-
-    router.get("/verify")
-        .handler(handleVerifyToken)
-
-    router
+  protected def parseLoginUser(jsonObject: JsonObject): Option[SystemUser] = {
+    val emailOption = jsonObject.getAsString("email")
+    val username = jsonObject.getAsString("username")
+    val passwordOption = jsonObject.getAsString("password")
+    val identifierOption = jsonObject.getAsString("identifier")
+    val roleOption = jsonObject.getAsString("role")
+    for {
+      email <- emailOption
+      password <- passwordOption
+    } yield SystemUser(email, username.getOrElse(""), password, identifierOption.getOrElse(""), roleOption.getOrElse(""))
   }
 
-  private def handleVerifyToken(context: RoutingContext): Unit = {
-    val token = context.queryParam("token").toString()
-    currentActiveTokens.find(_.identifier == token) match {
-      case Some(value) => context.response().setOk(systemUserToJson(value))
-      case None => context.response().setNotAuthorized()
-    }
+  protected def systemUserToJson(user: SystemUser): JsonObject = {
+    new JsonObject()
+      .put("email", user.email)
+      .put("username", user.username)
+      .put("identifier", user.identifier)
+      .put("role", user.role)
   }
 
-  private def systemUserToJson(user: SystemUser): JsonObject =
-    new JsonObject().put("identifier", user.identifier).put("role", user.role)
-
-  private val currentActiveTokens = Seq(
-    SystemUser("50" -> "citizen"),
-    SystemUser("47" -> "stakeholder"),
-    SystemUser("46" -> "doctor")
-  )
 }

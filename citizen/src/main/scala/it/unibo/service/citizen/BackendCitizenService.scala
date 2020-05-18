@@ -7,8 +7,8 @@ import it.unibo.core.data.{Data, DataCategory, DataCategoryOps, LeafCategory, St
 import it.unibo.core.dt.History.History
 import it.unibo.core.dt.State
 import it.unibo.core.microservice.FutureService
-import it.unibo.core.utils.ServiceError.{MissingParameter, MissingResource, Unauthorized}
-import it.unibo.service.authentication.AuthenticationService
+import it.unibo.core.protocol.ServiceError.{MissingParameter, MissingResource, Unauthorized}
+import it.unibo.service.authentication.{AuthenticationService, TokenIdentifier}
 import it.unibo.service.permission.AuthorizationService
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
@@ -32,21 +32,21 @@ class BackendCitizenService(authenticationService : AuthenticationService,
 
   implicit val executionContext: ExecutionContextExecutor = ExecutionContext.global
 
-  override def readState(who: String, citizenId: String): FutureService[Seq[Data]] = {
+  override def readState(who: TokenIdentifier, citizenId: String): FutureService[Seq[Data]] = {
     authenticationService.getAuthenticatedUser(who).flatMap(user => readState(user, citizenId))
   }
 
-  override def updateState(who: String, citizenId: String, data: Seq[Data]): FutureService[Seq[Data]] = {
+  override def updateState(who: TokenIdentifier, citizenId: String, data: Seq[Data]): FutureService[Seq[Data]] = {
     authenticationService.getAuthenticatedUser(who).flatMap(user => updateState(user, citizenId, data))
   }
 
-  override def readHistory(who: String, citizenId: String, dataCategory: DataCategory, maxSize: Int): FutureService[History] = {
+  override def readHistory(who: TokenIdentifier, citizenId: String, dataCategory: DataCategory, maxSize: Int): FutureService[History] = {
     authenticationService.getAuthenticatedUser(who)
       .flatMap(user => authorizationService.authorizeRead(user, citizenId, dataCategory))
       .map(category => findHistoryInStorage(category, maxSize))
   }
 
-  override def readHistoryData(who: String, citizenId: String, dataIdentifier: String): FutureService[Data] = {
+  override def readHistoryData(who: TokenIdentifier, citizenId: String, dataIdentifier: String): FutureService[Data] = {
     authenticationService.getAuthenticatedUser(who)
         .map(user => (user, findDataInStorage(dataIdentifier)))
         .flatMap {
@@ -117,7 +117,7 @@ class BackendCitizenService(authenticationService : AuthenticationService,
     override def close(): Unit = self.channels -= this
   }
 
-  override def observeState(who: String, citizenId: String, callback: Data => Unit): FutureService[Channel] = {
+  override def observeState(who: TokenIdentifier, citizenId: String, callback: Data => Unit): FutureService[Channel] = {
     authenticationService.getAuthenticatedUser(who)
       .flatMap(user => {
         authorizationService.authorizedReadCategories(user, citizenId)
