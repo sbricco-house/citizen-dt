@@ -1,5 +1,7 @@
 package it.unibo.service.citizen
 
+import java.util.UUID
+
 import io.vertx.core.json.JsonArray
 import io.vertx.lang.scala.json.{Json, JsonObject}
 import io.vertx.scala.ext.web.RoutingContext
@@ -40,6 +42,7 @@ class RestCitizenVerticle(protected val citizenService: CitizenService,
   protected def jsonToState(jsonObject: JsonObject): Seq[Data] = {
     jsonObject.getAsArray("data")
       .flatMap(_.getAsObjectSeq)
+      .map(json => json.map(_.put("id", UUID.randomUUID().toString))) // assign unique data identifier
       .map(jsonData => jsonData.flatMap(parser.decode))
       .getOrElse(Seq())
   }

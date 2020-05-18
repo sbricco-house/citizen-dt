@@ -37,7 +37,7 @@ trait WebSocketCitizenApi extends WebSocketApi {
 
   def evalPath(webSocket: ServerWebSocket) : Try[Unit] = webSocket.path() match {
     case self.citizenStateEndpoint => Success()
-    case _ => Failure[Unit]
+    case _ => Failure(new IllegalArgumentException())
   }
 
   private def createWebsocketCallback(websocket: ServerWebSocket) : Data => Unit = data => parser.encode(data) match {
