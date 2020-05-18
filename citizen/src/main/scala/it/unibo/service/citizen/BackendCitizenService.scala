@@ -110,9 +110,8 @@ class BackendCitizenService(authenticationService : AuthenticationService,
 
     override def emit(data: Seq[Data]): Unit = data foreach callback
 
+    //TODO this method may avoid to call update state, it has categories already
     override def updateState(data: Seq[Data]): FutureService[Seq[Data]] = self.updateState(user, citizen, data)
-
-    override def readState(): FutureService[Seq[Data]] = self.readState(user, citizen)
 
     override def close(): Unit = self.channels -= this
   }

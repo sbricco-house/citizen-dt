@@ -20,7 +20,6 @@ trait CitizenService {
 
   trait Channel {
     def updateState(data: Seq[Data]): FutureService[Seq[Data]]
-    def readState(): FutureService[Seq[Data]]
     def close() : Unit
   }
 

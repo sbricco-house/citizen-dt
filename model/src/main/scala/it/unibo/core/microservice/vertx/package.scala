@@ -1,10 +1,21 @@
 package it.unibo.core.microservice
 
-import io.vertx.lang.scala.json.{JsonArray, JsonObject}
-import io.vertx.scala.core.http.HttpServerResponse
+import io.vertx.core.buffer.Buffer
+import io.vertx.lang.scala.json.{Json, JsonArray, JsonObject}
+import io.vertx.scala.core.http.{HttpServerResponse, ServerWebSocket}
 
 package object vertx {
+  object JsonConversion {
+    def objectFromString(buffer : String) : Option[JsonObject] = tryOrNone(Json.fromObjectString(buffer))
+
+    protected[vertx] def tryOrNone[E](some : => E) : Option[E] = try {
+      Some(some)
+    } catch {
+      case e : Exception => None
+    }
+  }
   implicit class RichJson(json : JsonObject) {
+    import JsonConversion._
     def getAsString(s : String) : Option[String] = if(json.containsKey(s)) {
       tryOrNone { json.getString(s) }
     } else {
@@ -40,12 +51,9 @@ package object vertx {
     } else {
       None
     }
-    private def tryOrNone[E](some : => E) : Option[E] = try {
-      Some(some)
-    } catch {
-      case e : Exception => None
-    }
+
   }
+
   implicit class RichJsonArray(json : JsonArray) {
     def getAsObjectSeq : Option[Seq[JsonObject]] = {
       val elems = json.size() - 1
@@ -61,7 +69,6 @@ package object vertx {
   }
 
   implicit class RichHttpServerResponse(response: HttpServerResponse) {
-
     private def setResponse(statusCode: Int, obj: JsonObject): Unit = setResponse(statusCode, obj.encode())
     private def setResponse(statusCode: Int, body: String): Unit = {
       response.setStatusCode(statusCode).end(body)
@@ -77,5 +84,14 @@ package object vertx {
     def setOk (obj: JsonObject) = setResponse(200, obj)
     def setOk (obj: JsonArray) = setResponse(200, obj.encode())
     def setNoContent() = setResponse(204, "")
+  }
+
+  implicit class RichServerWebSocket(webSocket : ServerWebSocket) {
+    def rejectInternalError() = webSocket.reject(500)
+    def rejectForbidden() = webSocket.reject(403)
+    def rejectNotAuthorized() = webSocket.reject(401)
+    def rejectBadContent() = webSocket.reject(400)
+    def writeTextJsonObject(json : JsonObject) = webSocket.writeTextMessage(json.encode())
+    def writeTextJsonArray(json : JsonArray) = webSocket.writeTextMessage(json.encode())
   }
 }

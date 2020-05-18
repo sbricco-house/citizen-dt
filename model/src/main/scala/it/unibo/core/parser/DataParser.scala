@@ -7,7 +7,8 @@ import it.unibo.core.data.{Data, LeafCategory}
  * It has the responsibility to deconde/encode only a specific type of data category (target)
  * @tparam Raw the type of codification used to store data externally (e.g. Json, Xml,String,..)
  */
-trait DataParser[Raw] {
+trait DataParser[Raw] extends Parser[Data, Raw] {
+  override type E = Option[Data]
   def decode(rawData : Raw) : Option[Data]
   def encode(data : Data) : Option[Raw]
   def target : LeafCategory
