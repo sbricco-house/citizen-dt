@@ -2,6 +2,7 @@ package it.unibo.service.citizen
 
 import io.vertx.lang.scala.json.{Json, JsonObject}
 import io.vertx.scala.core.Vertx
+import io.vertx.scala.core.http.{HttpClient, HttpClientOptions, WebSocketConnectOptions}
 import io.vertx.scala.ext.web.client.{HttpRequest, WebClient, WebClientOptions}
 import it.unibo.core.authentication.SystemUser
 import it.unibo.core.data._
@@ -13,7 +14,7 @@ import it.unibo.service.permission.MockAuthorization
 
 import scala.concurrent.Future
 
-object RestBootstrap {
+object HttpBootstrap {
   val STATE_ENDPOINT = s"http://localhost:8080/citizens/50/state"
   val HISTORY_ENDPOINT = s"http://localhost:8080/citizens/50/history"
   val CITIZEN_AUTHORIZED_HEADER = "Authorization" -> "50"
@@ -60,9 +61,19 @@ object RestBootstrap {
     WebClient.create(vertx, WebClientOptions().setDefaultPort(8080))
   }
 
+  def httpClient(): HttpClient = {
+    Vertx.vertx().createHttpClient(HttpClientOptions().setDefaultPort(8080))
+  }
+
   implicit class RichHttpRequest[T](request: HttpRequest[T]) {
     def putHeader(value: (String, String)): HttpRequest[T] = request.putHeader(value._1, value._2)
   }
+
+  implicit class RichWebsocketOptions[T](request: WebSocketConnectOptions) {
+    def putHeader(value: (String, String)): WebSocketConnectOptions = request.addHeader(value._1, value._2)
+  }
+
+  def wsOptions(uri : String) : WebSocketConnectOptions = WebSocketConnectOptions().setURI(uri)
 }
 
 object Categories {
