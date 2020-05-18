@@ -8,7 +8,7 @@ import it.unibo.core.microservice.vertx.BaseVerticle
 import it.unibo.core.microservice.vertx._
 
 class AuthenticationVerticle(port : Int = 8081,
-                             host : String = "0.0.0.0") extends BaseVerticle(port, host) {
+                             host : String = "0.0.0.0") extends BaseVerticle(port, host) with RestApi {
 
   override def createRouter(): Router = {
     val router = Router.router(vertx)

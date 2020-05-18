@@ -45,7 +45,7 @@ object RestBootstrap {
     val citizenService = CitizenService(authenticationService, authorizationService, store)
 
     val parser = DataParserRegistry(new Categories.HearBeatParser())
-    vertx.deployVerticleFuture(new RestCitizenVerticle(citizenService, parser, categoriesRegistry, "50"))
+    vertx.deployVerticleFuture(new RestCitizenVerticle(citizenService, parser, categoriesRegistry, "50") with RestCitizenApi)
   }
 
   def webClient(): WebClient = {

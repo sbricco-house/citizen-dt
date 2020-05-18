@@ -2,7 +2,9 @@ package it.unibo.service.citizen
 
 object CitizenClient {
   private val STATE_PATH = s"/citizens/%s/state"
+
 }
+
 
 // TODO: finish testing
 /*class CitizenClient(private val baseUri: String) extends CitizenService {
