@@ -45,7 +45,7 @@ trait RestAuthenticationApi extends RestApi {
       .getOrElse(FutureService.fail(BadParameter(s"Missing or malformed request body")))
 
     login.whenComplete {
-      case Response(JWToken(token)) => context.response().setCreated(token)
+      case Response(TokenIdentifier(token)) => context.response().setCreated(token)
       case Fail(Unauthenticated(m)) => context.response().setNotAuthorized(m)
       case Fail(Unauthorized(m)) => context.response().setForbidden(m)
       case Fail(BadParameter(m)) => context.response().setBadRequest(m)
@@ -55,11 +55,11 @@ trait RestAuthenticationApi extends RestApi {
 
   private def handleVerifyToken(context: RoutingContext): Unit = {
     context.queryParams.get(TOKEN_QUERY)
-      .map(JWToken.apply)  // TODO: validate if is valid jwt token
-      .map(authenticationService.getAuthenticatedUser(_))
+      .map(TokenIdentifier.apply)  // TODO: validate if is valid jwt token
+      .map(authenticationService.verifyToken)
       .getOrElse(FutureService.fail(MissingParameter(s"Missing token")))
       .whenComplete {
-        case Response(content) => context.response().setOk(systemUserToJson(content))
+        case Response(content) => context.response().setOk(userToJson(content))
           // todo: add case when token is expired or invalid
         case Fail(MissingParameter(m)) => context.response().setBadRequest(m)
         case Fail(BadParameter(m)) => context.response().setBadRequest(m)
@@ -71,7 +71,7 @@ trait RestAuthenticationApi extends RestApi {
   private def handleLogout(context: RoutingContext): Unit = {
     context.request().headers().get(AUTHORIZATION_HEADER)
       .flatMap(auth => extractToken(auth))
-      .map(token => authenticationService.logout(JWToken(token)))
+      .map(token => authenticationService.logout(TokenIdentifier(token)))
       .getOrElse(FutureService.fail(MissingParameter(s"Missing authorization header")))
       .whenComplete {
         case Response(_) => context.response().setNoContent()
@@ -86,10 +86,10 @@ trait RestAuthenticationApi extends RestApi {
   private def handleRefresh(context: RoutingContext): Unit = {
     context.request().headers().get(AUTHORIZATION_HEADER)
       .flatMap(auth => extractToken(auth))
-      .map(token => authenticationService.refresh(JWToken(token)))
+      .map(token => authenticationService.refresh(TokenIdentifier(token)))
       .getOrElse(FutureService.fail(MissingParameter(s"Missing authorization header")))
       .whenComplete {
-        case Response(JWToken(token)) => context.response().setCreated(token)
+        case Response(TokenIdentifier(token)) => context.response().setCreated(token)
         case Fail(MissingParameter(m)) => context.response().setBadRequest(m)
         case Fail(BadParameter(m)) => context.response().setBadRequest(m)
         case Fail(Unauthenticated(m)) => context.response().setNotAuthorized(m)

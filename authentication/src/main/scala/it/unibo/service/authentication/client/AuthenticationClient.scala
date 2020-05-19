@@ -10,7 +10,7 @@ import it.unibo.core.authentication.SystemUser
 import it.unibo.core.client.{RestApiClient, _}
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.microservice.{FutureService, Response}
-import it.unibo.service.authentication.{AuthenticationService, JWToken, TokenIdentifier}
+import it.unibo.service.authentication.{AuthenticationService, TokenIdentifier}
 import AuthenticationClient._
 
 object AuthenticationClient {
@@ -38,12 +38,12 @@ private class AuthenticationClient(serviceUri: URI) extends AuthenticationServic
     val requestBody = Json.emptyObj().put("email", email).put("password", password)
     client.post(request).sendJsonObjectFuture(requestBody)
       .map(response => response.mapToServiceResponse {
-        case (201, token) => Response(JWToken(token))
+        case (201, token) => Response(TokenIdentifier(token))
       })
       .toFutureService
   }
 
-  override def getAuthenticatedUser(identifier: TokenIdentifier): FutureService[SystemUser] = {
+  override def verifyToken(identifier: TokenIdentifier): FutureService[SystemUser] = {
     val request = s"${serviceUri.toString}$VERIFY".format(identifier.token)
     client.get(request).sendFuture()
       .map(response => response.mapToServiceResponse {
@@ -55,7 +55,7 @@ private class AuthenticationClient(serviceUri: URI) extends AuthenticationServic
     val request = s"${serviceUri.toString}$REFRESH"
     client.post(request).putHeader(getAuthorizationHeader(identifier)).sendFuture()
       .map(response => response.mapToServiceResponse {
-        case (201, newToken) => Response(JWToken(newToken))
+        case (201, newToken) => Response(TokenIdentifier(newToken))
       }).toFutureService
   }
 

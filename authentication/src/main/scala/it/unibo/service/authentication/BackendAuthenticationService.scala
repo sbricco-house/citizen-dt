@@ -5,22 +5,18 @@ import java.security.MessageDigest
 import java.util.concurrent.Executors
 
 import io.vertx.core.json.JsonObject
+import io.vertx.scala.ext.auth.User
 import io.vertx.scala.ext.auth.jwt.{JWTAuth, JWTOptions}
 import it.unibo.core.authentication.SystemUser
 import it.unibo.core.data.Storage
-import it.unibo.core.microservice.{Fail, FutureService, Response, ServiceResponse}
-import it.unibo.core.protocol.ServiceError.{BadParameter, Unauthenticated, Unauthorized}
+import it.unibo.core.microservice.{Fail, FutureService, Response, ServiceResponse, _}
+import it.unibo.core.protocol.ServiceError.Unauthenticated
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
-trait TokenIdentifier {
-  def token: String
-}
-case class JWToken(val token: String) extends TokenIdentifier
-
-class AuthenticationServiceBackend(provider: JWTAuth,
+class BackendAuthenticationService(provider: JWTAuth,
                                    userStorage: Storage[SystemUser, String]) extends AuthenticationService {
 
   private implicit val context: ExecutionContext = ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
@@ -34,46 +30,34 @@ class AuthenticationServiceBackend(provider: JWTAuth,
       .map(user => generateToken(user))
   }
 
-  override def getAuthenticatedUser(identifier: TokenIdentifier): FutureService[SystemUser] = identifier match {
-      case JWToken(token) if !blackListToken.contains(identifier) =>
-        provider.authenticateFuture(new JsonObject().put("jwt", token))
-          .map(user => claimsToUser(user.principal()))
-          .map(Response.apply)
-          .toFutureService
-      case JWToken(_) => FutureService.fail(Unauthenticated(s"Invalid or expired token"))
-      case _ => FutureService.fail(BadParameter(s"Identifier not supported"))
+  override def verifyToken(identifier: TokenIdentifier): FutureService[SystemUser] = {
+    if(blackListToken contains identifier) {
+      FutureService.fail(Unauthenticated(s"Invalid or expired token"))
+    } else {
+      authenticateToken(identifier).map(decoded => claimsToUser(decoded.principal()))
+    }
+  }
+
+  private def authenticateToken(identifier: TokenIdentifier): FutureService[User] = {
+    provider.authenticateFuture(new JsonObject().put("jwt", identifier.token))
+      .transformToFutureService {
+        case Failure(_) => Fail(Unauthenticated(s"Invalid or expired token"))
+        case Success(value) => Response(value)
+      }
   }
 
   override def logout(identifier: TokenIdentifier): FutureService[Boolean] = {
-    getAuthenticatedUser(identifier)
+    verifyToken(identifier)
       .flatMap(_ => FutureService(insertBlackList(identifier)))
   }
 
   override def refresh(identifier: TokenIdentifier): FutureService[TokenIdentifier] = {
     // authenticate the user, add current token to blacklist, regenerate the token
-    getAuthenticatedUser(identifier)
+    verifyToken(identifier)
       .map(user => {
         insertBlackList(identifier)
         generateToken(user)
       })
-  }
-
-  private def claimsToUser(user: JsonObject): SystemUser = {
-    SystemUser(
-      user.getString("email"),
-      user.getString("username"),
-      "", // no password,
-      user.getString("identifier"),
-      user.getString("role")
-    )
-  }
-
-  private def userToClaims(user: SystemUser): JsonObject = {
-    new JsonObject()
-      .put("email", user.email)
-      .put("username", user.username)
-      .put("identifier", user.identifier)
-      .put("role", user.role)
   }
 
   private def generateToken(user: SystemUser): TokenIdentifier = {
@@ -82,7 +66,7 @@ class AuthenticationServiceBackend(provider: JWTAuth,
     // this not happens, but is better to prevent this
     Thread.sleep(1000)
     val token = provider.generateToken(userToClaims(user), jwtOptions)
-    JWToken(token)
+    TokenIdentifier(token)
   }
 
   private def hashPassword(password: String): String = {
@@ -101,5 +85,23 @@ class AuthenticationServiceBackend(provider: JWTAuth,
   private def insertBlackList(token: TokenIdentifier): ServiceResponse[Boolean] = {
     blackListToken.add(token)
     Response(true)
+  }
+
+  protected def claimsToUser(user: JsonObject): SystemUser = {
+    SystemUser(
+      user.getString("email"),
+      user.getString("username"),
+      "", // no password,
+      user.getString("identifier"),
+      user.getString("role")
+    )
+  }
+
+  protected def userToClaims(user: SystemUser): JsonObject = {
+    new JsonObject()
+      .put("email", user.email)
+      .put("username", user.username)
+      .put("identifier", user.identifier)
+      .put("role", user.role)
   }
 }

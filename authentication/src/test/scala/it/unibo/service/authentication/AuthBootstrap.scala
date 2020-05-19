@@ -50,7 +50,7 @@ object AuthBootstrap {
         .setSymmetric(true)))
 
     val provider = JWTAuth.create(vertx, options)
-    val auth = new AuthenticationServiceBackend(provider, userStorage)
+    val auth = new BackendAuthenticationService(provider, userStorage)
     val verticle = new AuthenticationVerticle(auth, 8080) with RestAuthenticationApi
     Await.result(vertx.deployVerticleFuture(verticle), 5 seconds)
   }

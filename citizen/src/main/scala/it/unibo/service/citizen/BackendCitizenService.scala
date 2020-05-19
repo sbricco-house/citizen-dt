@@ -33,21 +33,21 @@ class BackendCitizenService(authenticationService : AuthenticationService,
   implicit val executionContext: ExecutionContextExecutor = ExecutionContext.global
 
   override def readState(who: TokenIdentifier, citizenId: String): FutureService[Seq[Data]] = {
-    authenticationService.getAuthenticatedUser(who).flatMap(user => readState(user, citizenId))
+    authenticationService.verifyToken(who).flatMap(user => readState(user, citizenId))
   }
 
   override def updateState(who: TokenIdentifier, citizenId: String, data: Seq[Data]): FutureService[Seq[Data]] = {
-    authenticationService.getAuthenticatedUser(who).flatMap(user => updateState(user, citizenId, data))
+    authenticationService.verifyToken(who).flatMap(user => updateState(user, citizenId, data))
   }
 
   override def readHistory(who: TokenIdentifier, citizenId: String, dataCategory: DataCategory, maxSize: Int): FutureService[History] = {
-    authenticationService.getAuthenticatedUser(who)
+    authenticationService.verifyToken(who)
       .flatMap(user => authorizationService.authorizeRead(user, citizenId, dataCategory))
       .map(category => findHistoryInStorage(category, maxSize))
   }
 
   override def readHistoryData(who: TokenIdentifier, citizenId: String, dataIdentifier: String): FutureService[Data] = {
-    authenticationService.getAuthenticatedUser(who)
+    authenticationService.verifyToken(who)
         .map(user => (user, findDataInStorage(dataIdentifier)))
         .flatMap {
           case (user, pendingData) => pendingData.flatMap {
@@ -117,7 +117,7 @@ class BackendCitizenService(authenticationService : AuthenticationService,
   }
 
   override def observeState(who: TokenIdentifier, citizenId: String, callback: Data => Unit): FutureService[Channel] = {
-    authenticationService.getAuthenticatedUser(who)
+    authenticationService.verifyToken(who)
       .flatMap(user => {
         authorizationService.authorizedReadCategories(user, citizenId)
           .map(categories => new SourceImpl(callback, user, citizenId, categories))

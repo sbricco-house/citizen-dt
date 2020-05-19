@@ -12,7 +12,7 @@ object MockAuthenticationClient {
   private class MockAuthenticationClient(users: Map[TokenIdentifier, SystemUser]) extends AuthenticationService {
     override def login(email: String, password: String): FutureService[TokenIdentifier] = ???
 
-    override def getAuthenticatedUser(identifier: TokenIdentifier): FutureService[SystemUser] = {
+    override def verifyToken(identifier: TokenIdentifier): FutureService[SystemUser] = {
       users.get(identifier)
         .map(FutureService.response)
         .getOrElse(FutureService.fail(MissingResource(s"User $identifier not found")))

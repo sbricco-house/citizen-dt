@@ -9,7 +9,7 @@ import it.unibo.core.data._
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.{DataParserRegistry, VertxJsonParser}
 import it.unibo.core.registry.DataCategoryRegistry
-import it.unibo.service.authentication.JWToken
+import it.unibo.service.authentication.TokenIdentifier
 import it.unibo.service.citizen.authentication.MockAuthenticationClient
 import it.unibo.service.permission.MockAuthorization
 
@@ -33,9 +33,9 @@ object HttpBootstrap {
     categoriesRegistry.register(Categories.bloodPressureCategory)
 
     val authenticationService = MockAuthenticationClient(Seq(
-      JWToken("jwt1") -> MockSystemUser("pippo", "50", "citizen"),
-      JWToken("jwt2") -> MockSystemUser("pluto", "47", "stakeholder"),
-      JWToken("jwt3") -> MockSystemUser("paperino", "46", "doctor")
+      TokenIdentifier("jwt1") -> MockSystemUser("pippo", "50", "citizen"),
+      TokenIdentifier("jwt2") -> MockSystemUser("pluto", "47", "stakeholder"),
+      TokenIdentifier("jwt3") -> MockSystemUser("paperino", "46", "doctor")
     ))
 
     val authorizationService = MockAuthorization(Map(

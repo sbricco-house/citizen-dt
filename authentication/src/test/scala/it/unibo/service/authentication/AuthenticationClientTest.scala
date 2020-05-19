@@ -26,7 +26,7 @@ class AuthenticationClientTest extends AnyFlatSpec with BeforeAndAfterAll with M
 
   "A client " can " verify its token" in {
     whenReady(client.login("petretiandrea@gmail.com", "andrea96")
-      .flatMap(token => client.getAuthenticatedUser(token)).future)
+      .flatMap(token => client.verifyToken(token)).future)
     {
       case Response(content) => content.email shouldBe "petretiandrea@gmail.com"
       case Fail(error) => assert(fail(error.toString))
@@ -44,7 +44,7 @@ class AuthenticationClientTest extends AnyFlatSpec with BeforeAndAfterAll with M
 
   "After logout, a client" should " not be able to verify its token" in {
     whenReady(client.login("petretiandrea@gmail.com", "andrea96")
-      .flatMap(token => client.logout(token).flatMap(_ => client.getAuthenticatedUser(token)))
+      .flatMap(token => client.logout(token).flatMap(_ => client.verifyToken(token)))
       .future) {
       case Fail(Unauthenticated(m)) => succeed
       case response => fail(response.toString)
