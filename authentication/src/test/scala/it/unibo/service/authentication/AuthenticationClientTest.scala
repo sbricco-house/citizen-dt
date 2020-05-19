@@ -1,11 +1,7 @@
 package it.unibo.service.authentication
 
-import java.net.URI
-
 import it.unibo.core.microservice.{Fail, Response}
-import it.unibo.core.protocol.ServiceError.{Unauthenticated, Unauthorized}
-import it.unibo.service.authentication.AuthBootstrap.{LOGIN_ENDPOINT, LOGOUT_ENDPOINT, REFRESH_ENDPOINT, getAuthorizationHeader}
-import it.unibo.service.authentication.client.AuthenticationClient
+import it.unibo.core.protocol.ServiceError.Unauthenticated
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
@@ -13,13 +9,12 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
 
 import scala.concurrent.ExecutionContext
-import scala.reflect.internal.util.FakePos
 
 class AuthenticationClientTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with ScalaFutures {
 
   implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(100, Seconds), interval = Span(100, Millis))
   implicit val executionContext: ExecutionContext = ExecutionContext.global
-  private val client = new AuthenticationClient(URI.create("http://localhost:8080"))
+  private var client: AuthenticationService = _
 
 
   "A client" should " be able to login" in {
@@ -76,5 +71,6 @@ class AuthenticationClientTest extends AnyFlatSpec with BeforeAndAfterAll with M
 
   override def beforeAll(): Unit = {
     AuthBootstrap.boot()
+    client = AuthBootstrap.client
   }
 }

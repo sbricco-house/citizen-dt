@@ -3,9 +3,8 @@ package it.unibo.service.authentication
 import io.vertx.scala.ext.web.handler.BodyHandler
 import io.vertx.scala.ext.web.{Router, RoutingContext}
 import it.unibo.core.microservice.vertx.{RestApi, _}
-import it.unibo.core.microservice.{Fail, FutureService, Response, ServiceResponse}
+import it.unibo.core.microservice.{Fail, FutureService, Response}
 import it.unibo.core.protocol.ServiceError._
-import it.unibo.core.protocol.ServiceResponseMapping
 
 object RestAuthenticationApi {
   val LOGIN_ENDPOINT = "/login"

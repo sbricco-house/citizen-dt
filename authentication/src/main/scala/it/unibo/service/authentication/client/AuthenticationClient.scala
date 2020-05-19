@@ -18,9 +18,12 @@ object AuthenticationClient {
   val VERIFY = s"/verify?token=%s"
   val LOGOUT = s"/logout"
   val REFRESH = s"/refreshToken"
+
+  def apply(serviceUri: URI): AuthenticationService = new AuthenticationClient(serviceUri)
+  def apply(host: String, port: Int = 8080): AuthenticationService = new AuthenticationClient(URI.create(s"http://$host:$port"))
 }
 
-class AuthenticationClient(serviceUri: URI) extends AuthenticationService with RestApiClient {
+private class AuthenticationClient(serviceUri: URI) extends AuthenticationService with RestApiClient {
 
   private val clientOptions =  WebClientOptions()
     .setFollowRedirects(true)

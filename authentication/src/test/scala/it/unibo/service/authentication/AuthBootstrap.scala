@@ -1,5 +1,7 @@
 package it.unibo.service.authentication
 
+import java.net.URI
+
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.client.HttpRequest
 import io.vertx.scala.core.Vertx
@@ -8,6 +10,7 @@ import io.vertx.scala.ext.auth.jwt.{JWTAuth, JWTAuthOptions}
 import io.vertx.scala.ext.web.client.{WebClient, WebClientOptions}
 import it.unibo.core.authentication.SystemUser
 import it.unibo.core.data.InMemoryStorage
+import it.unibo.service.authentication.client.AuthenticationClient
 
 import scala.concurrent.duration._
 import scala.collection.mutable
@@ -52,10 +55,12 @@ object AuthBootstrap {
     Await.result(vertx.deployVerticleFuture(verticle), 5 seconds)
   }
 
-  def client: WebClient = {
+  def httpClient: WebClient = {
     val vertx = Vertx.vertx()
     WebClient.create(vertx, WebClientOptions().setDefaultPort(8080))
   }
+
+  def client: AuthenticationService = AuthenticationClient("localhost", 8080)
 
   implicit class RichHttpRequest[T](request: HttpRequest[T]) {
     def putHeader(value: (String, String)): HttpRequest[T] = request.putHeader(value._1, value._2)
