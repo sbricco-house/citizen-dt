@@ -18,7 +18,7 @@ object MockAuthenticationClient {
         .getOrElse(FutureService.fail(MissingResource(s"User $identifier not found")))
     }
 
-    override def refresh(authenticated: SystemUser): FutureService[SystemUser] = ???
+    override def refresh(authenticated: TokenIdentifier): FutureService[TokenIdentifier] = ???
 
     override def logout(identifier: TokenIdentifier): FutureService[Boolean] = ???
   }

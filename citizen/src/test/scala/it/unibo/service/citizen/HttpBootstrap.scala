@@ -18,9 +18,9 @@ import scala.concurrent.Future
 object HttpBootstrap {
   val STATE_ENDPOINT = s"http://localhost:8080/citizens/50/state"
   val HISTORY_ENDPOINT = s"http://localhost:8080/citizens/50/history"
-  val CITIZEN_AUTHORIZED_HEADER = "Authorization" -> "50"
-  val STAKEHOLDER_AUTHENTICATED_HEADER = "Authorization" -> "47"
-  val STAKEHOLDER_AUTHORIZED_HEADER = "Authorization" -> "46"
+  val CITIZEN_AUTHORIZED_HEADER = "Authorization" -> "jwt1"
+  val STAKEHOLDER_AUTHENTICATED_HEADER = "Authorization" -> "jwt2"
+  val STAKEHOLDER_AUTHORIZED_HEADER = "Authorization" -> "jwt3"
   val HISTORY_LIMIT = 5
   val HISTORY_CATEGORY = "heartbeat"
   val HISTORY_GROUP_CATEGORY = "medical"
@@ -33,9 +33,9 @@ object HttpBootstrap {
     categoriesRegistry.register(Categories.bloodPressureCategory)
 
     val authenticationService = MockAuthenticationClient(Seq(
-      JWToken("50") -> MockSystemUser("pippo", "50", "citizen"),
-      JWToken("47") -> MockSystemUser("pluto", "47", "stakeholder"),
-      JWToken("46") -> MockSystemUser("paperino", "46", "doctor")
+      JWToken("jwt1") -> MockSystemUser("pippo", "50", "citizen"),
+      JWToken("jwt2") -> MockSystemUser("pluto", "47", "stakeholder"),
+      JWToken("jwt3") -> MockSystemUser("paperino", "46", "doctor")
     ))
 
     val authorizationService = MockAuthorization(Map(

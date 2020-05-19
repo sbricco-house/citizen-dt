@@ -11,6 +11,7 @@ object RestAuthenticationApi {
   val LOGIN_ENDPOINT = "/login"
   val VERIFY_ENDPOINT = "/verify"
   val LOGOUT_ENDPOINT = "/logout"
+  val REFRESH_TOKEN = "/refreshToken"
   val AUTHORIZATION_HEADER = "Authorization"
   val TOKEN_QUERY = "token"
 }
@@ -32,6 +33,9 @@ trait RestAuthenticationApi extends RestApi {
     router.get(LOGOUT_ENDPOINT)
         .handler(handleLogout)
 
+    router.post(REFRESH_TOKEN)
+        .handler(handleRefresh)
+
     router
   }
 
@@ -43,7 +47,8 @@ trait RestAuthenticationApi extends RestApi {
 
     login.whenComplete {
       case Response(JWToken(token)) => context.response().setCreated(token)
-      case Fail(Unauthorized(m)) => context.response().setNotAuthorized(m)
+      case Fail(Unauthenticated(m)) => context.response().setNotAuthorized(m)
+      case Fail(Unauthorized(m)) => context.response().setForbidden(m)
       case Fail(BadParameter(m)) => context.response().setBadRequest(m)
       case _ => context.response().setInternalError()
     }
@@ -59,7 +64,7 @@ trait RestAuthenticationApi extends RestApi {
           // todo: add case when token is expired or invalid
         case Fail(MissingParameter(m)) => context.response().setBadRequest(m)
         case Fail(BadParameter(m)) => context.response().setBadRequest(m)
-        case Fail(Unauthorized(m)) => context.response().setNotAuthorized(m)
+        case Fail(Unauthenticated(m)) => context.response().setNotAuthorized(m)
         case _ => context.response().setInternalError()
     }
   }
@@ -73,6 +78,22 @@ trait RestAuthenticationApi extends RestApi {
         case Response(_) => context.response().setNoContent()
         case Fail(MissingParameter(m)) => context.response().setBadRequest(m)
         case Fail(BadParameter(m)) => context.response().setBadRequest(m)
+        case Fail(Unauthenticated(m)) => context.response().setNotAuthorized(m)
+        case Fail(Unauthorized(m)) => context.response().setForbidden(m)
+        case _ => context.response().setInternalError()
+      }
+  }
+
+  private def handleRefresh(context: RoutingContext): Unit = {
+    context.request().headers().get(AUTHORIZATION_HEADER)
+      .flatMap(auth => extractToken(auth))
+      .map(token => authenticationService.refresh(JWToken(token)))
+      .getOrElse(FutureService.fail(MissingParameter(s"Missing authorization header")))
+      .whenComplete {
+        case Response(JWToken(token)) => context.response().setCreated(token)
+        case Fail(MissingParameter(m)) => context.response().setBadRequest(m)
+        case Fail(BadParameter(m)) => context.response().setBadRequest(m)
+        case Fail(Unauthenticated(m)) => context.response().setNotAuthorized(m)
         case Fail(Unauthorized(m)) => context.response().setForbidden(m)
         case _ => context.response().setInternalError()
       }

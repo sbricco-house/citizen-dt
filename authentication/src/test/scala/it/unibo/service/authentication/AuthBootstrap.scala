@@ -32,6 +32,7 @@ object AuthBootstrap {
   val LOGIN_ENDPOINT = "http://localhost:8080/login"
   val VERIFY_ENDPOINT = "http://localhost:8080/verify?token=%s"
   val LOGOUT_ENDPOINT = "http://localhost:8080/logout"
+  val REFRESH_ENDPOINT = "http://localhost:8080/refreshToken"
   def getAuthorizationHeader(token: String): (String, String) = "Authorization" -> s"Bearer $token"
 
   def boot(): Unit = {

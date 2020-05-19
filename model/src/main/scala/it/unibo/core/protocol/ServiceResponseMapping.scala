@@ -6,12 +6,11 @@ import it.unibo.core.protocol.ServiceError.{MissingResource, Unauthenticated, Un
 object ServiceResponseMapping {
 
   def httpToServiceResponse[T] : PartialFunction[(Int, String), ServiceResponse[T]] = {
-    case (204, _) => Response("".asInstanceOf[T])
     // TODO: case (400, body) => MissingParameter
     case (401, body) => Fail(Unauthenticated(body))
     case (403, body) => Fail(Unauthorized(body))
     case (404, body) => Fail(MissingResource(body))
-    case (500, body) => Fail(body)
+    case (_, body) => Fail(body)
   }
 
   def serviceResponseToHttp[T] : PartialFunction[ServiceResponse[T], (Int, String)] = {

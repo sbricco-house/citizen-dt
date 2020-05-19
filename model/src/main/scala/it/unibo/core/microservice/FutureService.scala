@@ -11,10 +11,10 @@ object FutureService {
 
 case class FutureService[+A](future: Future[ServiceResponse[A]]) {
   def flatMap[U](f: A => FutureService[U])(implicit executionContext: ExecutionContext): FutureService[U] =
-    this.future.flatMap {
+    FutureService(this.future.flatMap {
       case Response(content) => f(content).future
-      case Fail(error) => Future.successful(Fail(error))
-    }.toFutureService
+      case Fail(error) => FutureService.fail(error).future
+    })
 
   def map[U](f: A => U)(implicit executionContext: ExecutionContext): FutureService[U] = {
     FutureService(this.future.map(_.map(f)))
