@@ -20,8 +20,6 @@ trait RestAuthenticationApi extends RestApi with RestDefaultResponse {
   self : AuthenticationVerticle =>
   import RestAuthenticationApi._
 
-  override def errorMapping[T]: PartialFunction[Fail[T], (HttpCode.Error, String)] =  ServiceResponseMapping.serviceResponseFailToHttp
-
   override def createRouter: Router = {
     val router = Router.router(vertx)
 
@@ -47,7 +45,7 @@ trait RestAuthenticationApi extends RestApi with RestDefaultResponse {
       .map(user => authenticationService.login(user.email, user.password))
       .getOrElse(FutureService.fail(MissingParameter(s"Missing or malformed request body")))
 
-    context.sendServiceResponseFromFuture(login) {
+    sendServiceResponseWhenComplete(context, login) {
       case Response(TokenIdentifier(token)) => (HttpCode.Created, token)
     }
   }
@@ -58,7 +56,7 @@ trait RestAuthenticationApi extends RestApi with RestDefaultResponse {
       .map(authenticationService.verifyToken)
       .getOrElse(FutureService.fail(MissingParameter(s"Missing token")))
 
-    context.sendServiceResponseFromFuture(verify) {
+    sendServiceResponseWhenComplete(context, verify) {
       case Response(content) => (HttpCode.Ok, userToJson(content).encode())
     }
   }
@@ -69,7 +67,7 @@ trait RestAuthenticationApi extends RestApi with RestDefaultResponse {
       .map(token => authenticationService.logout(TokenIdentifier(token)))
       .getOrElse(FutureService.fail(MissingParameter(s"Missing authorization header")))
 
-    context.sendServiceResponseFromFuture(logout) {
+    sendServiceResponseWhenComplete(context, logout) {
       case Response(_) => (HttpCode.NoContent, "")
     }
   }
@@ -80,7 +78,7 @@ trait RestAuthenticationApi extends RestApi with RestDefaultResponse {
       .map(token => authenticationService.refresh(TokenIdentifier(token)))
       .getOrElse(FutureService.fail(MissingParameter(s"Missing authorization header")))
 
-    context.sendServiceResponseFromFuture(refresh) {
+    sendServiceResponseWhenComplete(context, refresh) {
       case Response(TokenIdentifier(token)) => (HttpCode.Created, token)
     }
   }

@@ -32,42 +32,36 @@ private class AuthenticationClient(serviceUri: URI) extends AuthenticationServic
     .setDefaultPort(serviceUri.getPort)
 
   override val webClient: WebClient = WebClient.create(vertx, clientOptions)
-  override def errorMapping[T]: PartialFunction[(HttpCode.Error, String), Fail[_]] = ServiceResponseMapping.httpFailToServiceResponse
 
   private implicit val executionContext: VertxExecutionContext = VertxExecutionContext(vertx.getOrCreateContext())
 
   override def login(email: String, password: String): FutureService[TokenIdentifier] = {
     val request = s"${serviceUri.toString}$LOGIN"
     val requestBody = Json.emptyObj().put("email", email).put("password", password)
-    webClient.post(request).sendJsonObjectFuture(requestBody)
-      .map(response => response.toServiceResponse {
-        case (HttpCode.Created, token) => TokenIdentifier(token)
-      })
-      .toFutureService
+    parseServiceResponseWhenComplete(webClient.post(request).sendJsonObjectFuture(requestBody)) {
+      case (HttpCode.Created, token) => TokenIdentifier(token)
+    }.toFutureService
   }
 
   override def verifyToken(identifier: TokenIdentifier): FutureService[SystemUser] = {
     val request = s"${serviceUri.toString}$VERIFY".format(identifier.token)
-    webClient.get(request).sendFuture()
-      .map(response => response.toServiceResponse {
-        case (HttpCode.Ok, body) => parseUser(Json.fromObjectString(body))
-      }).toFutureService
+    parseServiceResponseWhenComplete(webClient.get(request).sendFuture()) {
+      case (HttpCode.Ok, body) => parseUser(Json.fromObjectString(body))
+    }.toFutureService
   }
 
   override def refresh(identifier: TokenIdentifier): FutureService[TokenIdentifier] = {
     val request = s"${serviceUri.toString}$REFRESH"
-    webClient.post(request).putHeader(getAuthorizationHeader(identifier)).sendFuture()
-      .map(response => response.toServiceResponse {
-        case (HttpCode.Created, newToken) => TokenIdentifier(newToken)
-      }).toFutureService
+    parseServiceResponseWhenComplete(webClient.post(request).putHeader(getAuthorizationHeader(identifier)).sendFuture()) {
+      case (HttpCode.Created, newToken) => TokenIdentifier(newToken)
+    }.toFutureService
   }
 
   override def logout(identifier: TokenIdentifier): FutureService[Boolean] = {
     val request = s"${serviceUri.toString}$LOGOUT"
-    webClient.get(request).putHeader(getAuthorizationHeader(identifier)).sendFuture()
-      .map(response => response.toServiceResponse {
-        case (HttpCode.NoContent, "") => true
-      }).toFutureService
+    parseServiceResponseWhenComplete(webClient.get(request).putHeader(getAuthorizationHeader(identifier)).sendFuture()) {
+      case (HttpCode.NoContent, "") => true
+    }.toFutureService
   }
 
   private def getAuthorizationHeader(token: TokenIdentifier): (String, String) = "Authorization" -> s"Bearer ${token.token}"

@@ -1,22 +1,26 @@
 package it.unibo.core.client
 
 import io.vertx.scala.ext.web.client.{HttpRequest, HttpResponse}
-import it.unibo.core.microservice.{Fail, Response, ServiceResponse}
-import it.unibo.core.utils.HttpCode
+import it.unibo.core.microservice.{Fail, FutureService, Response, ServiceResponse}
+import it.unibo.core.utils.{HttpCode, ServiceResponseMapping}
+
+import scala.concurrent.{ExecutionContext, Future}
 
 trait RestClientDefaultResponse {
   self: RestApiClient =>
 
-  def errorMapping[T] : PartialFunction[(HttpCode.Error, String), Fail[_]]
+  def defaultFailHandler[T] : PartialFunction[(HttpCode.Error, String), Fail[_]] = ServiceResponseMapping.httpFailToServiceResponse
 
-  implicit class RichHttpResponse[+T](response: HttpResponse[T]) {
-     def toServiceResponse[U](responseMap: PartialFunction[(HttpCode.Success, String), U]): ServiceResponse[U] = {
-        val httpCode = HttpCode(response.statusCode())
-        (httpCode, response.bodyAsString().getOrElse("")) match {
-          case (code: HttpCode.Success, content) => Response(responseMap(code, content))
-          case (code: HttpCode.Error, content) => errorMapping((code, content))
-       }
-     }
+  def parseServiceResponseWhenComplete[T, U](future: Future[HttpResponse[T]])(responseMap: PartialFunction[(HttpCode.Success, String), U])(implicit context: ExecutionContext): Future[ServiceResponse[U]] = {
+    future.map(response => parseServiceResponse(response, responseMap))
+  }
+
+  def parseServiceResponse[T, U](response: HttpResponse[T], responseMap: PartialFunction[(HttpCode.Success, String), U]): ServiceResponse[U] = {
+    val httpCode = HttpCode(response.statusCode())
+    (httpCode, response.bodyAsString().getOrElse("")) match {
+      case (code: HttpCode.Success, content) => Response(responseMap(code, content))
+      case (code: HttpCode.Error, content) => defaultFailHandler((code, content))
+    }
   }
 
   implicit class RichHttpRequest[T](request: HttpRequest[T]) {
