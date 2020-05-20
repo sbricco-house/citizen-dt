@@ -1,7 +1,7 @@
 package it.unibo.core.protocol
 
 import it.unibo.core.microservice.{Fail, Response, ServiceResponse}
-import it.unibo.core.protocol.ServiceError.{MissingResource, Unauthenticated, Unauthorized}
+import it.unibo.core.utils.ServiceError.{MissingResource, Unauthenticated, Unauthorized}
 
 object ServiceResponseMapping {
 

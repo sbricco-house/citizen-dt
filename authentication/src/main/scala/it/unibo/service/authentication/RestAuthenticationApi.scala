@@ -4,8 +4,7 @@ import io.vertx.scala.ext.web.handler.BodyHandler
 import io.vertx.scala.ext.web.{Router, RoutingContext}
 import it.unibo.core.microservice.vertx.{RestApi, _}
 import it.unibo.core.microservice.{Fail, FutureService, Response}
-import it.unibo.core.utils.ServiceError.MissingParameter
-import it.unibo.core.utils.{HttpCode, ServiceResponseMapping}
+import it.unibo.core.utils.ServiceError.{MissingParameter, Unauthenticated, Unauthorized}
 
 object RestAuthenticationApi {
   val LOGIN_ENDPOINT = "/login"
@@ -43,13 +42,13 @@ trait RestAuthenticationApi extends RestApi {
     val login = context.getBodyAsJson()
       .flatMap(self.parseLoginUser)
       .map(user => authenticationService.login(user.email, user.password))
-      .getOrElse(FutureService.fail(BadParameter(s"Missing or malformed request body")))
+      .getOrElse(FutureService.fail(MissingParameter(s"Missing or malformed request body")))
 
     login.whenComplete {
       case Response(TokenIdentifier(token)) => context.response().setCreated(token)
       case Fail(Unauthenticated(m)) => context.response().setNotAuthorized(m)
       case Fail(Unauthorized(m)) => context.response().setForbidden(m)
-      case Fail(BadParameter(m)) => context.response().setBadRequest(m)
+      case Fail(MissingParameter(m)) => context.response().setBadRequest(m)
       case _ => context.response().setInternalError()
     }
   }
@@ -63,7 +62,6 @@ trait RestAuthenticationApi extends RestApi {
         case Response(content) => context.response().setOk(userToJson(content))
           // todo: add case when token is expired or invalid
         case Fail(MissingParameter(m)) => context.response().setBadRequest(m)
-        case Fail(BadParameter(m)) => context.response().setBadRequest(m)
         case Fail(Unauthenticated(m)) => context.response().setNotAuthorized(m)
         case _ => context.response().setInternalError()
     }
@@ -77,7 +75,6 @@ trait RestAuthenticationApi extends RestApi {
       .whenComplete {
         case Response(_) => context.response().setNoContent()
         case Fail(MissingParameter(m)) => context.response().setBadRequest(m)
-        case Fail(BadParameter(m)) => context.response().setBadRequest(m)
         case Fail(Unauthenticated(m)) => context.response().setNotAuthorized(m)
         case Fail(Unauthorized(m)) => context.response().setForbidden(m)
         case _ => context.response().setInternalError()
@@ -92,7 +89,6 @@ trait RestAuthenticationApi extends RestApi {
       .whenComplete {
         case Response(TokenIdentifier(token)) => context.response().setCreated(token)
         case Fail(MissingParameter(m)) => context.response().setBadRequest(m)
-        case Fail(BadParameter(m)) => context.response().setBadRequest(m)
         case Fail(Unauthenticated(m)) => context.response().setNotAuthorized(m)
         case Fail(Unauthorized(m)) => context.response().setForbidden(m)
         case _ => context.response().setInternalError()
