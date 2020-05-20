@@ -1,7 +1,5 @@
 package it.unibo.service.authentication
 
-import java.math.BigInteger
-import java.security.MessageDigest
 import java.util.concurrent.Executors
 
 import io.vertx.core.json.JsonObject
@@ -11,6 +9,7 @@ import it.unibo.core.authentication.SystemUser
 import it.unibo.core.data.Storage
 import it.unibo.core.microservice.{Fail, FutureService, Response, ServiceResponse, _}
 import it.unibo.core.utils.ServiceError.Unauthenticated
+import it.unibo.service.authentication.utils.Hash
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
@@ -20,13 +19,13 @@ class BackendAuthenticationService(provider: JWTAuth,
                                    userStorage: Storage[SystemUser, String]) extends AuthenticationService {
 
   private implicit val context: ExecutionContext = ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
-  private val hash = MessageDigest.getInstance("SHA-256")
+
   private val blackListToken: mutable.LinkedHashSet[TokenIdentifier] = mutable.LinkedHashSet()
   private val jwtOptions = JWTOptions()
     .setExpiresInMinutes(30)
 
   override def login(email: String, password: String): FutureService[TokenIdentifier] = {
-    FutureService(loginUser(email, hashPassword(password)))
+    FutureService(loginUser(email, Hash.SHA256.digest(password)))
       .map(user => generateToken(user))
   }
 
@@ -67,11 +66,6 @@ class BackendAuthenticationService(provider: JWTAuth,
     Thread.sleep(1000)
     val token = provider.generateToken(userToClaims(user), jwtOptions)
     TokenIdentifier(token)
-  }
-
-  private def hashPassword(password: String): String = {
-    val digest = hash.digest(password.getBytes("UTF-8"))
-    String.format("%064x", new BigInteger(1, digest))
   }
 
   private def loginUser(email: String, digest: String): ServiceResponse[SystemUser] = {
