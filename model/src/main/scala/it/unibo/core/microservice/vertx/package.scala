@@ -1,11 +1,7 @@
 package it.unibo.core.microservice
 
-import io.vertx.core.buffer.Buffer
 import io.vertx.lang.scala.json.{Json, JsonArray, JsonObject}
 import io.vertx.scala.core.http.{HttpServerResponse, ServerWebSocket}
-import io.vertx.lang.scala.json.{JsonArray, JsonObject}
-import io.vertx.scala.core.http.HttpServerResponse
-import it.unibo.core.protocol.ServiceResponseMapping
 
 package object vertx {
   object JsonConversion {

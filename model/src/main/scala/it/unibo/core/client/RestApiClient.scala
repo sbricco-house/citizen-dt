@@ -1,3 +1,7 @@
 package it.unibo.core.client
 
-trait RestApiClient
+import io.vertx.scala.ext.web.client.WebClient
+
+trait RestApiClient {
+  def webClient: WebClient
+}

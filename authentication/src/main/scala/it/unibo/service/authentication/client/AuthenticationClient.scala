@@ -9,9 +9,10 @@ import io.vertx.scala.ext.web.client.{WebClient, WebClientOptions}
 import it.unibo.core.authentication.SystemUser
 import it.unibo.core.client.{RestApiClient, _}
 import it.unibo.core.microservice.vertx._
-import it.unibo.core.microservice.{FutureService, Response}
+import it.unibo.core.microservice.{Fail, FutureService, Response}
 import it.unibo.service.authentication.{AuthenticationService, TokenIdentifier}
 import AuthenticationClient._
+import it.unibo.core.utils.{HttpCode, ServiceResponseMapping}
 
 object AuthenticationClient {
   val LOGIN = s"/login"
@@ -23,47 +24,49 @@ object AuthenticationClient {
   def apply(host: String, port: Int = 8080): AuthenticationService = new AuthenticationClient(URI.create(s"http://$host:$port"))
 }
 
-private class AuthenticationClient(serviceUri: URI) extends AuthenticationService with RestApiClient {
+private class AuthenticationClient(serviceUri: URI) extends AuthenticationService with RestApiClient with RestClientDefaultResponse {
 
+  private val vertx = Vertx.vertx()
   private val clientOptions =  WebClientOptions()
     .setFollowRedirects(true)
     .setDefaultPort(serviceUri.getPort)
 
-  private val vertx = Vertx.vertx()
-  private val client: WebClient = WebClient.create(vertx, clientOptions)
+  override val webClient: WebClient = WebClient.create(vertx, clientOptions)
+  override def errorMapping[T]: PartialFunction[(HttpCode.Error, String), Fail[_]] = ServiceResponseMapping.httpFailToServiceResponse
+
   private implicit val executionContext: VertxExecutionContext = VertxExecutionContext(vertx.getOrCreateContext())
 
   override def login(email: String, password: String): FutureService[TokenIdentifier] = {
     val request = s"${serviceUri.toString}$LOGIN"
     val requestBody = Json.emptyObj().put("email", email).put("password", password)
-    client.post(request).sendJsonObjectFuture(requestBody)
-      .map(response => response.mapToServiceResponse {
-        case (201, token) => Response(TokenIdentifier(token))
+    webClient.post(request).sendJsonObjectFuture(requestBody)
+      .map(response => response.toServiceResponse {
+        case (HttpCode.Created, token) => TokenIdentifier(token)
       })
       .toFutureService
   }
 
   override def verifyToken(identifier: TokenIdentifier): FutureService[SystemUser] = {
     val request = s"${serviceUri.toString}$VERIFY".format(identifier.token)
-    client.get(request).sendFuture()
-      .map(response => response.mapToServiceResponse {
-        case (200, body) => Response(parseUser(Json.fromObjectString(body)))
+    webClient.get(request).sendFuture()
+      .map(response => response.toServiceResponse {
+        case (HttpCode.Ok, body) => parseUser(Json.fromObjectString(body))
       }).toFutureService
   }
 
   override def refresh(identifier: TokenIdentifier): FutureService[TokenIdentifier] = {
     val request = s"${serviceUri.toString}$REFRESH"
-    client.post(request).putHeader(getAuthorizationHeader(identifier)).sendFuture()
-      .map(response => response.mapToServiceResponse {
-        case (201, newToken) => Response(TokenIdentifier(newToken))
+    webClient.post(request).putHeader(getAuthorizationHeader(identifier)).sendFuture()
+      .map(response => response.toServiceResponse {
+        case (HttpCode.Created, newToken) => TokenIdentifier(newToken)
       }).toFutureService
   }
 
   override def logout(identifier: TokenIdentifier): FutureService[Boolean] = {
     val request = s"${serviceUri.toString}$LOGOUT"
-    client.get(request).putHeader(getAuthorizationHeader(identifier)).sendFuture()
-      .map(response => response.mapToServiceResponse {
-        case (204, "") => Response(true)
+    webClient.get(request).putHeader(getAuthorizationHeader(identifier)).sendFuture()
+      .map(response => response.toServiceResponse {
+        case (HttpCode.NoContent, "") => true
       }).toFutureService
   }
 
@@ -90,4 +93,5 @@ private class AuthenticationClient(serviceUri: URI) extends AuthenticationServic
       password <- passwordOption
     } yield SystemUser(email, username.getOrElse(""), password, identifierOption.getOrElse(""), roleOption.getOrElse(""))
   }
+
 }
