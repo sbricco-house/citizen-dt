@@ -1,11 +1,8 @@
 package it.unibo.core.microservice
 
-import io.vertx.core.buffer.Buffer
 import io.vertx.lang.scala.json.{Json, JsonArray, JsonObject}
 import io.vertx.scala.core.http.{HttpServerResponse, ServerWebSocket}
-import io.vertx.lang.scala.json.{JsonArray, JsonObject}
-import io.vertx.scala.core.http.HttpServerResponse
-import it.unibo.core.protocol.ServiceResponseMapping
+import it.unibo.core.utils.HttpCode
 
 package object vertx {
   object JsonConversion {
@@ -72,6 +69,8 @@ package object vertx {
   }
 
   implicit class RichHttpServerResponse(response: HttpServerResponse) {
+
+    def setResponse(response: (HttpCode, String)): Unit = setResponse(response._1.code, response._2)
 
     private def setResponse(statusCode: Int, obj: JsonObject): Unit = setResponse(statusCode, obj.encode())
     private def setResponse(statusCode: Int, body: String): Unit = {
