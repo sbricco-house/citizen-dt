@@ -48,7 +48,7 @@ object HttpBootstrap {
     val store = InMemoryStorage[Data, String]()
     val citizenService = CitizenService(authenticationService, authorizationService, store)
 
-    val parser = DataParserRegistry(new Categories.HearBeatParser())
+    val parser = DataParserRegistry(new Categories.HearBeatParser(), new Categories.BloodPressureParser())
     val citizenVerticle = new RestCitizenVerticle(
       citizenService,
       parser,
@@ -103,5 +103,18 @@ object Categories {
       case x: Double =>Some(Json.emptyObj().put("value", x))
     }
     override def target: LeafCategory = hearBeatCategory
+  }
+
+  case class BloodPressureData(identifier: String, timestamp: Long, value: Int, feeder: Feeder) extends Data {
+    override def category: LeafCategory = Categories.bloodPressureCategory
+  }
+  class BloodPressureParser extends VertxJsonParser {
+    override protected def createDataFrom(identifier: String, feeder: Feeder, timestamp: Long, json: JsonObject): Option[Data] = {
+      json.getAsInt("value").map(v => BloodPressureData(identifier, timestamp, v, feeder))
+    }
+    override protected def encodeStrategy(value: Any): Option[JsonObject] = value match {
+      case x: Int =>Some(Json.emptyObj().put("value", x))
+    }
+    override def target: LeafCategory = Categories.bloodPressureCategory
   }
 }

@@ -32,9 +32,11 @@ trait DataJsonMatcher {
 
   protected class DataJsonArrayContent(val right: JsonArray) extends Matcher[JsonArray] {
     override def apply(left: JsonArray): MatchResult = {
-      val allMatch = toJsonObjectArray(left).zip(toJsonObjectArray(right)).map {
+      val allMatch = if(left.size() == right.size()) {
+        toJsonObjectArray(left).zip(toJsonObjectArray(right)).map {
           case (l, r) => new DataJsonContent(r).apply(l)
         }.forall(_.matches)
+      } else false
 
       MatchResult(
         allMatch,

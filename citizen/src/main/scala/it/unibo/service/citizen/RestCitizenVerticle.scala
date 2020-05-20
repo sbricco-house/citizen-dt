@@ -40,6 +40,8 @@ class RestCitizenVerticle(protected val citizenService: CitizenService,
     Json.arr(dataSeq.flatMap(parser.encode):_*)
   }
 
+  // TODO: what do if an update state (patch) contains unspported datacategory? or wrong format of supported category?
+  // actually only valid data are parsed and returned
   protected def jsonToState(jsonObject: JsonObject): Seq[Data] = {
     jsonObject.getAsArray("data")
       .flatMap(_.getAsObjectSeq)

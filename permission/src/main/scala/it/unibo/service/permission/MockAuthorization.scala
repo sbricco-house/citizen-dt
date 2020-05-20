@@ -1,7 +1,7 @@
 package it.unibo.service.permission
 
 import it.unibo.core.authentication.SystemUser
-import it.unibo.core.data.{DataCategory, DataCategoryOps}
+import it.unibo.core.data.{DataCategory, DataCategoryOps, GroupCategory, LeafCategory}
 import it.unibo.core.microservice.{Fail, FutureService, Response}
 import it.unibo.core.utils.ServiceError.Unauthorized
 
@@ -38,9 +38,8 @@ class MockAuthorization(private val authorization: Map[(String, String), Seq[Dat
     }
   }
 
-  // TODO: move from here
-  private def checkPermission(authorizeCategories: Seq[DataCategory], requestCategory: DataCategory): Option[DataCategory] = {
-    DataCategoryOps.allChild(requestCategory).find(leaf => authorizeCategories.exists(DataCategoryOps.allChild(_).contains(leaf)))
+  private def checkPermission(authorizeCategories: Seq[DataCategory], requestCategory: DataCategory): Option[DataCategory] = requestCategory match {
+    case GroupCategory(name, _) => authorizeCategories.find(_.name == name)
+    case LeafCategory(name, _) => DataCategoryOps.allChild(requestCategory).find(leaf => leaf.name == name)
   }
-
 }

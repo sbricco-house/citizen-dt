@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit
 import io.vertx.core.json.JsonObject
 import io.vertx.scala.ext.web.client.WebClient
 import it.unibo.service.citizen.HttpBootstrap._
+import it.unibo.core.microservice.vertx._
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
@@ -27,7 +28,7 @@ class RestApiTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with 
 
   "Citizen state" should " be update by himself" in {
     whenReady(client.patch(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER).sendJsonObjectFuture(Useful.postState)) {
-      result => result.statusCode() shouldBe 201
+      result => println(result.bodyAsString()); result.statusCode() shouldBe 201
     }
   }
 
@@ -77,7 +78,7 @@ class RestApiTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with 
     {
       result =>
         result.statusCode() shouldBe 200
-        result.bodyAsJsonArray().get should sameArrayData(Useful.postState.getJsonArray("data"))
+        result.bodyAsJsonArray().get should sameArrayData(Useful.historyDataCategory.getJsonArray("data"))
     }
   }
 
@@ -132,6 +133,7 @@ class RestApiTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with 
   "Malformed state update " should " be rejected" in {
     val malformedBody = Useful.postState.copy()
     malformedBody.getJsonArray("data").getJsonObject(0).remove("timestamp")
+    malformedBody.getJsonArray("data").getJsonObject(1).remove("timestamp")
     whenReady(client.patch(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER).sendJsonObjectFuture(malformedBody)) {
       result => result.statusCode() shouldBe 400
     }
@@ -158,6 +160,15 @@ object Useful {
                 "timestamp": 134034600,
                 "feeder": {
                     "name": "mi_band_3"
+                }
+            },
+            {
+                "id":"",
+                "value": 91,
+                "category": "blood_pressure",
+                "timestamp": 126034600,
+                "feeder": {
+                    "name": "mi_band_4"
                 }
             }
         ]
@@ -192,4 +203,20 @@ object Useful {
         ]
       }
       """)
+  val historyDataCategory = new JsonObject(
+    """
+      {
+        "data": [
+           {
+              "id":"",
+              "value": 75.0,
+              "category": "heartbeat",
+              "timestamp": 134034600,
+              "feeder": {
+                  "name": "mi_band_3"
+                }
+            }
+        ]
+      }
+      """.stripMargin)
 }
