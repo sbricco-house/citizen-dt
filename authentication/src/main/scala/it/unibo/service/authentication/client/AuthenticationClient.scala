@@ -24,7 +24,7 @@ object AuthenticationClient {
   def apply(host: String, port: Int = 8080): AuthenticationService = new AuthenticationClient(URI.create(s"http://$host:$port"))
 }
 
-private class AuthenticationClient(serviceUri: URI) extends AuthenticationService with RestApiClient with RestClientDefaultResponse {
+private class AuthenticationClient(serviceUri: URI) extends AuthenticationService with RestApiClient with RestClientServiceResponse {
 
   private val vertx = Vertx.vertx()
   private val clientOptions =  WebClientOptions()

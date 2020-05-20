@@ -6,7 +6,7 @@ import it.unibo.core.utils.{HttpCode, ServiceResponseMapping}
 
 import scala.concurrent.ExecutionContext
 
-trait RestDefaultResponse {
+trait RestServiceResponse {
   self: RestApi =>
 
   def defaultFailHandler[T] : PartialFunction[Fail[T], (HttpCode.Error, String)] = ServiceResponseMapping.serviceResponseFailToHttp

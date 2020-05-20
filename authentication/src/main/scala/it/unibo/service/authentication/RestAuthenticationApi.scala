@@ -16,7 +16,7 @@ object RestAuthenticationApi {
   val TOKEN_QUERY = "token"
 }
 
-trait RestAuthenticationApi extends RestApi with RestDefaultResponse {
+trait RestAuthenticationApi extends RestApi with RestServiceResponse {
   self : AuthenticationVerticle =>
   import RestAuthenticationApi._
 
