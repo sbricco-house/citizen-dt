@@ -12,7 +12,7 @@ import scala.concurrent.ExecutionContext
 
 class AuthenticationClientTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with ScalaFutures {
 
-  implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(100, Seconds), interval = Span(100, Millis))
+  implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(10, Seconds), interval = Span(100, Millis))
   implicit val executionContext: ExecutionContext = ExecutionContext.global
   private var client: AuthenticationService = _
 
@@ -72,5 +72,9 @@ class AuthenticationClientTest extends AnyFlatSpec with BeforeAndAfterAll with M
   override def beforeAll(): Unit = {
     AuthBootstrap.boot()
     client = AuthBootstrap.client
+  }
+
+  override def afterAll(): Unit = {
+
   }
 }

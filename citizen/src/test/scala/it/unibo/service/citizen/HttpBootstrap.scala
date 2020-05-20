@@ -1,5 +1,7 @@
 package it.unibo.service.citizen
 
+import java.net.URI
+
 import io.vertx.lang.scala.json.{Json, JsonObject}
 import io.vertx.scala.core.Vertx
 import io.vertx.scala.core.http.{HttpClient, HttpClientOptions, WebSocketConnectOptions}
@@ -70,7 +72,10 @@ object HttpBootstrap {
     def putHeader(value: (String, String)): HttpRequest[T] = request.putHeader(value._1, value._2)
   }
 
-  def wsOptions(uri : String) : WebSocketConnectOptions = WebSocketConnectOptions().setURI(uri)
+  def wsOptions(uri : String) : WebSocketConnectOptions = {
+    val uriObj = URI.create(uri)
+    WebSocketConnectOptions().setHost(uriObj.getHost).setPort(uriObj.getPort).setURI(uriObj.getPath)
+  }
 
   implicit class RichWebsocketOptions[T](request: WebSocketConnectOptions) {
     def putHeader(value: (String, String)): WebSocketConnectOptions = request.addHeader(value._1, value._2)
