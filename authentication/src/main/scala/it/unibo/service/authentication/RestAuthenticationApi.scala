@@ -4,7 +4,8 @@ import io.vertx.scala.ext.web.handler.BodyHandler
 import io.vertx.scala.ext.web.{Router, RoutingContext}
 import it.unibo.core.microservice.vertx.{RestApi, _}
 import it.unibo.core.microservice.{Fail, FutureService, Response}
-import it.unibo.core.utils.ServiceError.{MissingParameter, Unauthenticated, Unauthorized}
+import it.unibo.core.utils.ServiceError.MissingParameter
+import it.unibo.core.utils.{HttpCode, ServiceResponseMapping}
 
 object RestAuthenticationApi {
   val LOGIN_ENDPOINT = "/login"
@@ -15,9 +16,11 @@ object RestAuthenticationApi {
   val TOKEN_QUERY = "token"
 }
 
-trait RestAuthenticationApi extends RestApi {
+trait RestAuthenticationApi extends RestApi with RestDefaultResponse {
   self : AuthenticationVerticle =>
   import RestAuthenticationApi._
+
+  override def errorMapping[T]: PartialFunction[Fail[T], (HttpCode.Error, String)] =  ServiceResponseMapping.serviceResponseFailToHttp
 
   override def createRouter: Router = {
     val router = Router.router(vertx)
@@ -44,55 +47,42 @@ trait RestAuthenticationApi extends RestApi {
       .map(user => authenticationService.login(user.email, user.password))
       .getOrElse(FutureService.fail(MissingParameter(s"Missing or malformed request body")))
 
-    login.whenComplete {
-      case Response(TokenIdentifier(token)) => context.response().setCreated(token)
-      case Fail(Unauthenticated(m)) => context.response().setNotAuthorized(m)
-      case Fail(Unauthorized(m)) => context.response().setForbidden(m)
-      case Fail(MissingParameter(m)) => context.response().setBadRequest(m)
-      case _ => context.response().setInternalError()
+    context.sendServiceResponseFromFuture(login) {
+      case Response(TokenIdentifier(token)) => (HttpCode.Created, token)
     }
   }
 
   private def handleVerifyToken(context: RoutingContext): Unit = {
-    context.queryParams.get(TOKEN_QUERY)
+    val verify = context.queryParams.get(TOKEN_QUERY)
       .map(TokenIdentifier.apply)  // TODO: validate if is valid jwt token
       .map(authenticationService.verifyToken)
       .getOrElse(FutureService.fail(MissingParameter(s"Missing token")))
-      .whenComplete {
-        case Response(content) => context.response().setOk(userToJson(content))
-          // todo: add case when token is expired or invalid
-        case Fail(MissingParameter(m)) => context.response().setBadRequest(m)
-        case Fail(Unauthenticated(m)) => context.response().setNotAuthorized(m)
-        case _ => context.response().setInternalError()
+
+    context.sendServiceResponseFromFuture(verify) {
+      case Response(content) => (HttpCode.Ok, userToJson(content).encode())
     }
   }
 
   private def handleLogout(context: RoutingContext): Unit = {
-    context.request().headers().get(AUTHORIZATION_HEADER)
+    val logout = context.request().headers().get(AUTHORIZATION_HEADER)
       .flatMap(auth => extractToken(auth))
       .map(token => authenticationService.logout(TokenIdentifier(token)))
       .getOrElse(FutureService.fail(MissingParameter(s"Missing authorization header")))
-      .whenComplete {
-        case Response(_) => context.response().setNoContent()
-        case Fail(MissingParameter(m)) => context.response().setBadRequest(m)
-        case Fail(Unauthenticated(m)) => context.response().setNotAuthorized(m)
-        case Fail(Unauthorized(m)) => context.response().setForbidden(m)
-        case _ => context.response().setInternalError()
-      }
+
+    context.sendServiceResponseFromFuture(logout) {
+      case Response(_) => (HttpCode.NoContent, "")
+    }
   }
 
   private def handleRefresh(context: RoutingContext): Unit = {
-    context.request().headers().get(AUTHORIZATION_HEADER)
+    val refresh = context.request().headers().get(AUTHORIZATION_HEADER)
       .flatMap(auth => extractToken(auth))
       .map(token => authenticationService.refresh(TokenIdentifier(token)))
       .getOrElse(FutureService.fail(MissingParameter(s"Missing authorization header")))
-      .whenComplete {
-        case Response(TokenIdentifier(token)) => context.response().setCreated(token)
-        case Fail(MissingParameter(m)) => context.response().setBadRequest(m)
-        case Fail(Unauthenticated(m)) => context.response().setNotAuthorized(m)
-        case Fail(Unauthorized(m)) => context.response().setForbidden(m)
-        case _ => context.response().setInternalError()
-      }
+
+    context.sendServiceResponseFromFuture(refresh) {
+      case Response(TokenIdentifier(token)) => (HttpCode.Created, token)
+    }
   }
 
   private def extractToken(authorizationHeader: String): Option[String] = {
