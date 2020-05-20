@@ -7,7 +7,7 @@ import it.unibo.core.data.{Data, DataCategory, DataCategoryOps, LeafCategory, St
 import it.unibo.core.dt.History.History
 import it.unibo.core.dt.State
 import it.unibo.core.microservice.FutureService
-import it.unibo.core.protocol.ServiceError.{MissingParameter, MissingResource, Unauthorized}
+import it.unibo.core.utils.ServiceError.{MissingParameter, MissingResource, Unauthorized}
 import it.unibo.service.authentication.{AuthenticationService, TokenIdentifier}
 import it.unibo.service.permission.AuthorizationService
 

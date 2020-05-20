@@ -10,7 +10,7 @@ import io.vertx.scala.ext.auth.jwt.{JWTAuth, JWTOptions}
 import it.unibo.core.authentication.SystemUser
 import it.unibo.core.data.Storage
 import it.unibo.core.microservice.{Fail, FutureService, Response, ServiceResponse, _}
-import it.unibo.core.protocol.ServiceError.Unauthenticated
+import it.unibo.core.utils.ServiceError.Unauthenticated
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext

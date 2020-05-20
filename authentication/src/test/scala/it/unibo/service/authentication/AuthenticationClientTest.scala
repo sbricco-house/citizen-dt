@@ -1,7 +1,7 @@
 package it.unibo.service.authentication
 
 import it.unibo.core.microservice.{Fail, Response}
-import it.unibo.core.protocol.ServiceError.Unauthenticated
+import it.unibo.core.utils.ServiceError.Unauthenticated
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec

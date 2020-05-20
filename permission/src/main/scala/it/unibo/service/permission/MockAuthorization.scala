@@ -3,7 +3,7 @@ package it.unibo.service.permission
 import it.unibo.core.authentication.SystemUser
 import it.unibo.core.data.{DataCategory, DataCategoryOps}
 import it.unibo.core.microservice.{Fail, FutureService, Response}
-import it.unibo.core.protocol.ServiceError.Unauthorized
+import it.unibo.core.utils.ServiceError.Unauthorized
 
 object MockAuthorization {
   def apply(authorization: Map[(String, String), Seq[DataCategory]]): MockAuthorization = new MockAuthorization(authorization)

@@ -5,7 +5,7 @@ import it.unibo.core.data.Data
 import it.unibo.core.microservice.protocol.WebsocketResponse
 import it.unibo.core.microservice.vertx.WebSocketApi
 import it.unibo.core.microservice.{Fail, Response, ServiceResponse}
-import it.unibo.core.protocol.ServiceError.Unauthorized
+import it.unibo.core.utils.ServiceError.Unauthorized
 import it.unibo.service.authentication.TokenIdentifier
 import it.unibo.service.citizen.middleware.UserMiddleware
 import it.unibo.service.citizen.websocket.{CitizenProtocol, Ok, Status}

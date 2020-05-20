@@ -4,7 +4,7 @@ import io.vertx.scala.ext.web.handler.BodyHandler
 import io.vertx.scala.ext.web.{Router, RoutingContext}
 import it.unibo.core.microservice.vertx.{RestApi, _}
 import it.unibo.core.microservice.{Fail, FutureService, Response}
-import it.unibo.core.protocol.ServiceError.{BadParameter, MissingParameter, MissingResource, Unauthorized}
+import it.unibo.core.utils.ServiceError.{MissingParameter, MissingResource, Unauthorized}
 import it.unibo.service.citizen.middleware.UserMiddleware
 
 trait RestCitizenApi extends RestApi {
@@ -48,7 +48,7 @@ trait RestCitizenApi extends RestApi {
     val pending = context.getBodyAsJson()
       .map(jsonToState)
       .map(newState => citizenService.updateState(token, citizenIdentifier, newState))
-      .getOrElse(FutureService.fail(BadParameter(s"Invalid json body")))
+      .getOrElse(FutureService.fail(MissingParameter(s"Invalid json body")))
 
     pending.whenComplete {
       case Response(newData) => context.response().setCreated(stateToJson(newData))
@@ -77,11 +77,11 @@ trait RestCitizenApi extends RestApi {
     val pending = dataCategory
       .flatMap(dataCategoryRegistry.get)
       .map(citizenService.readHistory(token, citizenIdentifier, _, limit))
-      .getOrElse(FutureService.fail(BadParameter(s"Missing or invalid data_category query parameter")))
+      .getOrElse(FutureService.fail(MissingParameter(s"Missing or invalid data_category query parameter")))
 
     pending.whenComplete {
       case Response(value) => context.response().setOk(dataArrayToJson(value))
-      case Fail(BadParameter(m)) => context.response().setBadRequest(m)
+      case Fail(MissingParameter(m)) => context.response().setBadRequest(m)
       case Fail(Unauthorized(m)) => context.response().setForbidden(m)
       case _ => context.response().setInternalError()
     }

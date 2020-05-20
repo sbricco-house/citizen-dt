@@ -2,7 +2,7 @@ package it.unibo.service.citizen.authentication
 
 import it.unibo.core.authentication.SystemUser
 import it.unibo.core.microservice.FutureService
-import it.unibo.core.protocol.ServiceError.MissingResource
+import it.unibo.core.utils.ServiceError.MissingResource
 import it.unibo.service.authentication.{AuthenticationService, TokenIdentifier}
 
 object MockAuthenticationClient {
