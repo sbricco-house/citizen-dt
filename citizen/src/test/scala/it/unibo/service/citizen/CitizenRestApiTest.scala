@@ -6,6 +6,7 @@ import io.vertx.core.json.JsonObject
 import io.vertx.scala.ext.web.client.WebClient
 import it.unibo.service.citizen.HttpBootstrap._
 import it.unibo.core.microservice.vertx._
+import it.unibo.service.citizen.matcher.DataJsonMatcher
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec

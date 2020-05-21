@@ -3,6 +3,7 @@ import java.util.concurrent.TimeUnit
 
 import io.vertx.scala.core.http.HttpClient
 import it.unibo.service.citizen.HttpBootstrap.{STATE_ENDPOINT, _}
+import it.unibo.service.citizen.matcher.DataJsonMatcher
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AsyncFlatSpec
@@ -13,7 +14,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success}
 
-class WebsocketApiTest extends AsyncFlatSpec with BeforeAndAfterAll with Matchers with ScalaFutures with DataJsonMatcher {
+class CitizenWebsocketApiTest extends AsyncFlatSpec with BeforeAndAfterAll with Matchers with ScalaFutures with DataJsonMatcher {
   implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(5, Seconds), interval = Span(100, Millis))
   var client : HttpClient = _
   "citizen api" should "can't upgrade to websocket if authorization header missing" in {

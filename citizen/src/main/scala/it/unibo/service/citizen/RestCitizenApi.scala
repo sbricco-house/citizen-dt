@@ -4,10 +4,11 @@ import io.vertx.scala.ext.web.handler.BodyHandler
 import io.vertx.scala.ext.web.{Router, RoutingContext}
 import it.unibo.core.microservice.vertx.{RestApi, _}
 import it.unibo.core.microservice.{Fail, FutureService, Response}
+import it.unibo.core.utils.HttpCode
 import it.unibo.core.utils.ServiceError.{MissingParameter, MissingResource, Unauthorized}
 import it.unibo.service.citizen.middleware.UserMiddleware
 
-trait RestCitizenApi extends RestApi {
+trait RestCitizenApi extends RestApi with RestServiceResponse {
   self : RestCitizenVerticle =>
   import RestCitizenVerticle._
 
@@ -36,10 +37,9 @@ trait RestCitizenApi extends RestApi {
 
   private def handleGetState(context: RoutingContext): Unit = {
     val token = context.getToken(UserMiddleware.JWT_TOKEN)
-    citizenService.readState(token, citizenIdentifier).whenComplete {
-      case Response(data) => context.response().setOk(stateToJson(data))
-      case Fail(Unauthorized(m)) => context.response().setForbidden(m)
-      case _ => context.response().setInternalError()
+
+    sendServiceResponseWhenComplete(context, citizenService.readState(token, citizenIdentifier)) {
+      case Response(data) => (HttpCode.Ok, stateToJson(data).encode())
     }
   }
 
@@ -50,11 +50,8 @@ trait RestCitizenApi extends RestApi {
       .map(newState => citizenService.updateState(token, citizenIdentifier, newState))
       .getOrElse(FutureService.fail(MissingParameter(s"Invalid json body")))
 
-    pending.whenComplete {
-      case Response(newData) => context.response().setCreated(stateToJson(newData))
-      case Fail(MissingParameter(m)) => context.response().setBadRequest(m)
-      case Fail(Unauthorized(m)) => context.response().setForbidden(m)
-      case _ => context.response().setInternalError()
+    sendServiceResponseWhenComplete(context, pending) {
+      case Response(newData) => (HttpCode.Created, stateToJson(newData).encode())
     }
   }
 
@@ -62,11 +59,8 @@ trait RestCitizenApi extends RestApi {
     val token = context.getToken(UserMiddleware.JWT_TOKEN)
     val dataIdentifier = context.pathParam("data_id").get
 
-    citizenService.readHistoryData(token, citizenIdentifier, dataIdentifier).whenComplete {
-      case Response(data) => context.response().setOk(parser.encode(data).get)
-      case Fail(MissingResource(m)) => context.response().setNotFound(m)
-      case Fail(Unauthorized(m)) => context.response().setForbidden(m)
-      case _ => context.response().setInternalError()
+    sendServiceResponseWhenComplete(context, citizenService.readHistoryData(token, citizenIdentifier, dataIdentifier)) {
+      case Response(data) => (HttpCode.Ok, parser.encode(data).get.encode())
     }
   }
 
@@ -79,11 +73,8 @@ trait RestCitizenApi extends RestApi {
       .map(citizenService.readHistory(token, citizenIdentifier, _, limit))
       .getOrElse(FutureService.fail(MissingParameter(s"Missing or invalid data_category query parameter")))
 
-    pending.whenComplete {
-      case Response(value) => context.response().setOk(dataArrayToJson(value))
-      case Fail(MissingParameter(m)) => context.response().setBadRequest(m)
-      case Fail(Unauthorized(m)) => context.response().setForbidden(m)
-      case _ => context.response().setInternalError()
+    sendServiceResponseWhenComplete(context, pending) {
+      case Response(value) => (HttpCode.Ok, dataArrayToJson(value).encode())
     }
   }
 }

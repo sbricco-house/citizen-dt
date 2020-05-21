@@ -8,11 +8,11 @@ import io.vertx.scala.core.Vertx
 import io.vertx.scala.ext.web.client.{WebClient, WebClientOptions}
 import it.unibo.core.authentication.SystemUser
 import it.unibo.core.client.{RestApiClient, _}
+import it.unibo.core.microservice.FutureService
 import it.unibo.core.microservice.vertx._
-import it.unibo.core.microservice.{Fail, FutureService, Response}
+import it.unibo.core.utils.HttpCode
+import it.unibo.service.authentication.client.AuthenticationClient._
 import it.unibo.service.authentication.{AuthenticationService, TokenIdentifier}
-import AuthenticationClient._
-import it.unibo.core.utils.{HttpCode, ServiceResponseMapping}
 
 object AuthenticationClient {
   val LOGIN = s"/login"

@@ -88,7 +88,7 @@ class BackendCitizenService(authenticationService : AuthenticationService,
       case categoriesToUpdate => authorizationService.authorizedWriteCategories(who, citizen = citizenId)
         .flatMap {
           case categories if checkPermission(categoriesToUpdate, categories) == categoriesToUpdate => FutureService.response(save(data))
-          case _ => FutureService.fail(Unauthorized())
+          case _ => FutureService.fail(Unauthorized(s"Not enough permission to do that"))
         }
     }
   }

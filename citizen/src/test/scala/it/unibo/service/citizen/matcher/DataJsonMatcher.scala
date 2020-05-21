@@ -1,4 +1,4 @@
-package it.unibo.service.citizen
+package it.unibo.service.citizen.matcher
 
 import io.vertx.core.json.JsonObject
 import io.vertx.lang.scala.json.JsonArray
