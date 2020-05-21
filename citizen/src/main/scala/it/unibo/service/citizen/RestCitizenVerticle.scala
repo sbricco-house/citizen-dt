@@ -5,11 +5,16 @@ import java.util.UUID
 import io.vertx.core.json.JsonArray
 import io.vertx.lang.scala.json.{Json, JsonObject}
 import io.vertx.scala.ext.web.RoutingContext
+import io.vertx.scala.servicediscovery.ServiceDiscovery
+import io.vertx.scala.servicediscovery.types.HttpEndpoint
 import it.unibo.core.data.Data
 import it.unibo.core.microservice.vertx.{BaseVerticle, _}
 import it.unibo.core.parser.DataParser
 import it.unibo.core.registry.DataCategoryRegistry
 import it.unibo.service.authentication.TokenIdentifier
+
+import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 object RestCitizenVerticle {
   private val CITIZEN_ENDPOINT = s"/citizens/%s/state"
@@ -30,6 +35,7 @@ class RestCitizenVerticle(protected val citizenService: CitizenService,
   import RestCitizenVerticle._
   protected val citizenStateEndpoint = CITIZEN_ENDPOINT.format(citizenIdentifier)
   protected val historyEndpoint = HISTORY_ENDPOINT.format(citizenIdentifier)
+
 
   // TODO: best way for transform model data to resource response. e.g. using resource mapper for state and history
   protected def stateToJson(state: Seq[Data]): JsonObject = {

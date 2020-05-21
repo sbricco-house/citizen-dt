@@ -15,7 +15,7 @@ object UserStorage {
 
   def generate(seeds: Seq[(Int, String)]): Storage[SystemUser, String] = {
     val userStorage: Storage[SystemUser, String] = InMemoryStorage[SystemUser, String]()
-    seeds.flatMap(seed => generateSystemUsers(seed._1, seed._2)).foreach(u => userStorage.store(u.identifier, u))
+    seeds.flatMap(seed => generateSystemUsers(seed._1, seed._2)).foreach(u => userStorage.store(u.email, u))
     userStorage
   }
 

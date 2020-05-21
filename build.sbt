@@ -28,7 +28,8 @@ lazy val testSetting = Seq(
 
 lazy val authenticationSettings = Seq(
   libraryDependencies ++= Seq(
-    "io.vertx" %% "vertx-auth-jwt-scala" % vertxVersion
+    "io.vertx" %% "vertx-auth-jwt-scala" % vertxVersion,
+    "io.vertx" %% "vertx-service-discovery-scala" % vertxVersion
   )
 )
 
