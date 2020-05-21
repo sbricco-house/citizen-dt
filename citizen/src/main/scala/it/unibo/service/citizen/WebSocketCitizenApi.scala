@@ -17,7 +17,8 @@ trait WebSocketCitizenApi extends WebSocketApi {
   import it.unibo.core.microservice.vertx._
 
   override def webSocketHandler(websocket: ServerWebSocket): Unit = {
-    val tokenOption = websocket.headers().get(UserMiddleware.AUTHORIZATION_HEADER)
+    val tokenOption = websocket.headers()
+      .get(UserMiddleware.AUTHORIZATION_HEADER)
       .map(TokenIdentifier)
     val pathCorrectness = evalPath(websocket)
     (tokenOption, pathCorrectness) match {
