@@ -15,7 +15,7 @@ import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
-class BackendAuthenticationService(provider: JWTAuth,
+class AuthenticationServiceBackend(provider: JWTAuth,
                                    userStorage: Storage[SystemUser, String]) extends AuthenticationService {
 
   private implicit val context: ExecutionContext = ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())

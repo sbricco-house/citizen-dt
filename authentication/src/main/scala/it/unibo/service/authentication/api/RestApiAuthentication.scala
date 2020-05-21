@@ -1,13 +1,14 @@
-package it.unibo.service.authentication
+package it.unibo.service.authentication.api
 
 import io.vertx.scala.ext.web.handler.BodyHandler
 import io.vertx.scala.ext.web.{Router, RoutingContext}
 import it.unibo.core.microservice.vertx.{RestApi, _}
-import it.unibo.core.microservice.{Fail, FutureService, Response}
+import it.unibo.core.microservice.{FutureService, Response}
 import it.unibo.core.utils.HttpCode
 import it.unibo.core.utils.ServiceError.MissingParameter
+import it.unibo.service.authentication.TokenIdentifier
 
-object RestAuthenticationApi {
+object RestApiAuthentication {
   val LOGIN_ENDPOINT = "/login"
   val VERIFY_ENDPOINT = "/verify"
   val LOGOUT_ENDPOINT = "/logout"
@@ -16,9 +17,9 @@ object RestAuthenticationApi {
   val TOKEN_QUERY = "token"
 }
 
-trait RestAuthenticationApi extends RestApi with RestServiceResponse {
-  self : AuthenticationVerticle =>
-  import RestAuthenticationApi._
+trait RestApiAuthentication extends RestApi with RestServiceResponse {
+  self : RestApiAuthenticationVerticle =>
+  import RestApiAuthentication._
 
   override def createRouter: Router = {
     val router = Router.router(vertx)

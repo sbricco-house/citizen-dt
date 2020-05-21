@@ -17,6 +17,6 @@ trait AuthenticationService {
 }
 
 object AuthenticationService {
-  def apply(provider: JWTAuth, userStorage: Storage[SystemUser, String]): AuthenticationService = new BackendAuthenticationService(provider, userStorage)
+  def apply(provider: JWTAuth, userStorage: Storage[SystemUser, String]): AuthenticationService = new AuthenticationServiceBackend(provider, userStorage)
   def createProxy(serviceUri: URI): AuthenticationService = AuthenticationClient(serviceUri)
 }

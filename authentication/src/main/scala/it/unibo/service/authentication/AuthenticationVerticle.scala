@@ -1,30 +1,36 @@
 package it.unibo.service.authentication
 
-import io.vertx.core.json.JsonObject
+import io.vertx.lang.scala.ScalaVerticle
+import io.vertx.scala.ext.auth.PubSecKeyOptions
+import io.vertx.scala.ext.auth.jwt.{JWTAuth, JWTAuthOptions}
 import it.unibo.core.authentication.SystemUser
-import it.unibo.core.microservice.vertx.BaseVerticle
-import it.unibo.core.microservice.vertx._
+import it.unibo.core.data.Storage
+import it.unibo.service.authentication.api.{RestApiAuthentication, RestApiAuthenticationVerticle}
+import it.unibo.service.authentication.app.UserStorage
 
-class AuthenticationVerticle(protected val authenticationService: AuthenticationService,
-                             port : Int = 8080,
-                             host : String = "0.0.0.0") extends BaseVerticle(port, host) {
+import scala.collection.mutable
+import scala.concurrent.Future
 
-  case class LoginUser(email: String, password: String)
+class AuthenticationVerticle extends ScalaVerticle {
 
-  protected def parseLoginUser(jsonObject: JsonObject): Option[LoginUser] = {
-    val emailOption = jsonObject.getAsString("email")
-    val passwordOption = jsonObject.getAsString("password")
-    for {
-      email <- emailOption
-      password <- passwordOption
-    } yield LoginUser(email, password)
-  }
+  val userStorage: Storage[SystemUser, String] = UserStorage.generateDefault()
 
-  protected def userToJson(user: SystemUser): JsonObject = {
-    new JsonObject()
-      .put("email", user.email)
-      .put("username", user.username)
-      .put("identifier", user.identifier)
-      .put("role", user.role)
+  override def startFuture(): Future[_] = {
+    super.startFuture()
+
+    val host = config.getString("api.rest.host", "localhost")
+    val port = config.getInteger("api.rest.port", 8080)
+    val symmetricKey = config.getString("jwt.key", "keyboard cat")
+
+    val options = JWTAuthOptions().setPubSecKeys(mutable.Buffer(PubSecKeyOptions()
+        .setAlgorithm("HS256")
+        .setPublicKey(symmetricKey)
+        .setSymmetric(true)))
+
+    val provider = JWTAuth.create(vertx, options)
+    val auth = AuthenticationService(provider, userStorage)
+    val verticle = new RestApiAuthenticationVerticle(auth, port, host) with RestApiAuthentication
+
+    vertx.deployVerticleFuture(verticle)
   }
 }
