@@ -15,8 +15,8 @@ import it.unibo.service.authentication.TokenIdentifier
 import it.unibo.service.citizen.authentication.MockAuthenticationClient
 import it.unibo.service.permission.MockAuthorization
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 
 object HttpBootstrap {
   val STATE_ENDPOINT = s"http://localhost:8080/citizens/50/state"
