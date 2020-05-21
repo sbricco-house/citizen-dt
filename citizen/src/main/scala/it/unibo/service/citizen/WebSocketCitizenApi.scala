@@ -2,7 +2,7 @@ package it.unibo.service.citizen
 
 import io.vertx.scala.core.http.ServerWebSocket
 import it.unibo.core.data.Data
-import it.unibo.core.microservice.protocol.WebsocketResponse
+import it.unibo.core.microservice.protocol.{WebsocketResponse, WebsocketUpdate}
 import it.unibo.core.microservice.vertx.WebSocketApi
 import it.unibo.core.microservice.{Fail, Response, ServiceResponse}
 import it.unibo.core.utils.ServiceError.Unauthorized
@@ -40,13 +40,15 @@ trait WebSocketCitizenApi extends WebSocketApi {
   }
 
   private def createWebsocketCallback(websocket: ServerWebSocket) : Data => Unit = data => parser.encode(data) match {
-    case Some(encoded) => websocket.writeBinaryMessage(encoded.toBuffer)
-    case _ => //TODO close the socket? or someone?
+    case Some(encoded) =>
+      val updatePacket = WebsocketUpdate(encoded)
+      websocket.writeTextMessage(CitizenProtocol.updateParser.decode(updatePacket))
+    case _ =>
   }
 
   private def manageChannel(webSocket: ServerWebSocket, channel : CitizenService#Channel) : Unit = {
     webSocket.closeHandler(_ => channel.close())
-
+    webSocket.accept()
     webSocket.textMessageHandler(handler => {
       val dataEncoded = CitizenProtocol.requestParser.encode(handler)
       dataEncoded match {
@@ -54,9 +56,9 @@ trait WebSocketCitizenApi extends WebSocketApi {
           val decodedElements = request.value.getAsObjectSeq.map(elements => elements.map(parser.decode))
           val anyFailedDecoding = decodedElements.map(_.contains(None))
           anyFailedDecoding match {
-            case Some(true) => manageRequest(request.id, channel, decodedElements.get, webSocket)
-            case Some(false) =>
-              val response = WebsocketResponse[Status](request.id, CitizenProtocol.unkwonDataError)
+            case Some(false) => manageRequest(request.id, channel, decodedElements.get, webSocket)
+            case Some(true) =>
+              val response = WebsocketResponse[Status](request.id, CitizenProtocol.unkwonDataCategoryError)
               val jsonResponse = CitizenProtocol.responseParser.decode(response)
               webSocket.writeTextMessage(jsonResponse)
             case _ => webSocket.writeTextJsonObject(CitizenProtocol.unkwon)

@@ -1,17 +1,15 @@
 package it.unibo.service.citizen.websocket
 
-import io.circe.JsonObject
-import io.vertx.core.buffer.Buffer
-import io.vertx.lang.scala.json.{Json, JsonArray}
+import io.vertx.lang.scala.json.{Json, JsonArray, JsonObject}
 import it.unibo.core.microservice.protocol.{WebsocketFailure, WebsocketRequest, WebsocketResponse, WebsocketUpdate}
 import it.unibo.core.microservice.vertx.{JsonConversion, _}
 import it.unibo.core.parser.Parser
 
 object CitizenProtocol {
   import Status._
-
+  //TODO put in unkwon the message sent.
   val unkwon = Json.obj("reason" -> "unkwon protocol", "code" -> 500)
-  val unkwonDataError = Failed("unkwon data")
+  val unkwonDataCategoryError = Failed("unkwon data")
   val internalError = Failed("internal error")
   val unothorized = Failed("category not allowed")
 
@@ -42,15 +40,15 @@ object CitizenProtocol {
     } yield WebsocketRequest[JsonArray](id, value)
   }
 
-  val updateParser  = Parser[String, WebsocketUpdate[JsonArray]]{
+  val updateParser  = Parser[String, WebsocketUpdate[JsonObject]]{
     rep => Json.obj(
       "value" -> rep.value
     ).toString
   }{
     data => for {
       json <- JsonConversion.objectFromString(data)
-      value <- json.getAsArray("value")
-    } yield WebsocketUpdate[JsonArray](value)
+      value <- json.getAsObject("value")
+    } yield WebsocketUpdate[JsonObject](value)
   }
 
   def unkwonFromString(data : String): Option[WebsocketFailure] = for {
