@@ -18,23 +18,23 @@ class AuthenticationClientTest extends AnyFlatSpec with BeforeAndAfterAll with M
 
 
   "A client" should " be able to login" in {
-    whenReady(client.login("petretiandrea@gmail.com", "andrea96").future) {
+    whenReady(client.login(Users.Citizen1.email, Users.Citizen1.password).future) {
       case Response(content) => content.token should not be empty
       case Fail(error) => assert(fail(error.toString))
     }
   }
 
   "A client " can " verify its token" in {
-    whenReady(client.login("petretiandrea@gmail.com", "andrea96")
+    whenReady(client.login(Users.Citizen1.email, Users.Citizen1.password)
       .flatMap(token => client.verifyToken(token)).future)
     {
-      case Response(content) => content.email shouldBe "petretiandrea@gmail.com"
+      case Response(content) => content.email shouldBe Users.Citizen1.email
       case Fail(error) => assert(fail(error.toString))
     }
   }
 
   "A client" can " logout" in {
-    whenReady(client.login("petretiandrea@gmail.com", "andrea96")
+    whenReady(client.login(Users.Citizen1.email, Users.Citizen1.password)
       .flatMap(token => client.logout(token)).future)
     {
       case Response(content) => content shouldBe true
@@ -43,7 +43,7 @@ class AuthenticationClientTest extends AnyFlatSpec with BeforeAndAfterAll with M
   }
 
   "After logout, a client" should " not be able to verify its token" in {
-    whenReady(client.login("petretiandrea@gmail.com", "andrea96")
+    whenReady(client.login(Users.Citizen1.email, Users.Citizen1.password)
       .flatMap(token => client.logout(token).flatMap(_ => client.verifyToken(token)))
       .future) {
       case Fail(Unauthenticated(m)) => succeed
@@ -52,15 +52,15 @@ class AuthenticationClientTest extends AnyFlatSpec with BeforeAndAfterAll with M
   }
 
   "Client logged " can "refresh his token" in {
-    whenReady(client.login("petretiandrea@gmail.com", "andrea96")
+    whenReady(client.login(Users.Citizen1.email, Users.Citizen1.password)
       .flatMap(token => client.refresh(token)).future) {
-      case Response(content) => println(content); assert(true)
+      case Response(content) => assert(true)
       case Fail(error) => assert(fail(error.toString))
     }
   }
 
   "Client not logged " can  " not refresh his token" in {
-    whenReady(client.login("petretiandrea@gmail.com", "andrea96")
+    whenReady(client.login(Users.Citizen1.email, Users.Citizen1.password)
       .flatMap(token => client.logout(token).flatMap(_ => client.refresh(token)))
       .future)
     {

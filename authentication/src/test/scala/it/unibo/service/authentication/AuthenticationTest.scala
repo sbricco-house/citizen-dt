@@ -14,7 +14,7 @@ class AuthenticationTest extends AnyFlatSpec with BeforeAndAfterAll with Matcher
   private var client: WebClient = _
 
   "User with correct credential" should " login into system" in {
-    whenReady(client.post(LOGIN_ENDPOINT).sendJsonObjectFuture(Users.Andrea.loginBodyJson)) {
+    whenReady(client.post(LOGIN_ENDPOINT).sendJsonObjectFuture(Users.Citizen1.loginBodyJson)) {
       result =>
         result.statusCode() shouldBe 201
         result.bodyAsString() shouldBe defined
@@ -29,20 +29,20 @@ class AuthenticationTest extends AnyFlatSpec with BeforeAndAfterAll with Matcher
   }
 
   "User logged " should " verify the token with success" in {
-    whenReady(client.post(LOGIN_ENDPOINT).sendJsonObjectFuture(Users.Andrea.loginBodyJson)) {
+    whenReady(client.post(LOGIN_ENDPOINT).sendJsonObjectFuture(Users.Citizen1.loginBodyJson)) {
       result =>
         result.statusCode() shouldBe 201
         val token = result.bodyAsString().get
         whenReady(client.get(VERIFY_ENDPOINT.format(token)).sendFuture()) {
           result =>
             result.statusCode() shouldBe 200
-            result.bodyAsJsonObject().get.getString("email") shouldBe Users.Andrea.email
+            result.bodyAsJsonObject().get.getString("email") shouldBe Users.Citizen1.email
         }
     }
   }
 
   "User " can " logout" in {
-    whenReady(client.post(LOGIN_ENDPOINT).sendJsonObjectFuture(Users.Andrea.loginBodyJson)) {
+    whenReady(client.post(LOGIN_ENDPOINT).sendJsonObjectFuture(Users.Citizen1.loginBodyJson)) {
       result => val token = result.bodyAsString().get
         whenReady(client.get(LOGOUT_ENDPOINT).putHeader(getAuthorizationHeader(token)).sendFuture()) {
           result => result.statusCode() shouldBe 204
@@ -51,7 +51,7 @@ class AuthenticationTest extends AnyFlatSpec with BeforeAndAfterAll with Matcher
   }
 
   "User logged out " can " not verify token" in {
-    whenReady(client.post(LOGIN_ENDPOINT).sendJsonObjectFuture(Users.Andrea.loginBodyJson)) {
+    whenReady(client.post(LOGIN_ENDPOINT).sendJsonObjectFuture(Users.Citizen1.loginBodyJson)) {
       result => val token = result.bodyAsString().get
         whenReady(client.get(LOGOUT_ENDPOINT).putHeader(getAuthorizationHeader(token)).sendFuture()) {
           result => result.statusCode() shouldBe 204
@@ -63,7 +63,7 @@ class AuthenticationTest extends AnyFlatSpec with BeforeAndAfterAll with Matcher
   }
 
   "User logged " can "refresh his token" in {
-    whenReady(client.post(LOGIN_ENDPOINT).sendJsonObjectFuture(Users.Andrea.loginBodyJson)) {
+    whenReady(client.post(LOGIN_ENDPOINT).sendJsonObjectFuture(Users.Citizen1.loginBodyJson)) {
       result => val token = result.bodyAsString().get
         whenReady(client.post(REFRESH_ENDPOINT).putHeader(getAuthorizationHeader(token)).sendFuture()) {
           result =>
@@ -75,7 +75,7 @@ class AuthenticationTest extends AnyFlatSpec with BeforeAndAfterAll with Matcher
   }
 
   "User logged out" can  " not refresh his token" in {
-    whenReady(client.post(LOGIN_ENDPOINT).sendJsonObjectFuture(Users.Andrea.loginBodyJson)) {
+    whenReady(client.post(LOGIN_ENDPOINT).sendJsonObjectFuture(Users.Citizen1.loginBodyJson)) {
       result => val token = result.bodyAsString().get
         whenReady(client.get(LOGOUT_ENDPOINT).putHeader(getAuthorizationHeader(token)).sendFuture()) {
           result => result.statusCode() shouldBe 204

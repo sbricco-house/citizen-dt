@@ -4,26 +4,28 @@ import java.net.URI
 
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.client.HttpRequest
-import io.vertx.scala.core.Vertx
+import io.vertx.scala.core.{DeploymentOptions, Vertx}
 import io.vertx.scala.ext.auth.PubSecKeyOptions
 import io.vertx.scala.ext.auth.jwt.{JWTAuth, JWTAuthOptions}
 import io.vertx.scala.ext.web.client.{WebClient, WebClientOptions}
 import it.unibo.core.authentication.SystemUser
 import it.unibo.core.data.InMemoryStorage
+import it.unibo.service.authentication.api.{RestApiAuthentication, RestApiAuthenticationVerticle}
 import it.unibo.service.authentication.client.AuthenticationClient
 
 import scala.concurrent.duration._
 import scala.collection.mutable
 import scala.concurrent.Await
+import scala.io.Source
 
 object Users {
-  object Andrea extends SystemUser {
-    override def username: String = "andrea"
-    override def password: String = "b0b00310eb29a09c24770a50f2fa373fb4d76f9cbc56fdb5f7751123e9605fb2"
+  object Citizen1 extends SystemUser {
+    override def username: String = "citizen1"
+    override def password: String = "citizen1"
     override def role: String = "citizen"
-    override def email: String = "petretiandrea@gmail.com"
-    override def identifier: String = "lsdfnlsmfldnskdnek"
-    def loginBodyJson : JsonObject = new JsonObject().put("email", email).put("password", "andrea96")
+    override def email: String = "citizen1@email.com"
+    override def identifier: String = "citizen1"
+    def loginBodyJson : JsonObject = new JsonObject().put("email", email).put("password", password)
   }
 
   object WrongUser {
@@ -37,32 +39,25 @@ object AuthBootstrap {
   val VERIFY_ENDPOINT = "http://localhost:8080/verify?token=%s"
   val LOGOUT_ENDPOINT = "http://localhost:8080/logout"
   val REFRESH_ENDPOINT = "http://localhost:8080/refreshToken"
+
   def getAuthorizationHeader(token: String): (String, String) = "Authorization" -> s"Bearer $token"
 
   var vertx: Vertx = _
+  val config = new JsonObject(Source.fromResource("testconfig.json").mkString)
+  val port: Integer = config.getInteger("api.rest.port")
 
   def boot(): Unit = {
-    val userStorage = InMemoryStorage[SystemUser, String]()
-    userStorage.store(Users.Andrea.email, Users.Andrea)
-
     vertx = Vertx.vertx()
-    val options = JWTAuthOptions()
-      .setPubSecKeys(mutable.Buffer(PubSecKeyOptions()
-        .setAlgorithm("HS256")
-        .setPublicKey("keyboard cat")
-        .setSymmetric(true)))
 
-    val provider = JWTAuth.create(vertx, options)
-    val auth = AuthenticationService(provider, userStorage)
-    val verticle = new AuthenticationVerticle(auth, 8080) with RestAuthenticationApi
-    Await.result(vertx.deployVerticleFuture(verticle), 5 seconds)
+    val deploy = vertx.deployVerticleFuture(new AuthenticationVerticle(), DeploymentOptions().setConfig(config))
+    Await.result(deploy, 5 seconds)
   }
 
   def httpClient: WebClient = {
-    WebClient.create(vertx, WebClientOptions().setDefaultPort(8080))
+    WebClient.create(vertx, WebClientOptions().setDefaultPort(port))
   }
 
-  def client: AuthenticationService = AuthenticationClient("localhost", 8080)
+  def client: AuthenticationService = AuthenticationClient("localhost", port)
 
   def teardown(): Unit = {
     Await.result(vertx.closeFuture(), 5 seconds)
