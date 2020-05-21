@@ -4,7 +4,7 @@ package it.unibo.core.utils
  * Abstraction to generic error provided by a service
  */
 sealed trait ServiceError {
-  val message: String
+  def message: String
 }
 
 object ServiceError {
@@ -19,7 +19,6 @@ object ServiceError {
 
   case class MissingParameter(message: String = "missing or malformed required parameter") extends MissingError
   case class MissingResource(message: String = "resource not found") extends MissingError
-
 }
 
 

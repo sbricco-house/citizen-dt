@@ -2,7 +2,7 @@ package it.unibo.service.citizen.matcher
 
 import io.vertx.core.json.JsonObject
 import io.vertx.lang.scala.json.JsonArray
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.matchers.{MatchResult, Matcher}
 
 trait DataJsonMatcher {
