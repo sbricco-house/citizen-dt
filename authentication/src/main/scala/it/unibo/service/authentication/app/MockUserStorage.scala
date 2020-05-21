@@ -4,7 +4,7 @@ import it.unibo.core.authentication.SystemUser
 import it.unibo.core.data.{InMemoryStorage, Storage}
 import it.unibo.service.authentication.utils.Hash
 
-object UserStorage {
+object MockUserStorage {
 
   def generateDefault(): Storage[SystemUser, String] = {
     generate(Seq(
@@ -25,7 +25,7 @@ object UserStorage {
 
   private def generateSystemUser(identifier: Int, seedRole: String): SystemUser = {
     val seedRoleId = s"$seedRole$identifier"
-    SystemUser(s"$seedRoleId@email.com", s"$seedRoleId", Hash.SHA256.digest(s"$seedRoleId"), s"$identifier", s"$seedRole")
+    SystemUser(s"$seedRoleId@email.com", s"$seedRoleId", Hash.SHA256.digest(s"$seedRoleId"), s"$seedRoleId", s"$seedRole")
   }
 }
 

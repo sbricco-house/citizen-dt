@@ -6,14 +6,14 @@ import io.vertx.scala.ext.auth.jwt.{JWTAuth, JWTAuthOptions}
 import it.unibo.core.authentication.SystemUser
 import it.unibo.core.data.Storage
 import it.unibo.service.authentication.api.{RestApiAuthentication, RestApiAuthenticationVerticle}
-import it.unibo.service.authentication.app.UserStorage
+import it.unibo.service.authentication.app.MockUserStorage
 
 import scala.collection.mutable
 import scala.concurrent.Future
 
 class AuthenticationVerticle extends ScalaVerticle {
 
-  val userStorage: Storage[SystemUser, String] = UserStorage.generateDefault()
+  val userStorage: Storage[SystemUser, String] = MockUserStorage.generateDefault()
 
   override def startFuture(): Future[_] = {
     super.startFuture()

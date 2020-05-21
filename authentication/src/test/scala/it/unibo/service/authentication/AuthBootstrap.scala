@@ -19,13 +19,13 @@ import scala.concurrent.Await
 import scala.io.Source
 
 object Users {
-  object Andrea extends SystemUser {
-    override def username: String = "andrea"
-    override def password: String = "b0b00310eb29a09c24770a50f2fa373fb4d76f9cbc56fdb5f7751123e9605fb2"
+  object Citizen1 extends SystemUser {
+    override def username: String = "citizen1"
+    override def password: String = "citizen1"
     override def role: String = "citizen"
-    override def email: String = "petretiandrea@gmail.com"
-    override def identifier: String = "lsdfnlsmfldnskdnek"
-    def loginBodyJson : JsonObject = new JsonObject().put("email", email).put("password", "andrea96")
+    override def email: String = "citizen1@email.com"
+    override def identifier: String = "citizen1"
+    def loginBodyJson : JsonObject = new JsonObject().put("email", email).put("password", password)
   }
 
   object WrongUser {
@@ -49,15 +49,11 @@ object AuthBootstrap {
   def boot(): Unit = {
     vertx = Vertx.vertx()
 
-    val userStorage = InMemoryStorage[SystemUser, String]()
-    userStorage.store(Users.Andrea.email, Users.Andrea)
-
     val deploy = vertx.deployVerticleFuture(new AuthenticationVerticle(), DeploymentOptions().setConfig(config))
     Await.result(deploy, 5 seconds)
   }
 
   def httpClient: WebClient = {
-
     WebClient.create(vertx, WebClientOptions().setDefaultPort(port))
   }
 
