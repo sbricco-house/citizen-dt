@@ -32,17 +32,20 @@ object Users {
 }
 
 object AuthBootstrap {
+
   val LOGIN_ENDPOINT = "http://localhost:8080/login"
   val VERIFY_ENDPOINT = "http://localhost:8080/verify?token=%s"
   val LOGOUT_ENDPOINT = "http://localhost:8080/logout"
   val REFRESH_ENDPOINT = "http://localhost:8080/refreshToken"
   def getAuthorizationHeader(token: String): (String, String) = "Authorization" -> s"Bearer $token"
 
+  var vertx: Vertx = _
+
   def boot(): Unit = {
     val userStorage = InMemoryStorage[SystemUser, String]()
     userStorage.store(Users.Andrea.email, Users.Andrea)
 
-    val vertx = Vertx.vertx()
+    vertx = Vertx.vertx()
     val options = JWTAuthOptions()
       .setPubSecKeys(mutable.Buffer(PubSecKeyOptions()
         .setAlgorithm("HS256")
@@ -50,17 +53,20 @@ object AuthBootstrap {
         .setSymmetric(true)))
 
     val provider = JWTAuth.create(vertx, options)
-    val auth = new BackendAuthenticationService(provider, userStorage)
+    val auth = AuthenticationService(provider, userStorage)
     val verticle = new AuthenticationVerticle(auth, 8080) with RestAuthenticationApi
     Await.result(vertx.deployVerticleFuture(verticle), 5 seconds)
   }
 
   def httpClient: WebClient = {
-    val vertx = Vertx.vertx()
     WebClient.create(vertx, WebClientOptions().setDefaultPort(8080))
   }
 
   def client: AuthenticationService = AuthenticationClient("localhost", 8080)
+
+  def teardown(): Unit = {
+    Await.result(vertx.closeFuture(), 5 seconds)
+  }
 
   implicit class RichHttpRequest[T](request: HttpRequest[T]) {
     def putHeader(value: (String, String)): HttpRequest[T] = request.putHeader(value._1, value._2)

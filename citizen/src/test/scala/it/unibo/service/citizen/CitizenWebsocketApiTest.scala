@@ -1,6 +1,4 @@
 package it.unibo.service.citizen
-import java.util.concurrent.TimeUnit
-
 import io.vertx.scala.core.http.HttpClient
 import it.unibo.service.citizen.HttpBootstrap.{STATE_ENDPOINT, _}
 import it.unibo.service.citizen.matcher.DataJsonMatcher
@@ -10,8 +8,6 @@ import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success}
 
 class CitizenWebsocketApiTest extends AsyncFlatSpec with BeforeAndAfterAll with Matchers with ScalaFutures with DataJsonMatcher {
@@ -32,11 +28,12 @@ class CitizenWebsocketApiTest extends AsyncFlatSpec with BeforeAndAfterAll with 
   }
 
   override def beforeAll(): Unit = {
-    Await.result(HttpBootstrap.boot(), Duration(5000, TimeUnit.MILLISECONDS))
+    HttpBootstrap.boot()
     client = HttpBootstrap.httpClient()
   }
 
   override def afterAll(): Unit = {
+    HttpBootstrap.teardown()
     client.close()
   }
 }

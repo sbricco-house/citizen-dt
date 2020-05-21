@@ -1,20 +1,14 @@
 package it.unibo.service.citizen
 
-import java.util.concurrent.TimeUnit
-
 import io.vertx.core.json.JsonObject
 import io.vertx.scala.ext.web.client.WebClient
 import it.unibo.service.citizen.HttpBootstrap._
-import it.unibo.core.microservice.vertx._
 import it.unibo.service.citizen.matcher.DataJsonMatcher
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
-
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
 
 class RestApiTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with ScalaFutures with DataJsonMatcher {
 
@@ -141,11 +135,12 @@ class RestApiTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with 
   }
 
   override def beforeAll(): Unit = {
-    Await.result(HttpBootstrap.boot(), Duration(5000, TimeUnit.MILLISECONDS))
+    HttpBootstrap.boot()
     client = HttpBootstrap.webClient()
   }
 
   override def afterAll(): Unit = {
+    HttpBootstrap.teardown()
     client.close()
   }
 }

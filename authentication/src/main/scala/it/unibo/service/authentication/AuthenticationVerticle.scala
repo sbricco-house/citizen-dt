@@ -6,8 +6,8 @@ import it.unibo.core.microservice.vertx.BaseVerticle
 import it.unibo.core.microservice.vertx._
 
 class AuthenticationVerticle(protected val authenticationService: AuthenticationService,
-                                       port : Int = 8080,
-                                       host : String = "0.0.0.0") extends BaseVerticle(port, host) {
+                             port : Int = 8080,
+                             host : String = "0.0.0.0") extends BaseVerticle(port, host) {
 
   case class LoginUser(email: String, password: String)
 

@@ -15,7 +15,8 @@ import it.unibo.service.authentication.TokenIdentifier
 import it.unibo.service.citizen.authentication.MockAuthenticationClient
 import it.unibo.service.permission.MockAuthorization
 
-import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 object HttpBootstrap {
   val STATE_ENDPOINT = s"http://localhost:8080/citizens/50/state"
@@ -27,8 +28,10 @@ object HttpBootstrap {
   val HISTORY_CATEGORY = "heartbeat"
   val HISTORY_GROUP_CATEGORY = "medical"
 
-  def boot(): Future[String] = {
-    val vertx = Vertx.vertx()
+  var vertx: Vertx = _
+
+  def boot(): Unit = {
+    vertx = Vertx.vertx()
 
     val categoriesRegistry = DataCategoryRegistry()
     categoriesRegistry.register(Categories.medicalDataCategory)
@@ -56,16 +59,19 @@ object HttpBootstrap {
       "50"
     ) with RestCitizenApi with WebSocketCitizenApi
 
-    vertx.deployVerticleFuture(citizenVerticle)
+    Await.result(vertx.deployVerticleFuture(citizenVerticle), 5 seconds)
   }
 
   def webClient(): WebClient = {
-    val vertx = Vertx.vertx()
     WebClient.create(vertx, WebClientOptions().setDefaultPort(8080))
   }
 
   def httpClient(): HttpClient = {
     Vertx.vertx().createHttpClient(HttpClientOptions().setDefaultPort(8080))
+  }
+
+  def teardown(): Unit = {
+    Await.result(vertx.closeFuture(), 5 seconds)
   }
 
   implicit class RichHttpRequest[T](request: HttpRequest[T]) {
