@@ -5,11 +5,11 @@ import it.unibo.core.data.{Data, DataCategory}
 import it.unibo.core.dt.History.History
 import it.unibo.core.microservice.FutureService
 import it.unibo.service.authentication.TokenIdentifier
-import io.vertx.scala.core.Vertx._
 import it.unibo.core.client.{RestApiClient, RestClientServiceResponse}
 import it.unibo.core.utils.HttpCode.Ok
 import it.unibo.core.microservice._
 class HttpCitizenClient(host : String, port : Int, user : String) extends CitizenService with RestApiClient with RestClientServiceResponse {
+  import io.vertx.scala.core.Vertx._
   override val webClient : WebClient = WebClient.create(vertx, WebClientOptions().setDefaultPort(8080))
   private implicit val executionContext: VertxExecutionContext = VertxExecutionContext(vertx.getOrCreateContext())
 
@@ -25,7 +25,5 @@ class HttpCitizenClient(host : String, port : Int, user : String) extends Citize
 
   override def readHistoryData(who: TokenIdentifier, citizenId: String, dataIdentifier: String): FutureService[Data] = ???
 
-  override def observeState(who: TokenIdentifier, citizenId: String, callback: Data => Unit): FutureService[Channel] = {
-
-  }
+  override def observeState(who: TokenIdentifier, citizenId: String): FutureService[Channel] = ???
 }

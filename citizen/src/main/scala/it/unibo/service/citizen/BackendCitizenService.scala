@@ -1,7 +1,5 @@
 package it.unibo.service.citizen
 
-import java.util.UUID
-
 import it.unibo.core.authentication.SystemUser
 import it.unibo.core.data.{Data, DataCategory, DataCategoryOps, LeafCategory, Storage}
 import it.unibo.core.dt.History.History
@@ -10,9 +8,11 @@ import it.unibo.core.microservice.FutureService
 import it.unibo.core.utils.ServiceError.{MissingParameter, MissingResource, Unauthorized}
 import it.unibo.service.authentication.{AuthenticationService, TokenIdentifier}
 import it.unibo.service.permission.AuthorizationService
+import monix.reactive.Observable
+import monix.reactive.subjects.PublishSubject
 
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
-import scala.util.{Failure, Success}
+import scala.concurrent.ExecutionContext
+import scala.util.Success
 
 /**
  * Implementation of backend CitizenService
@@ -25,12 +25,11 @@ import scala.util.{Failure, Success}
 class BackendCitizenService(authenticationService : AuthenticationService,
                             authorizationService: AuthorizationService,
                             dataStorage : Storage[Data, String],
-                            private var state: State = State.empty) extends CitizenService {
+                            private var state: State = State.empty,
+                            )(implicit val executionContext: ExecutionContext) extends CitizenService {
   self =>
 
   private var channels : Map[SourceChannel, SystemUser] = Map.empty
-
-  implicit val executionContext: ExecutionContextExecutor = ExecutionContext.global
 
   override def readState(who: TokenIdentifier, citizenId: String): FutureService[Seq[Data]] = {
     authenticationService.verifyToken(who).flatMap(user => readState(user, citizenId))
@@ -105,22 +104,25 @@ class BackendCitizenService(authenticationService : AuthenticationService,
       .map(categories => state.get(categories))
   }
 
-  private class SourceImpl(callback : Data => Unit, user : SystemUser, citizen : String, categories : Seq[DataCategory]) extends SourceChannel {
+  private class SourceImpl(user : SystemUser, citizen : String, categories : Seq[DataCategory]) extends SourceChannel {
     self.channels += this -> user
-
-    override def emit(data: Seq[Data]): Unit = data foreach callback
+    val publishChannel = PublishSubject[Data]()
+    //todo handle on next
+    override def emit(data: Seq[Data]): Unit = data foreach publishChannel.onNext
 
     //TODO this method may avoid to call update state, it has categories already
     override def updateState(data: Seq[Data]): FutureService[Seq[Data]] = self.updateState(user, citizen, data)
 
     override def close(): Unit = self.channels -= this
+
+    override def updateDataStream(): Observable[Data] = publishChannel
   }
 
-  override def observeState(who: TokenIdentifier, citizenId: String, callback: Data => Unit): FutureService[Channel] = {
+  override def observeState(who: TokenIdentifier, citizenId: String): FutureService[Channel] = {
     authenticationService.verifyToken(who)
       .flatMap(user => {
         authorizationService.authorizedReadCategories(user, citizenId)
-          .map(categories => new SourceImpl(callback, user, citizenId, categories))
+          .map(categories => new SourceImpl(user, citizenId, categories))
       })
   }
 }

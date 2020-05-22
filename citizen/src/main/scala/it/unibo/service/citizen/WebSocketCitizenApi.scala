@@ -1,5 +1,8 @@
 package it.unibo.service.citizen
 
+import io.vertx.lang.scala.VertxExecutionContext
+import io.vertx.lang.scala.json.JsonObject
+import io.vertx.scala.core.Vertx.vertx
 import io.vertx.scala.core.http.ServerWebSocket
 import it.unibo.core.data.Data
 import it.unibo.core.microservice.protocol.{WebsocketResponse, WebsocketUpdate}
@@ -9,12 +12,15 @@ import it.unibo.core.utils.ServiceError.Unauthorized
 import it.unibo.service.authentication.TokenIdentifier
 import it.unibo.service.citizen.middleware.UserMiddleware
 import it.unibo.service.citizen.websocket.{CitizenProtocol, Ok, Status}
+import monix.execution.{Ack, Scheduler}
 
+import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 trait WebSocketCitizenApi extends WebSocketApi {
   self : RestCitizenVerticle =>
   import it.unibo.core.microservice.vertx._
+  implicit lazy val monixVertxContext = monix.execution.Scheduler(VertxExecutionContext(self.vertx.getOrCreateContext()))
 
   override def webSocketHandler(websocket: ServerWebSocket): Unit = {
     val tokenOption = websocket.headers()
@@ -25,7 +31,7 @@ trait WebSocketCitizenApi extends WebSocketApi {
       case (None, _) => websocket.rejectNotAuthorized()
       case (_, Failure(_)) => websocket.rejectBadContent()
       case (Some(user), Success(_)) =>
-        self.citizenService.observeState(user, self.citizenIdentifier, createWebsocketCallback(websocket))
+        self.citizenService.observeState(user, self.citizenIdentifier)
           .whenComplete {
             case Response(channel) => manageChannel(websocket, channel)
             case Fail(Unauthorized(m)) => websocket.rejectNotAuthorized()
@@ -39,15 +45,18 @@ trait WebSocketCitizenApi extends WebSocketApi {
     case _ => Failure(new IllegalArgumentException())
   }
 
-  private def createWebsocketCallback(websocket: ServerWebSocket) : Data => Unit = data => parser.encode(data) match {
-    case Some(encoded) =>
-      val updatePacket = WebsocketUpdate(encoded)
-      websocket.writeTextMessage(CitizenProtocol.updateParser.decode(updatePacket))
-    case _ =>
-  }
-
   private def manageChannel(webSocket: ServerWebSocket, channel : CitizenService#Channel) : Unit = {
-    webSocket.closeHandler(_ => channel.close())
+    val toCancel = channel.updateDataStream()
+      .map(parser.encode)
+      .collect { case Some(obj) => obj }
+      .foreach(consumeData(webSocket, _))
+
+    channel.updateDataStream()
+    webSocket.closeHandler(_ => {
+      channel.close()
+      toCancel.cancel()
+    })
+
     webSocket.accept()
     webSocket.textMessageHandler(handler => {
       val dataEncoded = CitizenProtocol.requestParser.encode(handler)
@@ -67,7 +76,10 @@ trait WebSocketCitizenApi extends WebSocketApi {
       }
     })
   }
-
+  private def consumeData(websocket: ServerWebSocket, data : JsonObject) : Unit = {
+      val updatePacket = WebsocketUpdate(data)
+      websocket.writeTextMessage(CitizenProtocol.updateParser.decode(updatePacket))
+  }
   private def manageRequest(requestId : Int, channel : CitizenService#Channel, data : Seq[Option[Data]], webSocket: ServerWebSocket) : Unit = {
     def produceResponse(futureResult : ServiceResponse[Seq[Data]]) = futureResult match {
       case Response(_) =>WebsocketResponse[Status](requestId, Ok)

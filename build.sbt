@@ -6,7 +6,7 @@ scalaVersion := "2.13.2"
 
 val circeVersion = "0.7.0"
 val vertxVersion = "3.9.0"
-
+val monixVersion = "3.2.1"
 
 lazy val commonSetting = Seq(
   libraryDependencies ++= Seq(
@@ -14,6 +14,7 @@ lazy val commonSetting = Seq(
     "io.circe"  %% "circe-core"     % circeVersion,
     "io.circe"  %% "circe-generic"  % circeVersion,
     "io.circe"  %% "circe-parser"   % circeVersion,
+    "io.monix" %% "monix-reactive" % monixVersion,
     "io.vertx" %% "vertx-lang-scala" % vertxVersion,
     "io.vertx" %% "vertx-web-scala" % vertxVersion,
     "io.vertx" %% "vertx-web-client-scala" % vertxVersion

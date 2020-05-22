@@ -49,7 +49,7 @@ object HttpBootstrap {
     ))
 
     val store = InMemoryStorage[Data, String]()
-    val citizenService = CitizenService(authenticationService, authorizationService, store)
+    val citizenService = CitizenService.fromVertx(authenticationService, authorizationService, store, vertx)
 
     val parser = DataParserRegistry(new Categories.HearBeatParser(), new Categories.BloodPressureParser())
     val citizenVerticle = new RestCitizenVerticle(
