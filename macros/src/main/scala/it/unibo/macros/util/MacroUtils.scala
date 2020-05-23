@@ -1,5 +1,6 @@
 package it.unibo.macros.util
 
+import scala.language.experimental.macros // enable travis CI to use macro compile options
 import scala.reflect.macros.whitebox.{Context => Whitebox}
 object MacroUtils {
   def getTypeOrNone[T](value : Any) : Option[Any] = macro getTypeOrNoneImpl[T]

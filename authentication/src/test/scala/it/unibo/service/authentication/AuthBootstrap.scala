@@ -35,22 +35,22 @@ object Users {
 
 object AuthBootstrap {
 
-  val LOGIN_ENDPOINT = "http://localhost:8080/login"
-  val VERIFY_ENDPOINT = "http://localhost:8080/verify?token=%s"
-  val LOGOUT_ENDPOINT = "http://localhost:8080/logout"
-  val REFRESH_ENDPOINT = "http://localhost:8080/refreshToken"
-
-  def getAuthorizationHeader(token: String): (String, String) = "Authorization" -> s"Bearer $token"
-
   var vertx: Vertx = _
   val config = new JsonObject(Source.fromResource("testconfig.json").mkString)
   val port: Integer = config.getInteger("api.rest.port")
+
+  val LOGIN_ENDPOINT = s"http://localhost:$port/login"
+  val VERIFY_ENDPOINT = s"http://localhost:$port/verify?token=%s"
+  val LOGOUT_ENDPOINT = s"http://localhost:$port/logout"
+  val REFRESH_ENDPOINT = s"http://localhost:$port/refreshToken"
+
+  def getAuthorizationHeader(token: String): (String, String) = "Authorization" -> s"Bearer $token"
 
   def boot(): Unit = {
     vertx = Vertx.vertx()
 
     val deploy = vertx.deployVerticleFuture(new AuthenticationVerticle(), DeploymentOptions().setConfig(config))
-    Await.result(deploy, 5 seconds)
+    Await.result(deploy, 10 seconds)
   }
 
   def httpClient: WebClient = {
