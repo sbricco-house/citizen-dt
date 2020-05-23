@@ -13,45 +13,21 @@ package object vertx {
     } catch {
       case e : Exception => None
     }
+
+    protected[vertx] def getOrNone[E](string : String, jsonObject: JsonObject)(some : => E) = if(jsonObject.containsKey(string)) {
+      tryOrNone(some)
+    } else {
+      None
+    }
   }
   implicit class RichJson(json : JsonObject) {
     import JsonConversion._
-    def getAsString(s : String) : Option[String] = if(json.containsKey(s)) {
-      tryOrNone { json.getString(s) }
-    } else {
-      None
-    }
-
-    def getAsObject(s : String) : Option[JsonObject] = if(json.containsKey(s)) {
-      tryOrNone { json.getJsonObject(s) }
-    } else {
-      None
-    }
-
-    def getAsLong(s : String) : Option[Long] = if(json.containsKey(s)) {
-      tryOrNone { json.getLong(s) }
-    } else {
-      None
-    }
-
-    def getAsInt(s : String) : Option[Int] = if(json.containsKey(s)) {
-      tryOrNone { json.getInteger(s) }
-    } else {
-      None
-    }
-
-    def getAsBoolean(s : String) : Option[Boolean] = if(json.containsKey(s)) {
-      tryOrNone { json.getBoolean(s)}
-    } else {
-      None
-    }
-
-    def getAsArray(s : String) : Option[JsonArray] = if(json.containsKey(s)) {
-      tryOrNone { json.getJsonArray(s)}
-    } else {
-      None
-    }
-
+    def getAsString(s : String) : Option[String] = getOrNone(s, json){ json.getString(s) }
+    def getAsObject(s : String) : Option[JsonObject] = getOrNone(s, json){ json.getJsonObject(s) }
+    def getAsLong(s : String) : Option[Long] = getOrNone(s, json){ json.getLong(s) }
+    def getAsInt(s : String) : Option[Int] = getOrNone(s, json){ json.getInteger(s) }
+    def getAsBoolean(s : String) : Option[Boolean] = getOrNone(s, json){ json.getBoolean(s)}
+    def getAsArray(s : String) : Option[JsonArray] = getOrNone(s, json) { json.getJsonArray(s)}
   }
 
   implicit class RichJsonArray(json : JsonArray) {

@@ -1,18 +1,18 @@
 package it.unibo.service.citizen
 
 import io.vertx.lang.scala.VertxExecutionContext
-import io.vertx.lang.scala.json.JsonObject
+import io.vertx.lang.scala.json.{JsonArray, JsonObject}
 import io.vertx.scala.core.Vertx.vertx
 import io.vertx.scala.core.http.ServerWebSocket
 import it.unibo.core.data.Data
-import it.unibo.core.microservice.protocol.{WebsocketResponse, WebsocketUpdate}
+import it.unibo.core.microservice.protocol.{WebsocketRequest, WebsocketResponse, WebsocketUpdate}
 import it.unibo.core.microservice.vertx.WebSocketApi
 import it.unibo.core.microservice.{Fail, Response, ServiceResponse}
 import it.unibo.core.utils.ServiceError.Unauthorized
 import it.unibo.service.authentication.TokenIdentifier
 import it.unibo.service.citizen.middleware.UserMiddleware
 import it.unibo.service.citizen.websocket.{CitizenProtocol, Ok, Status}
-import monix.execution.{Ack, Scheduler}
+import monix.execution.{Ack, Cancelable, Scheduler}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
@@ -46,36 +46,49 @@ trait WebSocketCitizenApi extends WebSocketApi {
   }
 
   private def manageChannel(webSocket: ServerWebSocket, channel : CitizenService#Channel) : Unit = {
+    val clientChannel = maintainChannelFromClient(webSocket, channel)
+    val serverChannel = maintainChannelFromServer(webSocket, channel)
+    webSocket.closeHandler(_ => {
+      channel.close()
+      clientChannel.cancel()
+      serverChannel.cancel()
+    })
+    webSocket.accept()
+  }
+
+  private def maintainChannelFromClient(webSocket: ServerWebSocket, channel : CitizenService#Channel) : Cancelable = {
     val toCancel = channel.updateDataStream()
       .map(parser.encode)
       .collect { case Some(obj) => obj }
       .foreach(consumeData(webSocket, _))
 
     channel.updateDataStream()
-    webSocket.closeHandler(_ => {
-      channel.close()
-      toCancel.cancel()
-    })
-
-    webSocket.accept()
-    webSocket.textMessageHandler(handler => {
-      val dataEncoded = CitizenProtocol.requestParser.encode(handler)
-      dataEncoded match {
-        case Some(request) =>
-          val decodedElements = request.value.getAsObjectSeq.map(elements => elements.map(parser.decode))
-          val anyFailedDecoding = decodedElements.map(_.contains(None))
-          anyFailedDecoding match {
-            case Some(false) => manageRequest(request.id, channel, decodedElements.get, webSocket)
-            case Some(true) =>
-              val response = WebsocketResponse[Status](request.id, CitizenProtocol.unkwonDataCategoryError)
-              val jsonResponse = CitizenProtocol.responseParser.decode(response)
-              webSocket.writeTextMessage(jsonResponse)
-            case _ => webSocket.writeTextJsonObject(CitizenProtocol.unkwon)
-          }
-        case None => webSocket.writeTextJsonObject(CitizenProtocol.unkwon)
-      }
-    })
+    toCancel
   }
+
+  private def maintainChannelFromServer(webSocket: ServerWebSocket, channel : CitizenService#Channel) : Cancelable = {
+    import it.unibo.core.observable._
+    val websocketObservable = observableFromWebSocket(webSocket)
+
+    def badCategoryResponse(request : WebsocketRequest[JsonArray]) : Unit = {
+      val response = WebsocketResponse[Status](request.id, CitizenProtocol.unkwonDataCategoryError)
+      val jsonResponse = CitizenProtocol.responseParser.decode(response)
+      webSocket.writeTextMessage(jsonResponse)
+    }
+
+    val toCancel = websocketObservable.map(CitizenProtocol.requestParser.encode)
+      .fallbackOption { webSocket.writeTextJsonObject(CitizenProtocol.unkwon) }
+      .collect { case Some(data) => data }
+      .map(request => (request, request.value.getAsObjectSeq.map(_.map(parser.decode))))
+      .fallback(_._2.nonEmpty, _ => webSocket.writeTextJsonObject(CitizenProtocol.unkwon))
+      .collect { case (request, Some(data)) => (request, data)}
+      .fallback(_._2.forall(_.nonEmpty), elem => badCategoryResponse(elem._1))
+      .foreach {
+        case (request, elem) => manageRequest(request.id, channel, elem, webSocket)
+      }
+    toCancel
+  }
+
   private def consumeData(websocket: ServerWebSocket, data : JsonObject) : Unit = {
       val updatePacket = WebsocketUpdate(data)
       websocket.writeTextMessage(CitizenProtocol.updateParser.decode(updatePacket))
