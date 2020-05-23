@@ -19,7 +19,7 @@ class AuthenticationVerticle extends ScalaVerticle {
     super.startFuture()
 
     val host = config.getString("api.rest.host", "localhost")
-    val port = config.getInteger("api.rest.port", 8080)
+    val port = config.getInteger("api.rest.port", 8123)
     val symmetricKey = config.getString("jwt.key", "keyboard cat")
 
     val options = JWTAuthOptions().setPubSecKeys(mutable.Buffer(PubSecKeyOptions()
