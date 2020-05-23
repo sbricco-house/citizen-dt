@@ -56,7 +56,7 @@ trait WebSocketCitizenApi extends WebSocketApi {
     webSocket.accept()
   }
 
-  private def maintainChannelFromClient(webSocket: ServerWebSocket, channel : CitizenService#Channel) : Cancelable = {
+  private def maintainChannelFromServer(webSocket: ServerWebSocket, channel : CitizenService#Channel) : Cancelable = {
     val toCancel = channel.updateDataStream()
       .map(parser.encode)
       .collect { case Some(obj) => obj }
@@ -66,7 +66,7 @@ trait WebSocketCitizenApi extends WebSocketApi {
     toCancel
   }
 
-  private def maintainChannelFromServer(webSocket: ServerWebSocket, channel : CitizenService#Channel) : Cancelable = {
+  private def maintainChannelFromClient(webSocket: ServerWebSocket, channel : CitizenService#Channel) : Cancelable = {
     import it.unibo.core.observable._
     val websocketObservable = observableFromWebSocket(webSocket)
 
