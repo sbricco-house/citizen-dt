@@ -7,7 +7,7 @@ import io.vertx.scala.core.http.{HttpClient, HttpClientOptions, WebSocketConnect
 import io.vertx.scala.ext.web.client.{HttpRequest, WebClient, WebClientOptions}
 import it.unibo.core.authentication.SystemUser
 import it.unibo.core.data._
-import it.unibo.core.parser.{DataParserRegistry, ValueParser}
+import it.unibo.core.parser.{DataParserRegistry, ValueParser, VertxJsonParser}
 import it.unibo.service.authentication.TokenIdentifier
 import it.unibo.service.citizen.authentication.MockAuthenticationClient
 import it.unibo.service.permission.MockAuthorization
@@ -43,11 +43,11 @@ object HttpBootstrap {
 
     val store = InMemoryStorage[Data, String]()
     val citizenService = CitizenService.fromVertx(authenticationService, authorizationService, store, vertx)
-
-    val parserRegistry = DataParserRegistry
-      .Json()
-      .registerParser(ValueParser.Json.intParser, Categories.bloodPressureCategory)
-      .registerParser(ValueParser.Json.doubleParser, Categories.hearBeatCategory)
+    val integerDataParser = VertxJsonParser(ValueParser.Json.intParser, Categories.bloodPressureCategory)
+    val doubleDataParser = VertxJsonParser(ValueParser.Json.intParser, Categories.hearBeatCategory)
+    val parserRegistry = DataParserRegistry()
+      .registerParser(integerDataParser)
+      .registerParser(doubleDataParser)
       .registerGroupCategory(Categories.medicalDataCategory)
 
     val citizenVerticle = new RestCitizenVerticle(
