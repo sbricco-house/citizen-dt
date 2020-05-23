@@ -50,7 +50,7 @@ object AuthBootstrap {
     vertx = Vertx.vertx()
 
     val deploy = vertx.deployVerticleFuture(new AuthenticationVerticle(), DeploymentOptions().setConfig(config))
-    Await.result(deploy, 5 seconds)
+    Await.result(deploy, 10 seconds)
   }
 
   def httpClient: WebClient = {
