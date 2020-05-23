@@ -68,8 +68,10 @@ trait RestCitizenApi extends RestApi with RestServiceResponse {
     val token = context.getToken(UserMiddleware.JWT_TOKEN)
     val dataCategory = context.queryParams().get("data_category")
     val limit = context.queryParams().get("limit").getOrElse("1").toInt
+    println(parser.supportedCategories)
+    println(dataCategory)
     val pending = dataCategory
-      .flatMap(dataCategoryRegistry.get)
+      .flatMap(parser.decodeCategory)
       .map(citizenService.readHistory(token, citizenIdentifier, _, limit))
       .getOrElse(FutureService.fail(MissingParameter(s"Missing or invalid data_category query parameter")))
 

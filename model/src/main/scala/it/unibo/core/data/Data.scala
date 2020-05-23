@@ -2,6 +2,8 @@ package it.unibo.core.data
 
 import java.util.UUID
 
+import monix.catnap.CircuitBreaker.Timestamp
+
 /**
  * main abstraction to store information about a citizen, institution or someone else.
  * It is piece of information characterized by
@@ -17,4 +19,12 @@ trait Data {
   def category : LeafCategory
   def timestamp : Long
   def value : Any
+}
+
+object Data {
+  def apply(identifier : String, feeder: Feeder, category: LeafCategory, timestamp: Long, value : Any) : Data = {
+    AnyData(identifier, feeder, category, timestamp, value)
+  }
+
+  case class AnyData(identifier : String, feeder: Feeder, category: LeafCategory, timestamp: Long, value : Any) extends Data
 }

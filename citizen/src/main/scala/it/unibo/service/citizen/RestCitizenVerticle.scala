@@ -7,8 +7,7 @@ import io.vertx.lang.scala.json.{Json, JsonObject}
 import io.vertx.scala.ext.web.RoutingContext
 import it.unibo.core.data.Data
 import it.unibo.core.microservice.vertx.{BaseVerticle, _}
-import it.unibo.core.parser.DataParser
-import it.unibo.core.registry.DataCategoryRegistry
+import it.unibo.core.parser.DataParserRegistry
 import it.unibo.service.authentication.TokenIdentifier
 
 object RestCitizenVerticle {
@@ -21,8 +20,7 @@ object RestCitizenVerticle {
 }
 
 class RestCitizenVerticle(protected val citizenService: CitizenService,
-                          protected val parser : DataParser[JsonObject],
-                          protected val dataCategoryRegistry: DataCategoryRegistry,
+                          protected val parser : DataParserRegistry[JsonObject],
                           protected val citizenIdentifier: String, // could be a UUID or integer, or something else
                           port : Int = 8080,
                           host : String = "localhost") extends BaseVerticle(port, host) {

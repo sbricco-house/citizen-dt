@@ -1,8 +1,6 @@
 package it.unibo.service.citizen
-import io.vertx.core.http.HttpMethod
 import io.vertx.lang.scala.json.{Json, JsonArray, JsonObject}
 import io.vertx.scala.core.http.{HttpClient, WebSocket}
-import io.vertx.scala.ext.web.client.WebClient
 import it.unibo.core.microservice.protocol.{WebsocketRequest, WebsocketResponse, WebsocketUpdate}
 import it.unibo.service.citizen.HttpBootstrap.{STATE_ENDPOINT, _}
 import it.unibo.service.citizen.matcher.DataJsonMatcher

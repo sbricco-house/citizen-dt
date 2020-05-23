@@ -1,7 +1,7 @@
 package it.unibo.core.parser
 
 trait Parser[Rep, Raw] {
-  type E[O]
+  type E[Rep]
   def decode(rawData : Raw) : E[Rep]
   def encode(data : Rep) : Option[Raw]
 }

@@ -10,6 +10,6 @@ import it.unibo.core.data.{Data, LeafCategory}
 trait DataParser[Raw] extends Parser[Data, Raw] {
   override type E[O] = Option[Data]
   def decode(rawData : Raw) : Option[Data]
+  def supportedCategories : Seq[LeafCategory]
   def encode(data : Data) : Option[Raw]
-  def target : LeafCategory
 }
