@@ -35,16 +35,16 @@ object Users {
 
 object AuthBootstrap {
 
-  val LOGIN_ENDPOINT = "http://localhost:8123/login"
-  val VERIFY_ENDPOINT = "http://localhost:8123/verify?token=%s"
-  val LOGOUT_ENDPOINT = "http://localhost:8123/logout"
-  val REFRESH_ENDPOINT = "http://localhost:8123/refreshToken"
-
-  def getAuthorizationHeader(token: String): (String, String) = "Authorization" -> s"Bearer $token"
-
   var vertx: Vertx = _
   val config = new JsonObject(Source.fromResource("testconfig.json").mkString)
   val port: Integer = config.getInteger("api.rest.port")
+
+  val LOGIN_ENDPOINT = s"http://localhost:$port/login"
+  val VERIFY_ENDPOINT = s"http://localhost:$port/verify?token=%s"
+  val LOGOUT_ENDPOINT = s"http://localhost:$port/logout"
+  val REFRESH_ENDPOINT = s"http://localhost:$port/refreshToken"
+
+  def getAuthorizationHeader(token: String): (String, String) = "Authorization" -> s"Bearer $token"
 
   def boot(): Unit = {
     vertx = Vertx.vertx()
