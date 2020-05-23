@@ -10,7 +10,7 @@ import org.scalatest.time.{Millis, Seconds, Span}
 
 class AuthenticationTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with ScalaFutures {
 
-  implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(5, Seconds), interval = Span(100, Millis))
+  implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(20, Seconds), interval = Span(100, Millis))
   private var client: WebClient = _
 
   "User with correct credential" should " login into system" in {
