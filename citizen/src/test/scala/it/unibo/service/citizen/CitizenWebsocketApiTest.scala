@@ -1,6 +1,8 @@
 package it.unibo.service.citizen
+import io.vertx.core.http.HttpMethod
 import io.vertx.lang.scala.json.{Json, JsonArray, JsonObject}
 import io.vertx.scala.core.http.{HttpClient, WebSocket}
+import io.vertx.scala.ext.web.client.WebClient
 import it.unibo.core.microservice.protocol.{WebsocketRequest, WebsocketResponse, WebsocketUpdate}
 import it.unibo.service.citizen.HttpBootstrap.{STATE_ENDPOINT, _}
 import it.unibo.service.citizen.matcher.DataJsonMatcher
@@ -53,12 +55,25 @@ class CitizenWebsocketApiTest extends AnyFlatSpec with BeforeAndAfterAll with Ma
         channel.writeTextMessage(stringRequest)
         val update = awaitUpdate(channel)
         whenReady(update) {
-          case _ => succeed
+          case WebsocketUpdate(data) => data should sameData(hearbeatData)
         }
         channel.close()
     }
   }
 
+  "citizen client" should "enable to notificated from citizen state rest update " in {
+    whenReady(client.webSocketFuture(wsOptions(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER))) {
+      channel =>
+        val webClient = HttpBootstrap.webClient()
+        val update = awaitUpdate(channel)
+        val patchFuture = webClient.patch(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER).sendJsonObjectFuture(postData)
+        whenReady(update.zip(patchFuture)) {
+          case (WebsocketUpdate(data), _) => data should sameData(bloodPressureData)
+        }
+        webClient.close()
+        channel.close()
+    }
+  }
   "citizen api" should "update citizen state with multiple data" in {
     whenReady(client.webSocketFuture(wsOptions(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER))) {
       channel =>
@@ -151,6 +166,7 @@ object CitizenWebsocketApiTest {
       |}""".stripMargin
   )
 
+  val postData = Json.obj("data" -> Json.arr(bloodPressureData))
   def awaitResponse(id : Int, websocket : WebSocket) : Future[WebsocketResponse[Status]] = {
     val promise = Promise[WebsocketResponse[Status]]()
     websocket.textMessageHandler(text => {

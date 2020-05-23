@@ -1,5 +1,7 @@
 package it.unibo.service.citizen
 import io.vertx.lang.scala.VertxExecutionContext
+import io.vertx.scala.core.Vertx
+import io.vertx.scala.core.http.{HttpClient, HttpClientOptions}
 import io.vertx.scala.ext.web.client.{WebClient, WebClientOptions}
 import it.unibo.core.data.{Data, DataCategory}
 import it.unibo.core.dt.History.History
@@ -11,6 +13,7 @@ import it.unibo.core.microservice._
 class HttpCitizenClient(host : String, port : Int, user : String) extends CitizenService with RestApiClient with RestClientServiceResponse {
   import io.vertx.scala.core.Vertx._
   override val webClient : WebClient = WebClient.create(vertx, WebClientOptions().setDefaultPort(8080))
+  val websocketClient : HttpClient = Vertx.vertx().createHttpClient(HttpClientOptions().setDefaultPort(8080))
   private implicit val executionContext: VertxExecutionContext = VertxExecutionContext(vertx.getOrCreateContext())
 
   override def updateState(who: TokenIdentifier, citizenId: String, data: Seq[Data]): FutureService[Seq[Data]] = {
