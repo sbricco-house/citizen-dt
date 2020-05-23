@@ -1,5 +1,5 @@
 package it.unibo.core.data
-import scala.util.{Failure, Success, Try}
+import scala.util.{Success, Try}
 
 /**
  * A basic storage implementation that store all information in memory
@@ -8,18 +8,24 @@ import scala.util.{Failure, Success, Try}
  */
 class InMemoryStorage[D, ID] private() extends Storage [D, ID]{
   var memory : Map[ID, D] = Map.empty[ID, D]
-  override def store(id : ID, data: D): Try[Unit] = {
+  override def store(id : ID, data: D): Try[D] = {
     memory += id -> data
-    Success()
+    Success(data)
   }
 
-  override def get(id: ID): Either[Option[D], Failure[Unit]] = Left(memory.get(id))
+  override def get(id: ID): Try[Option[D]] = Success(memory.get(id))
 
-  override def find(policy: D => Boolean): Either[Option[D], Failure[Unit]] = {
-    Left(memory.values.find(policy))
+  override def find(policy: D => Boolean): Try[Option[D]] = {
+    Success(memory.values.find(policy))
+  }
+
+  override def findMany(policy: D => Boolean, maxElements: Int = InMemoryStorage.NO_LIMIT): Try[Seq[D]] = {
+    Success(memory.values.filter(policy).take(maxElements).toSeq)
   }
 }
 
 object InMemoryStorage {
   def apply[D, ID]() : Storage[D, ID] = new InMemoryStorage()
+
+  private val NO_LIMIT = -1
 }

@@ -15,6 +15,8 @@ trait State {
    */
   def get(category : DataCategory) : Seq[Data]
 
+  def get(dataCategories: Seq[DataCategory]): Seq[Data] = dataCategories.flatMap(this.get).distinct
+
   /**
    * update the current state of DT with a new Data
    * @param data
@@ -40,9 +42,7 @@ object State {
         .toSeq
     }
     override def update(data: Data): State = MapLikeState(map + (data.category -> data))
-
     override def snapshot: Seq[Data] = map.values.toSeq
   }
   val empty : State = MapLikeState(Map.empty)
-
 }
