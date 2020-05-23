@@ -15,6 +15,7 @@ lazy val coreSetting = Seq(
 )
 
 lazy val commonSetting = Seq(
+  parallelExecution in ThisBuild := false,
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "3.1.1" % "test",
     "io.monix" %% "monix-reactive" % monixVersion,
