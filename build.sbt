@@ -13,6 +13,7 @@ lazy val coreSetting = Seq(
   resolvers += Resolver.sonatypeRepo("releases"),
   addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 )
+
 lazy val commonSetting = Seq(
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "3.1.1" % "test",
