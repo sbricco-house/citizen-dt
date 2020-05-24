@@ -24,34 +24,35 @@ import scala.util.Success
  */
 class BackendCitizenService(authenticationService : AuthenticationService,
                             authorizationService: AuthorizationService,
+                            override val citizenIdentifier : String,
                             dataStorage : Storage[Data, String],
                             private var state: State = State.empty,
                             )(implicit val executionContext: ExecutionContext) extends CitizenService {
   self =>
 
-  private var channels : Map[SourceChannel, SystemUser] = Map.empty
+  private var channels : Map[SourcePhysicalLink, SystemUser] = Map.empty
 
-  override def readState(who: TokenIdentifier, citizenId: String): FutureService[Seq[Data]] = {
-    authenticationService.verifyToken(who).flatMap(user => readState(user, citizenId))
+  override def readState(who: TokenIdentifier): FutureService[Seq[Data]] = {
+    authenticationService.verifyToken(who).flatMap(readState)
   }
 
-  override def updateState(who: TokenIdentifier, citizenId: String, data: Seq[Data]): FutureService[Seq[Data]] = {
-    authenticationService.verifyToken(who).flatMap(user => updateState(user, citizenId, data))
+  override def updateState(who: TokenIdentifier, data: Seq[Data]): FutureService[Seq[Data]] = {
+    authenticationService.verifyToken(who).flatMap(user => updateState(user, data))
   }
 
-  override def readHistory(who: TokenIdentifier, citizenId: String, dataCategory: DataCategory, maxSize: Int): FutureService[History] = {
+  override def readHistory(who: TokenIdentifier, dataCategory: DataCategory, maxSize: Int): FutureService[History] = {
     authenticationService.verifyToken(who)
-      .flatMap(user => authorizationService.authorizeRead(user, citizenId, dataCategory))
+      .flatMap(user => authorizationService.authorizeRead(user, citizenIdentifier, dataCategory))
       .map(category => findHistoryInStorage(category, maxSize))
   }
 
-  override def readHistoryData(who: TokenIdentifier, citizenId: String, dataIdentifier: String): FutureService[Data] = {
+  override def readHistoryData(who: TokenIdentifier, dataIdentifier: String): FutureService[Data] = {
     authenticationService.verifyToken(who)
         .map(user => (user, findDataInStorage(dataIdentifier)))
         .flatMap {
           case (user, pendingData) => pendingData.flatMap {
             data => {
-              authorizationService.authorizeRead(user, citizenId, data.category).map(_ => data)
+              authorizationService.authorizeRead(user, citizenIdentifier, data.category).map(_ => data)
             }
           }
         }
@@ -81,10 +82,10 @@ class BackendCitizenService(authenticationService : AuthenticationService,
     savedData
   }
 
-  protected def updateState(who : SystemUser, citizenId : String, data : Seq[Data]) : FutureService[Seq[Data]] ={
+  protected def updateState(who : SystemUser, data : Seq[Data]) : FutureService[Seq[Data]] ={
     data.map(_.category) match {
       case Nil => FutureService.fail(MissingParameter(s"Invalid set of data"))
-      case categoriesToUpdate => authorizationService.authorizedWriteCategories(who, citizen = citizenId)
+      case categoriesToUpdate => authorizationService.authorizedWriteCategories(who, citizen = citizenIdentifier)
         .flatMap {
           case categories if checkPermission(categoriesToUpdate, categories) == categoriesToUpdate => FutureService.response(save(data))
           case _ => FutureService.fail(Unauthorized(s"Not enough permission to do that"))
@@ -99,30 +100,30 @@ class BackendCitizenService(authenticationService : AuthenticationService,
     }
   }
 
-  protected def readState(who : SystemUser, citizenId : String) : FutureService[Seq[Data]] = {
-    authorizationService.authorizedReadCategories(who, citizen = citizenId)
+  protected def readState(who : SystemUser) : FutureService[Seq[Data]] = {
+    authorizationService.authorizedReadCategories(who, citizen = citizenIdentifier)
       .map(categories => state.get(categories))
   }
 
-  private class SourceImpl(user : SystemUser, citizen : String, categories : Seq[DataCategory]) extends SourceChannel {
+  private class SourceImpl(user : SystemUser, categories : Seq[DataCategory]) extends SourcePhysicalLink {
     self.channels += this -> user
     val publishChannel = PublishSubject[Data]()
     //todo handle on next
     override def emit(data: Seq[Data]): Unit = data foreach publishChannel.onNext
 
     //TODO this method may avoid to call update state, it has categories already
-    override def updateState(data: Seq[Data]): FutureService[Seq[Data]] = self.updateState(user, citizen, data)
+    override def updateState(data: Seq[Data]): FutureService[Seq[Data]] = self.updateState(user, data)
 
     override def close(): Unit = self.channels -= this
 
     override def updateDataStream(): Observable[Data] = publishChannel
   }
 
-  override def observeState(who: TokenIdentifier, citizenId: String): FutureService[Channel] = {
+  override def observeState(who: TokenIdentifier): FutureService[PhysicalLink] = {
     authenticationService.verifyToken(who)
       .flatMap(user => {
-        authorizationService.authorizedReadCategories(user, citizenId)
-          .map(categories => new SourceImpl(user, citizenId, categories))
+        authorizationService.authorizedReadCategories(user, self.citizenIdentifier)
+          .map(categories => new SourceImpl(user, categories))
       })
   }
 }

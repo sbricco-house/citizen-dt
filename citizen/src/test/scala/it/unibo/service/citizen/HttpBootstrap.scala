@@ -42,7 +42,7 @@ object HttpBootstrap {
     ))
 
     val store = InMemoryStorage[Data, String]()
-    val citizenService = CitizenService.fromVertx(authenticationService, authorizationService, store, vertx)
+    val citizenService = CitizenService.fromVertx(authenticationService, authorizationService, "50", store, vertx)
     val integerDataParser = VertxJsonParser(ValueParser.Json.intParser, Categories.bloodPressureCategory)
     val doubleDataParser = VertxJsonParser(ValueParser.Json.intParser, Categories.hearBeatCategory)
     val parserRegistry = DataParserRegistry()
@@ -53,7 +53,6 @@ object HttpBootstrap {
     val citizenVerticle = new RestCitizenVerticle(
       citizenService,
       parserRegistry,
-      "50"
     ) with RestCitizenApi with WebSocketCitizenApi
 
     Await.result(vertx.deployVerticleFuture(citizenVerticle), 5 seconds)

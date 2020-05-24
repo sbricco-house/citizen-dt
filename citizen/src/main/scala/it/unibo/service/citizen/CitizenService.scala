@@ -19,20 +19,20 @@ import scala.concurrent.ExecutionContext
  * key idea: allow to expose the same service through different web technology/interface, e.g. websocket, rest api, ecc...
  */
 trait CitizenService {
-  def updateState(who: TokenIdentifier, citizenId: String, data: Seq[Data]): FutureService[Seq[Data]]
-  def readState(who: TokenIdentifier, citizenId: String): FutureService[Seq[Data]]
-  def readHistory(who: TokenIdentifier, citizenId: String, dataCategory: DataCategory, maxSize: Int = 1): FutureService[History]
-  def readHistoryData(who: TokenIdentifier, citizenId: String, dataIdentifier: String): FutureService[Data]
-  // TODO: define better using rx scala
-  def observeState(who: TokenIdentifier, citizenId: String): FutureService[Channel]
+  def citizenIdentifier : String
+  def updateState(who: TokenIdentifier,data: Seq[Data]): FutureService[Seq[Data]]
+  def readState(who: TokenIdentifier): FutureService[Seq[Data]]
+  def readHistory(who: TokenIdentifier, dataCategory: DataCategory, maxSize: Int = 1): FutureService[History]
+  def readHistoryData(who: TokenIdentifier, dataIdentifier: String): FutureService[Data]
+  def observeState(who: TokenIdentifier): FutureService[PhysicalLink]
 
-  trait Channel {
+  trait PhysicalLink {
     def updateState(data: Seq[Data]): FutureService[Seq[Data]]
     def updateDataStream() : Observable[Data]
     def close() : Unit
   }
 
-  protected trait SourceChannel extends Channel {
+  protected trait SourcePhysicalLink extends PhysicalLink {
     def emit(data : Seq[Data]) : Unit
   }
 }
@@ -48,17 +48,19 @@ object CitizenService {
    */
   def apply(authenticationService : AuthenticationService,
             authorizationService: AuthorizationService,
+            citizenId : String,
             dataStorage: Storage[Data, String]): CitizenService = {
     implicit val execution = ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
-    new BackendCitizenService(authenticationService, authorizationService, dataStorage)
+    new BackendCitizenService(authenticationService, authorizationService, citizenId, dataStorage)
   }
 
   def fromVertx(authenticationService : AuthenticationService,
             authorizationService: AuthorizationService,
+            citizenId : String,
             dataStorage: Storage[Data, String],
             vertx: Vertx): CitizenService = {
     implicit val execution = VertxExecutionContext(vertx.getOrCreateContext())
-    new BackendCitizenService(authenticationService, authorizationService, dataStorage)
+    new BackendCitizenService(authenticationService, authorizationService, citizenId, dataStorage)
   }
 
   // the same interface could be used for create the client counterpart. Useful for test the backend.

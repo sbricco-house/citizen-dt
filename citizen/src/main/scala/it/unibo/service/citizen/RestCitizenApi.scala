@@ -38,7 +38,7 @@ trait RestCitizenApi extends RestApi with RestServiceResponse {
   private def handleGetState(context: RoutingContext): Unit = {
     val token = context.getToken(UserMiddleware.JWT_TOKEN)
 
-    sendServiceResponseWhenComplete(context, citizenService.readState(token, citizenIdentifier)) {
+    sendServiceResponseWhenComplete(context, citizenService.readState(token)) {
       case Response(data) => (HttpCode.Ok, stateToJson(data).encode())
     }
   }
@@ -47,7 +47,7 @@ trait RestCitizenApi extends RestApi with RestServiceResponse {
     val token = context.getToken(UserMiddleware.JWT_TOKEN)
     val pending = context.getBodyAsJson()
       .map(jsonToState)
-      .map(newState => citizenService.updateState(token, citizenIdentifier, newState))
+      .map(newState => citizenService.updateState(token, newState))
       .getOrElse(FutureService.fail(MissingParameter(s"Invalid json body")))
 
     sendServiceResponseWhenComplete(context, pending) {
@@ -59,7 +59,7 @@ trait RestCitizenApi extends RestApi with RestServiceResponse {
     val token = context.getToken(UserMiddleware.JWT_TOKEN)
     val dataIdentifier = context.pathParam("data_id").get
 
-    sendServiceResponseWhenComplete(context, citizenService.readHistoryData(token, citizenIdentifier, dataIdentifier)) {
+    sendServiceResponseWhenComplete(context, citizenService.readHistoryData(token, dataIdentifier)) {
       case Response(data) => (HttpCode.Ok, parser.encode(data).get.encode())
     }
   }
@@ -72,7 +72,7 @@ trait RestCitizenApi extends RestApi with RestServiceResponse {
     println(dataCategory)
     val pending = dataCategory
       .flatMap(parser.decodeCategory)
-      .map(citizenService.readHistory(token, citizenIdentifier, _, limit))
+      .map(citizenService.readHistory(token, _, limit))
       .getOrElse(FutureService.fail(MissingParameter(s"Missing or invalid data_category query parameter")))
 
     sendServiceResponseWhenComplete(context, pending) {

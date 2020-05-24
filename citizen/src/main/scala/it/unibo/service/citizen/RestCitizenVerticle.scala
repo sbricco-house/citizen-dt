@@ -21,13 +21,12 @@ object RestCitizenVerticle {
 
 class RestCitizenVerticle(protected val citizenService: CitizenService,
                           protected val parser : DataParserRegistry[JsonObject],
-                          protected val citizenIdentifier: String, // could be a UUID or integer, or something else
                           port : Int = 8080,
                           host : String = "localhost") extends BaseVerticle(port, host) {
 
   import RestCitizenVerticle._
-  protected val citizenStateEndpoint = CITIZEN_ENDPOINT.format(citizenIdentifier)
-  protected val historyEndpoint = HISTORY_ENDPOINT.format(citizenIdentifier)
+  protected val citizenStateEndpoint = CITIZEN_ENDPOINT.format(citizenService.citizenIdentifier)
+  protected val historyEndpoint = HISTORY_ENDPOINT.format(citizenService.citizenIdentifier)
 
   // TODO: best way for transform model data to resource response. e.g. using resource mapper for state and history
   protected def stateToJson(state: Seq[Data]): JsonObject = {
