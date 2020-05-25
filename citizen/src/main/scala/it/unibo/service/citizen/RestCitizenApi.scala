@@ -47,11 +47,12 @@ trait RestCitizenApi extends RestApi with RestServiceResponse {
     val token = context.getToken(UserMiddleware.JWT_TOKEN)
     val pending = context.getBodyAsJson()
       .map(jsonToState)
+      .collect { case Some(data) => data }
       .map(newState => citizenService.updateState(token, newState))
       .getOrElse(FutureService.fail(MissingParameter(s"Invalid json body")))
 
     sendServiceResponseWhenComplete(context, pending) {
-      case Response(newData) => (HttpCode.Ok, stateToJson(newData).encode())
+      case Response(newData) => (HttpCode.Ok, seqToJsonArray(newData).encode())
     }
   }
 

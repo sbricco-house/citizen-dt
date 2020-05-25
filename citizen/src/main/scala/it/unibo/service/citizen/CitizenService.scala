@@ -20,14 +20,14 @@ import scala.concurrent.ExecutionContext
  */
 trait CitizenService {
   def citizenIdentifier : String
-  def updateState(who: TokenIdentifier,data: Seq[Data]): FutureService[Seq[Data]]
+  def updateState(who: TokenIdentifier,data: Seq[Data]): FutureService[Seq[String]]
   def readState(who: TokenIdentifier): FutureService[Seq[Data]]
   def readHistory(who: TokenIdentifier, dataCategory: DataCategory, maxSize: Int = 1): FutureService[History]
   def readHistoryData(who: TokenIdentifier, dataIdentifier: String): FutureService[Data]
   def observeState(who: TokenIdentifier): FutureService[PhysicalLink]
 
   trait PhysicalLink {
-    def updateState(data: Seq[Data]): FutureService[Seq[Data]]
+    def updateState(data: Seq[Data]): FutureService[Seq[String]]
     def updateDataStream() : Observable[Data]
     def close() : Unit
   }
@@ -62,8 +62,4 @@ object CitizenService {
     implicit val execution = VertxExecutionContext(vertx.getOrCreateContext())
     new BackendCitizenService(authenticationService, authorizationService, citizenId, dataStorage)
   }
-
-  // the same interface could be used for create the client counterpart. Useful for test the backend.
-  // e.g. a client could use vertx http client, but expose the same interface to the user.
-  // def client(): CitizenService = ???
 }

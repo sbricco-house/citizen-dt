@@ -43,9 +43,6 @@ object State {
     }
     override def update(data: Data): State = map.get(data.category) match {
       case Some(old) if old.timestamp > data.timestamp => this
-      case Some(old) =>
-        println(old, old.timestamp, data.timestamp)
-        this
       case _ => MapLikeState(map + (data.category -> data))
     }
     override def snapshot: Seq[Data] = map.values.toSeq

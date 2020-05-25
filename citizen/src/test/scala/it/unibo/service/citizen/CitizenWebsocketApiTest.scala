@@ -59,7 +59,7 @@ class CitizenWebsocketApiTest extends AnyFlatSpec with BeforeAndAfterAll with Ma
     }
   }
 
-  "citizen client" should "enable to notificated from citizen state rest update " in {
+  "citizen client" should "enable to notified from citizen state rest update " in {
     whenReady(client.webSocketFuture(wsOptions(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER))) {
       channel =>
         val webClient = HttpBootstrap.webClient()
@@ -83,6 +83,24 @@ class CitizenWebsocketApiTest extends AnyFlatSpec with BeforeAndAfterAll with Ma
           case _ => fail()
         }
         channel.close()
+    }
+  }
+
+  "citizen service" should " manage multiple update" in {
+    whenReady(client.webSocketFuture(wsOptions(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER))) {
+      channel => {
+        val request = WebsocketRequest[JsonArray](1, Json.arr(hearbeatData, bloodPressureData))
+        val stringRequest = CitizenProtocol.requestParser.decode(request)
+        val restPath = webClient().patch(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER).sendJsonObjectFuture(Useful.postState)
+        channel.writeTextMessage(stringRequest)
+        val awaitUpdate = awaitResponse(1, channel)
+        whenReady(restPath.zip(awaitUpdate)) { result => {}}
+        whenReady(webClient().get(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER).sendFuture()) {
+          result =>
+            result.statusCode() shouldBe 200
+            result.bodyAsJsonObject().get.getJsonArray("data") should sameArrayData(Json.arr(hearbeatData, bloodPressureData))
+        }
+      }
     }
   }
 
@@ -128,9 +146,9 @@ object CitizenWebsocketApiTest {
     """
       |{
       |    "id":"",
-      |    "value": 75.0,
+      |    "value": 90.0,
       |    "category": "heartbeat",
-      |    "timestamp": 134034600,
+      |    "timestamp": 134034640,
       |    "feeder": {
       |      "name": "mi_band_3"
       |    }

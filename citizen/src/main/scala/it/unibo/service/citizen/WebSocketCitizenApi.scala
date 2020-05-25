@@ -2,7 +2,6 @@ package it.unibo.service.citizen
 
 import io.vertx.lang.scala.VertxExecutionContext
 import io.vertx.lang.scala.json.{JsonArray, JsonObject}
-import io.vertx.scala.core.Vertx.vertx
 import io.vertx.scala.core.http.ServerWebSocket
 import it.unibo.core.data.Data
 import it.unibo.core.microservice.protocol.{WebsocketRequest, WebsocketResponse, WebsocketUpdate}
@@ -12,9 +11,8 @@ import it.unibo.core.utils.ServiceError.Unauthorized
 import it.unibo.service.authentication.TokenIdentifier
 import it.unibo.service.citizen.middleware.UserMiddleware
 import it.unibo.service.citizen.websocket.{CitizenProtocol, Ok, Status}
-import monix.execution.{Ack, Cancelable, Scheduler}
+import monix.execution.Cancelable
 
-import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 trait WebSocketCitizenApi extends WebSocketApi {
@@ -95,7 +93,7 @@ trait WebSocketCitizenApi extends WebSocketApi {
   }
 
   private def manageRequest(requestId : Int, channel : CitizenService#PhysicalLink, data : Seq[Option[Data]], webSocket: ServerWebSocket) : Unit = {
-    def produceResponse(futureResult : ServiceResponse[Seq[Data]]) = futureResult match {
+    def produceResponse(futureResult : ServiceResponse[Seq[String]]) = futureResult match {
       case Response(_) =>WebsocketResponse[Status](requestId, Ok)
       case Fail(Unauthorized(_)) => WebsocketResponse[Status](requestId, CitizenProtocol.unothorized)
       case _ => WebsocketResponse[Status](requestId, CitizenProtocol.internalError)

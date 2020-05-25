@@ -37,13 +37,16 @@ class RestCitizenVerticle(protected val citizenService: CitizenService,
     Json.arr(dataSeq.flatMap(parser.encode):_*)
   }
 
+  protected def seqToJsonArray[E](elements : Seq[String]) :JsonArray = Json.arr(elements:_*)
+
   // TODO: what do if an update state (patch) contains unspported datacategory? or wrong format of supported category?
   // actually only valid data are parsed and returned
-  protected def jsonToState(jsonObject: JsonObject): Seq[Data] = {
+  protected def jsonToState(jsonObject: JsonObject): Option[Seq[Data]] = {
     jsonObject.getAsArray("data")
       .flatMap(_.getAsObjectSeq)
       .map(json => json.map(_.put("id", UUID.randomUUID().toString))) // assign unique data identifier
-      .map(jsonData => jsonData.flatMap(parser.decode))
-      .getOrElse(Seq())
+      .map(jsonData => jsonData.map(parser.decode))
+      .filter(elements => elements.forall(_.nonEmpty))
+      .map(elems => elems.map(_.get))
   }
 }

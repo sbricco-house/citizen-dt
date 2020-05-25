@@ -36,7 +36,7 @@ class BackendCitizenService(authenticationService : AuthenticationService,
     authenticationService.verifyToken(who).flatMap(readState)
   }
 
-  override def updateState(who: TokenIdentifier, data: Seq[Data]): FutureService[Seq[Data]] = {
+  override def updateState(who: TokenIdentifier, data: Seq[Data]): FutureService[Seq[String]] = {
     authenticationService.verifyToken(who).flatMap(user => updateState(user, data))
   }
 
@@ -48,14 +48,14 @@ class BackendCitizenService(authenticationService : AuthenticationService,
 
   override def readHistoryData(who: TokenIdentifier, dataIdentifier: String): FutureService[Data] = {
     authenticationService.verifyToken(who)
-        .map(user => (user, findDataInStorage(dataIdentifier)))
-        .flatMap {
-          case (user, pendingData) => pendingData.flatMap {
-            data => {
-              authorizationService.authorizeRead(user, citizenIdentifier, data.category).map(_ => data)
-            }
+      .map(user => (user, findDataInStorage(dataIdentifier)))
+      .flatMap {
+        case (user, pendingData) => pendingData.flatMap {
+          data => {
+            authorizationService.authorizeRead(user, citizenIdentifier, data.category).map(_ => data)
           }
         }
+      }
   }
 
   private def findHistoryInStorage(category: DataCategory, maxSize: Int): Seq[Data] = {
@@ -73,16 +73,7 @@ class BackendCitizenService(authenticationService : AuthenticationService,
     }
   }
 
-  private def save(dataSequence: Seq[Data]): Seq[Data] = {
-    //TODO FIX
-    this.channels.keys.foreach(_.emit(dataSequence))
-    val savedData = dataSequence.map(data => dataStorage.store(data.identifier, data))
-        .filter(result => result.isSuccess).map(_.get)
-    savedData.foreach(data => state = state.update(data))
-    savedData
-  }
-
-  protected def updateState(who : SystemUser, data : Seq[Data]) : FutureService[Seq[Data]] ={
+  protected def updateState(who : SystemUser, data : Seq[Data]) : FutureService[Seq[String]] ={
     data.map(_.category) match {
       case Nil => FutureService.fail(MissingParameter(s"Invalid set of data"))
       case categoriesToUpdate => authorizationService.authorizedWriteCategories(who, citizen = citizenIdentifier)
@@ -91,6 +82,15 @@ class BackendCitizenService(authenticationService : AuthenticationService,
           case _ => FutureService.fail(Unauthorized(s"Not enough permission to do that"))
         }
     }
+  }
+
+  private def save(dataSequence: Seq[Data]): Seq[String] = {
+    //TODO FIX
+    this.channels.keys.foreach(_.emit(dataSequence))
+    val savedData = dataSequence.map(data => dataStorage.store(data.identifier, data))
+        .filter(result => result.isSuccess).map(_.get)
+    savedData.foreach(data => state = state.update(data))
+    savedData.map(_.identifier)
   }
 
   // TODO: move from here
@@ -112,7 +112,7 @@ class BackendCitizenService(authenticationService : AuthenticationService,
     override def emit(data: Seq[Data]): Unit = data foreach publishChannel.onNext
 
     //TODO this method may avoid to call update state, it has categories already
-    override def updateState(data: Seq[Data]): FutureService[Seq[Data]] = self.updateState(user, data)
+    override def updateState(data: Seq[Data]): FutureService[Seq[String]] = self.updateState(user, data)
 
     override def close(): Unit = self.channels -= this
 
