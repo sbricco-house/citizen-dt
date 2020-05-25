@@ -23,7 +23,7 @@ class RestApiTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with 
 
   "Citizen state" should " be update by himself" in {
     whenReady(client.patch(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER).sendJsonObjectFuture(Useful.postState)) {
-      result => println(result.bodyAsString()); result.statusCode() shouldBe 201
+      result => println(result.bodyAsString()); result.statusCode() shouldBe 200
     }
   }
 
@@ -114,7 +114,7 @@ class RestApiTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with 
   "Single history data " should " readable from citizen" in {
     whenReady(client.patch(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER).sendJsonObjectFuture(Useful.postState)) {
       result =>
-        result.statusCode() shouldBe 201
+        result.statusCode() shouldBe 200
         val response = result.bodyAsJsonObject().get
         val dataIdentifier = response.getJsonArray("data").getJsonObject(0).getString("id")
         whenReady(client.get(s"$HISTORY_ENDPOINT/$dataIdentifier").putHeader(CITIZEN_AUTHORIZED_HEADER).sendFuture()) {
