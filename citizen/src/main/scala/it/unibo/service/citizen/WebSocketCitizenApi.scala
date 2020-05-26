@@ -29,7 +29,7 @@ trait WebSocketCitizenApi extends WebSocketApi {
       case (None, _) => websocket.rejectNotAuthorized()
       case (_, Failure(_)) => websocket.rejectBadContent()
       case (Some(user), Success(_)) =>
-        self.citizenService.observeState(user)
+        self.citizenService.createPhysicalLink(user)
           .whenComplete {
             case Response(channel) => manageChannel(websocket, channel)
             case Fail(Unauthorized(m)) => websocket.rejectNotAuthorized()

@@ -22,7 +22,8 @@ object HttpBootstrap {
   val STAKEHOLDER_AUTHENTICATED_HEADER = "Authorization" -> "jwt2"
   val STAKEHOLDER_AUTHORIZED_HEADER = "Authorization" -> "jwt3"
   val HISTORY_LIMIT = 5
-  val HISTORY_CATEGORY = "heartbeat"
+  val HEARTHBEAT_CATEGORY = "heartbeat"
+  val UNKNOWN = "_"
   val HISTORY_GROUP_CATEGORY = "medical"
 
   var vertx: Vertx = _

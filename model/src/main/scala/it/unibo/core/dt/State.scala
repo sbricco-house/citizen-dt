@@ -33,7 +33,7 @@ trait State {
 
 object State {
   private case class MapLikeState(map : Map[LeafCategory, Data]) extends State {
-    override def get(category: DataCategory): Seq[Data] ={
+    override def get(category: DataCategory): Seq[Data] = {
       DataCategoryOps.allChild(category)
         .map(cat => map.get(cat))
         .collect{

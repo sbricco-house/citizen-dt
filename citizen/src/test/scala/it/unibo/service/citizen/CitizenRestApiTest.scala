@@ -34,7 +34,29 @@ class RestApiTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with 
         result.bodyAsJsonObject().get.getJsonArray("data") should sameArrayData(Useful.postState.getJsonArray("data"))
     }
   }
+  "Citizen state" should " be filtered by category" in {
+    val getByCategory = client.get(STATE_ENDPOINT)
+        .putHeader(CITIZEN_AUTHORIZED_HEADER)
+        .addQueryParam("data_category", HEARTHBEAT_CATEGORY)
+        .sendFuture()
 
+    whenReady(getByCategory) {
+      result =>
+        result.statusCode() shouldBe 200
+        result.bodyAsJsonObject().get.getJsonArray("data") should sameArrayData(Useful.heartbeatDataCategory.getJsonArray("data"))
+    }
+  }
+  "Citizen state" should " be NOT filtered by wrong category" in {
+    val getByCategory = client.get(STATE_ENDPOINT)
+      .putHeader(CITIZEN_AUTHORIZED_HEADER)
+      .addQueryParam("data_category", UNKNOWN)
+      .sendFuture()
+
+    whenReady(getByCategory) {
+      result =>
+        result.statusCode() shouldBe 400
+    }
+  }
   "Citizen state" should " be hidden by unauthorized stakeholder" in {
     whenReady(client.get(STATE_ENDPOINT).putHeader(STAKEHOLDER_AUTHENTICATED_HEADER).sendFuture()) {
       result => result.statusCode() shouldBe 403
@@ -68,12 +90,12 @@ class RestApiTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with 
   "History" should " be readable from citizen" in {
     whenReady(client.get(HISTORY_ENDPOINT)
       .putHeader(CITIZEN_AUTHORIZED_HEADER)
-      .addQueryParam("data_category", HISTORY_CATEGORY)
+      .addQueryParam("data_category", HEARTHBEAT_CATEGORY)
       .addQueryParam("limit", HISTORY_LIMIT.toString).sendFuture())
     {
       result =>
         result.statusCode() shouldBe 200
-        result.bodyAsJsonArray().get should sameArrayData(Useful.historyDataCategory.getJsonArray("data"))
+        result.bodyAsJsonArray().get should sameArrayData(Useful.heartbeatDataCategory.getJsonArray("data"))
     }
   }
 
@@ -199,7 +221,7 @@ object Useful {
         ]
       }
       """)
-  val historyDataCategory = new JsonObject(
+  val heartbeatDataCategory = new JsonObject(
     """
       {
         "data": [

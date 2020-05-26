@@ -27,7 +27,7 @@ class RestCitizenVerticle(protected val citizenService: CitizenService,
   import RestCitizenVerticle._
   protected val citizenStateEndpoint = CITIZEN_ENDPOINT.format(citizenService.citizenIdentifier)
   protected val historyEndpoint = HISTORY_ENDPOINT.format(citizenService.citizenIdentifier)
-
+  protected val categoryParamName = "data_category"
   // TODO: best way for transform model data to resource response. e.g. using resource mapper for state and history
   protected def stateToJson(state: Seq[Data]): JsonObject = {
     Json.obj("data" -> dataArrayToJson(state))

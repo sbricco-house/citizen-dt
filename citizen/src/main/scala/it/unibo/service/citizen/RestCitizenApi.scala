@@ -4,7 +4,7 @@ import io.vertx.scala.ext.web.handler.BodyHandler
 import io.vertx.scala.ext.web.{Router, RoutingContext}
 import it.unibo.core.microservice.vertx.{RestApi, _}
 import it.unibo.core.microservice.{FutureService, Response}
-import it.unibo.core.utils.HttpCode
+import it.unibo.core.utils.{HttpCode, ServiceError}
 import it.unibo.core.utils.ServiceError.MissingParameter
 import it.unibo.service.citizen.middleware.UserMiddleware
 
@@ -37,8 +37,14 @@ trait RestCitizenApi extends RestApi with RestServiceResponse {
 
   private def handleGetState(context: RoutingContext): Unit = {
     val token = context.getToken(UserMiddleware.JWT_TOKEN)
+    val getOperation = context.queryParams().get(categoryParamName) match {
+      case None => citizenService.readState(token)
+      case Some(category) => parser.decodeCategory(category)
+        .map(citizenService.readStateByCategory(token, _))
+        .getOrElse(FutureService.fail(MissingParameter(s"Invalid query value")))
+    }
 
-    sendServiceResponseWhenComplete(context, citizenService.readState(token)) {
+    sendServiceResponseWhenComplete(context, getOperation) {
       case Response(data) => (HttpCode.Ok, stateToJson(data).encode())
     }
   }
@@ -67,7 +73,7 @@ trait RestCitizenApi extends RestApi with RestServiceResponse {
 
   private def handleGetHistoryDataFromCategory(context: RoutingContext): Unit = {
     val token = context.getToken(UserMiddleware.JWT_TOKEN)
-    val dataCategory = context.queryParams().get("data_category")
+    val dataCategory = context.queryParams().get(categoryParamName)
     val limit = context.queryParams().get("limit").getOrElse("1").toInt
     val pending = dataCategory
       .flatMap(parser.decodeCategory)

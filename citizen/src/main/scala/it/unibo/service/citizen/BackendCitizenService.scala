@@ -11,7 +11,7 @@ import it.unibo.service.permission.AuthorizationService
 import monix.reactive.Observable
 import monix.reactive.subjects.PublishSubject
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Success
 
 /**
@@ -29,11 +29,19 @@ class BackendCitizenService(authenticationService : AuthenticationService,
                             private var state: State = State.empty,
                             )(implicit val executionContext: ExecutionContext) extends CitizenService {
   self =>
-
-  private var channels : Map[SourcePhysicalLink, SystemUser] = Map.empty
+  private val observableState = PublishSubject[Data]()
+  private var channels : Map[PhysicalLink, SystemUser] = Map.empty
 
   override def readState(who: TokenIdentifier): FutureService[Seq[Data]] = {
-    authenticationService.verifyToken(who).flatMap(readState)
+    authenticationService.verifyToken(who)
+      .flatMap(authorizationService.authorizedReadCategories(_, citizen = citizenIdentifier))
+      .map(categories => state.get(categories))
+  }
+
+  override def readStateByCategory(who: TokenIdentifier, category: DataCategory): FutureService[Seq[Data]] = {
+    authenticationService.verifyToken(who)
+      .flatMap(authorizationService.authorizeRead(_, citizen = citizenIdentifier, category))
+      .map(categories => state.get(categories))
   }
 
   override def updateState(who: TokenIdentifier, data: Seq[Data]): FutureService[Seq[String]] = {
@@ -85,11 +93,12 @@ class BackendCitizenService(authenticationService : AuthenticationService,
   }
 
   private def save(dataSequence: Seq[Data]): Seq[String] = {
-    //TODO FIX
-    this.channels.keys.foreach(_.emit(dataSequence))
     val savedData = dataSequence.map(data => dataStorage.store(data.identifier, data))
         .filter(result => result.isSuccess).map(_.get)
-    savedData.foreach(data => state = state.update(data))
+    savedData.foreach(data => {
+      state = state.update(data)
+      this.observableState.onNext(data)
+    })
     savedData.map(_.identifier)
   }
 
@@ -100,30 +109,23 @@ class BackendCitizenService(authenticationService : AuthenticationService,
     }
   }
 
-  protected def readState(who : SystemUser) : FutureService[Seq[Data]] = {
-    authorizationService.authorizedReadCategories(who, citizen = citizenIdentifier)
-      .map(categories => state.get(categories))
+  override def createPhysicalLink(who: TokenIdentifier): FutureService[PhysicalLink] = {
+    authenticationService.verifyToken(who)
+      .flatMap(user => {
+        authorizationService.authorizedReadCategories(user, self.citizenIdentifier)
+          .map(categories => new SourceImpl(user, categories))
+      })
   }
 
-  private class SourceImpl(user : SystemUser, categories : Seq[DataCategory]) extends SourcePhysicalLink {
+  private class SourceImpl(user : SystemUser, categories : Seq[DataCategory]) extends PhysicalLink {
     self.channels += this -> user
-    val publishChannel = PublishSubject[Data]()
-    //todo handle on next
-    override def emit(data: Seq[Data]): Unit = data foreach publishChannel.onNext
-
+    private val flattenCategory = categories.flatMap(DataCategoryOps.allChild).toSet
+    private val publishChannel = self.observableState.filter(data => flattenCategory.contains(data.category))
     //TODO this method may avoid to call update state, it has categories already
     override def updateState(data: Seq[Data]): FutureService[Seq[String]] = self.updateState(user, data)
 
     override def close(): Unit = self.channels -= this
 
     override def updateDataStream(): Observable[Data] = publishChannel
-  }
-
-  override def observeState(who: TokenIdentifier): FutureService[PhysicalLink] = {
-    authenticationService.verifyToken(who)
-      .flatMap(user => {
-        authorizationService.authorizedReadCategories(user, self.citizenIdentifier)
-          .map(categories => new SourceImpl(user, categories))
-      })
   }
 }
