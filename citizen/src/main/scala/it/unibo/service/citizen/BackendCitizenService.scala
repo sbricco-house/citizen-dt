@@ -11,7 +11,7 @@ import it.unibo.service.permission.AuthorizationService
 import monix.reactive.Observable
 import monix.reactive.subjects.PublishSubject
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.util.Success
 
 /**
@@ -66,6 +66,21 @@ class BackendCitizenService(authenticationService : AuthenticationService,
       }
   }
 
+  override def createPhysicalLink(who: TokenIdentifier): FutureService[PhysicalLink] = {
+    authenticationService.verifyToken(who)
+      .flatMap(user => {
+        authorizationService.authorizedReadCategories(user, self.citizenIdentifier)
+          .map(categories => new SourceImpl(user, categories))
+      })
+  }
+
+  override def observeState(who: TokenIdentifier, dataCategory: DataCategory): FutureService[Observable[Data]] = {
+    authenticationService.verifyToken(who)
+      .flatMap(user => authorizationService.authorizeRead(user, citizenIdentifier, dataCategory))
+      .map(DataCategoryOps.allChild)
+      .map(categories => observableState.filter(data => categories.contains(data.category)))
+  }
+
   private def findHistoryInStorage(category: DataCategory, maxSize: Int): Seq[Data] = {
     dataStorage.findMany(data => DataCategoryOps.contains(category, data.category).isDefined, maxSize) match {
       case Success(value) => value
@@ -107,14 +122,6 @@ class BackendCitizenService(authenticationService : AuthenticationService,
     categoriesToUpdate.filter {
       leaf => authorizedCategories.exists(DataCategoryOps.allChild(_).contains(leaf))
     }
-  }
-
-  override def createPhysicalLink(who: TokenIdentifier): FutureService[PhysicalLink] = {
-    authenticationService.verifyToken(who)
-      .flatMap(user => {
-        authorizationService.authorizedReadCategories(user, self.citizenIdentifier)
-          .map(categories => new SourceImpl(user, categories))
-      })
   }
 
   private class SourceImpl(user : SystemUser, categories : Seq[DataCategory]) extends PhysicalLink {

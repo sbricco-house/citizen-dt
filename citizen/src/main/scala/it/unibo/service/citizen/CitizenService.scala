@@ -26,6 +26,7 @@ trait CitizenService {
   def readHistory(who: TokenIdentifier, dataCategory: DataCategory, maxSize: Int = 1): FutureService[History]
   def readHistoryData(who: TokenIdentifier, dataIdentifier: String): FutureService[Data]
   def createPhysicalLink(who: TokenIdentifier): FutureService[PhysicalLink]
+  def observeState(who: TokenIdentifier, dataCategory : DataCategory): FutureService[Observable[Data]]
 
   trait PhysicalLink {
     def updateState(data: Seq[Data]): FutureService[Seq[String]]
