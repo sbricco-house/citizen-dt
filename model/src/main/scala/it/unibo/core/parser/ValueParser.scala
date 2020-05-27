@@ -24,8 +24,8 @@ object ValueParser {
 
     implicit private def optionAnyToJson(opt : Option[Any]) : Option[JsonObject] = opt.map(data => Jsonx.obj("value"-> data))
 
-    val intParser = apply { _.getAsInt("value") } { getTypeOrNone[Int](_) }
-    val doubleParser = apply { _.getAsInt("value") } { getTypeOrNone[Double](_) }
-    val stringParser = apply { _.getAsInt("value") } { getTypeOrNone[String](_) }
+    val intParser = apply { _.getAsInt("value") } { Some(_).filter(_.isInstanceOf[Int]) }
+    val doubleParser = apply { _.getAsInt("value") } { Some(_).filter(_.isInstanceOf[Double]) }
+    val stringParser = apply { _.getAsInt("value") } { Some(_).filter(_.isInstanceOf[String]) }
   }
 }
