@@ -6,7 +6,10 @@ import it.unibo.core.microservice.vertx.{RestApi, _}
 import it.unibo.core.microservice.{FutureService, Response}
 import it.unibo.core.utils.HttpCode
 import it.unibo.core.utils.ServiceError.MissingParameter
-import it.unibo.service.authentication.TokenIdentifier
+import it.unibo.service.authentication.model.Parsers
+import it.unibo.service.authentication.{Token, TokenIdentifier}
+import it.unibo.service.authentication.model.Resources.AuthenticationInfo
+import Parsers._
 
 object RestApiAuthentication {
   val LOGIN_ENDPOINT = "/login"
@@ -47,7 +50,7 @@ trait RestApiAuthentication extends RestApi with RestServiceResponse {
       .getOrElse(FutureService.fail(MissingParameter(s"Missing or malformed request body")))
 
     sendServiceResponseWhenComplete(context, login) {
-      case Response(TokenIdentifier(token)) => (HttpCode.Created, token)
+      case Response(e: AuthenticationInfo) => (HttpCode.Created, AuthInfoParser.decode(e).encode())
     }
   }
 
@@ -58,7 +61,7 @@ trait RestApiAuthentication extends RestApi with RestServiceResponse {
       .getOrElse(FutureService.fail(MissingParameter(s"Missing token")))
 
     sendServiceResponseWhenComplete(context, verify) {
-      case Response(content) => (HttpCode.Ok, userToJson(content).encode())
+      case Response(content) => (HttpCode.Ok, SystemUserParser.decode(content).encode())
     }
   }
 
@@ -80,7 +83,7 @@ trait RestApiAuthentication extends RestApi with RestServiceResponse {
       .getOrElse(FutureService.fail(MissingParameter(s"Missing authorization header")))
 
     sendServiceResponseWhenComplete(context, refresh) {
-      case Response(TokenIdentifier(token)) => (HttpCode.Created, token)
+      case Response(t : Token) => (HttpCode.Created, TokenParser.decode(t).encode())
     }
   }
 

@@ -8,10 +8,12 @@ import it.unibo.core.authentication.SystemUser
 import it.unibo.core.data.Storage
 import it.unibo.core.microservice.FutureService
 import it.unibo.service.authentication.client.AuthenticationClient
+import it.unibo.service.authentication.model.Resources.AuthenticationInfo
+
 
 trait AuthenticationService {
-  def login(email: String, password: String): FutureService[TokenIdentifier]
-  def refresh(identifier: TokenIdentifier): FutureService[TokenIdentifier]
+  def login(email: String, password: String): FutureService[AuthenticationInfo]
+  def refresh(identifier: TokenIdentifier): FutureService[Token]
   def logout(identifier: TokenIdentifier): FutureService[Boolean]
   def verifyToken(identifier: TokenIdentifier) : FutureService[SystemUser]
 }

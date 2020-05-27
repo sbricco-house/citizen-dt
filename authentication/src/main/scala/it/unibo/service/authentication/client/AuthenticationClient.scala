@@ -12,7 +12,8 @@ import it.unibo.core.microservice.FutureService
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.utils.HttpCode
 import it.unibo.service.authentication.client.AuthenticationClient._
-import it.unibo.service.authentication.{AuthenticationService, TokenIdentifier}
+import it.unibo.service.authentication.model.Resources.AuthenticationInfo
+import it.unibo.service.authentication.{AuthenticationService, Token, TokenIdentifier}
 
 object AuthenticationClient {
   val LOGIN = s"/login"
@@ -35,11 +36,11 @@ private class AuthenticationClient(serviceUri: URI) extends AuthenticationServic
 
   private implicit val executionContext: VertxExecutionContext = VertxExecutionContext(vertx.getOrCreateContext())
 
-  override def login(email: String, password: String): FutureService[TokenIdentifier] = {
+  override def login(email: String, password: String): FutureService[AuthenticationInfo] = {
     val request = s"${serviceUri.toString}$LOGIN"
     val requestBody = Json.emptyObj().put("email", email).put("password", password)
     parseServiceResponseWhenComplete(webClient.post(request).sendJsonObjectFuture(requestBody)) {
-      case (HttpCode.Created, token) => TokenIdentifier(token)
+      case (HttpCode.Created, authenticationInfo) => parseAuthenticationInfo(new JsonObject(authenticationInfo))
     }.toFutureService
   }
 
@@ -50,10 +51,10 @@ private class AuthenticationClient(serviceUri: URI) extends AuthenticationServic
     }.toFutureService
   }
 
-  override def refresh(identifier: TokenIdentifier): FutureService[TokenIdentifier] = {
+  override def refresh(identifier: TokenIdentifier): FutureService[Token] = {
     val request = s"${serviceUri.toString}$REFRESH"
     parseServiceResponseWhenComplete(webClient.post(request).putHeader(getAuthorizationHeader(identifier)).sendFuture()) {
-      case (HttpCode.Created, newToken) => TokenIdentifier(newToken)
+      case (HttpCode.Created, newToken) => parseToken(new JsonObject(newToken))
     }.toFutureService
   }
 
@@ -65,6 +66,14 @@ private class AuthenticationClient(serviceUri: URI) extends AuthenticationServic
   }
 
   private def getAuthorizationHeader(token: TokenIdentifier): (String, String) = "Authorization" -> s"Bearer ${token.token}"
+
+  protected def parseAuthenticationInfo(jsonObject: JsonObject): AuthenticationInfo = {
+    AuthenticationInfo(parseToken(jsonObject), parseUser(jsonObject))
+  }
+
+  protected def parseToken(jsonObject: JsonObject): Token = {
+    Token(jsonObject.getString("token"), jsonObject.getInteger("expirationInMinute"))
+  }
 
   protected def parseUser(jsonObject: JsonObject): SystemUser = {
     SystemUser(

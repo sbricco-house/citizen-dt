@@ -14,6 +14,12 @@ import it.unibo.service.authentication.utils.Hash
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
+import AuthenticationServiceBackend._
+import it.unibo.service.authentication.model.Resources.AuthenticationInfo
+
+object AuthenticationServiceBackend {
+  private val EXPIRE_TIME_MIN = 30
+}
 
 class AuthenticationServiceBackend(provider: JWTAuth,
                                    userStorage: Storage[SystemUser, String]) extends AuthenticationService {
@@ -22,11 +28,11 @@ class AuthenticationServiceBackend(provider: JWTAuth,
 
   private val blackListToken: mutable.LinkedHashSet[TokenIdentifier] = mutable.LinkedHashSet()
   private val jwtOptions = JWTOptions()
-    .setExpiresInMinutes(30)
+    .setExpiresInMinutes(EXPIRE_TIME_MIN)
 
-  override def login(email: String, password: String): FutureService[TokenIdentifier] = {
+  override def login(email: String, password: String): FutureService[AuthenticationInfo] = {
     FutureService(loginUser(email, Hash.SHA256.digest(password)))
-      .map(user => generateToken(user))
+      .map(user => AuthenticationInfo(generateToken(user), user))
   }
 
   override def verifyToken(identifier: TokenIdentifier): FutureService[SystemUser] = {
@@ -50,7 +56,7 @@ class AuthenticationServiceBackend(provider: JWTAuth,
       .flatMap(_ => FutureService(insertBlackList(identifier)))
   }
 
-  override def refresh(identifier: TokenIdentifier): FutureService[TokenIdentifier] = {
+  override def refresh(identifier: TokenIdentifier): FutureService[Token] = {
     // authenticate the user, add current token to blacklist, regenerate the token
     verifyToken(identifier)
       .map(user => {
@@ -59,13 +65,13 @@ class AuthenticationServiceBackend(provider: JWTAuth,
       })
   }
 
-  private def generateToken(user: SystemUser): TokenIdentifier = {
+  private def generateToken(user: SystemUser): Token = {
     // introduce fixed delay for prevent creation of same jwt. By definition JWT time is expressed in seconds
     // generating a token for the same user at high rate < 1s could generate same token. In real scenario
     // this not happens, but is better to prevent this
     Thread.sleep(1000)
     val token = provider.generateToken(userToClaims(user), jwtOptions)
-    TokenIdentifier(token)
+    Token(token, EXPIRE_TIME_MIN)
   }
 
   private def loginUser(email: String, digest: String): ServiceResponse[SystemUser] = {
