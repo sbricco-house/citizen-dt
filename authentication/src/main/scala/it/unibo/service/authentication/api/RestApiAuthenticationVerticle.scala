@@ -3,7 +3,8 @@ package it.unibo.service.authentication.api
 import io.vertx.core.json.JsonObject
 import it.unibo.core.authentication.SystemUser
 import it.unibo.core.microservice.vertx.{BaseVerticle, _}
-import it.unibo.service.authentication.AuthenticationService
+import it.unibo.service.authentication.model.Resources.AuthenticationInfo
+import it.unibo.service.authentication.{AuthenticationService, Token}
 
 class RestApiAuthenticationVerticle(protected val authenticationService: AuthenticationService,
                                     port : Int = 8080,
@@ -18,13 +19,5 @@ class RestApiAuthenticationVerticle(protected val authenticationService: Authent
       email <- emailOption
       password <- passwordOption
     } yield LoginUser(email, password)
-  }
-
-  protected def userToJson(user: SystemUser): JsonObject = {
-    new JsonObject()
-      .put("email", user.email)
-      .put("username", user.username)
-      .put("identifier", user.identifier)
-      .put("role", user.role)
   }
 }
