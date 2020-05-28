@@ -116,7 +116,6 @@ class BackendCitizenService(authenticationService : AuthenticationService,
     })
     savedData.map(_.identifier)
   }
-
   // TODO: move from here
   private def checkPermission(categoriesToUpdate: Seq[LeafCategory], authorizedCategories: Seq[DataCategory]): Seq[LeafCategory] = {
     categoriesToUpdate.filter {

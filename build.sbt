@@ -21,6 +21,7 @@ lazy val commonSetting = Seq(
     "io.monix" %% "monix-reactive" % monixVersion,
     "io.vertx" %% "vertx-lang-scala" % vertxVersion,
     "io.vertx" %% "vertx-web-scala" % vertxVersion,
+    "io.lemonlabs" %% "scala-uri" % "2.2.2",
     "io.vertx" %% "vertx-web-client-scala" % vertxVersion,
     "org.eclipse.californium" % "californium-core" % "2.2.3"
   )

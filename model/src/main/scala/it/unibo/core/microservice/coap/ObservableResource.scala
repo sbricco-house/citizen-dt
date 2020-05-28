@@ -7,5 +7,4 @@ class ObservableResource(name : String, observingType : Type) extends CoapResour
   this.setObservable(true)
   this.setObserveType(observingType)
   getAttributes.setObservable(); // mark observable in the Link-Format
-
 }

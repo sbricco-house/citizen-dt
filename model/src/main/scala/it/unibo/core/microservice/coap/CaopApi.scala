@@ -5,6 +5,8 @@ import java.util.concurrent.ScheduledExecutorService
 import org.eclipse.californium.core.{CoapResource, CoapServer}
 
 object CaopApi {
+  def apply(port : Int) : CoapServer = new CoapServer(port)
+
   def apply(port : Int, rootResource : CoapResource) : CoapServer = {
     val server = new CoapServer(port)
     server.add(rootResource)
