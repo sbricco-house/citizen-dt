@@ -2,9 +2,10 @@ package it.unibo.service.citizen
 
 import io.vertx.lang.scala.json.JsonObject
 import it.unibo.core.data.{Data, DataCategory}
-import it.unibo.core.microservice.Response
+import it.unibo.core.microservice.{Fail, Response}
 import it.unibo.core.microservice.coap._
 import it.unibo.core.parser.DataParserRegistry
+import it.unibo.core.utils.ServiceError.Unauthorized
 import it.unibo.service.authentication.TokenIdentifier
 import it.unibo.service.citizen.CitizenMessageDelivery.ObserveData
 import monix.execution.Scheduler.Implicits.global
@@ -20,10 +21,11 @@ object CoapObservableApi {
             dataParser : DataParserRegistry[JsonObject],
             port : Int = 5683) : CoapServer = {
     val server = CaopApi(port)
-    val observableFactory : ObserveData => Option[Resource] = data => dataParser
-      .decodeCategory(data.category)
-      .map(new CategoryLink(data.id, _, citizenService, dataParser))
-    val messageDelivery = new CitizenMessageDelivery(server.getRoot, observableFactory)
+    val observableFactory : ObserveData => Option[Resource] = data => {
+      dataParser.decodeCategory(data.category)
+        .map(new CategoryLink(data.id, _, citizenService, dataParser))
+    }
+    val messageDelivery = new CitizenMessageDelivery(observableFactory)
     server.setMessageDeliverer(messageDelivery)
     server
   }
@@ -41,18 +43,20 @@ object CoapObservableApi {
     override def handleRequest(exchange: Exchange): Unit = {
       val coapExchange = new CoapExchange(exchange, this)
       val tokenOpt = coapExchange.getAuthToken
+
       def manageObserve(token : String): Unit = {
         val observable = citizenService.observeState(TokenIdentifier(token), category)
         observable.whenComplete {
           case Response(observable) =>
             createLink(observable, category)
             super.handleRequest(exchange)
-          case _ => coapExchange.reject()
+          case Fail(Unauthorized(m)) => coapExchange.respond(ResponseCode.FORBIDDEN)
+          case _ => coapExchange.respond(ResponseCode.INTERNAL_SERVER_ERROR)
         }
       }
       def isObservableNecessary = exchange.getRequest.isObserve && ! exchange.getRelation.isEstablished
       tokenOpt match {
-        case None => coapExchange.reject()
+        case None => coapExchange.respond(ResponseCode.UNAUTHORIZED)
         case Some(token) if(isObservableNecessary) => manageObserve(token)
         case _ => super.handleRequest(exchange)
       }

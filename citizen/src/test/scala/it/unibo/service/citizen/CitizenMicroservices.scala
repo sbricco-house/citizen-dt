@@ -10,7 +10,7 @@ import it.unibo.service.permission.{AuthorizationService, MockAuthorization}
 
 object CitizenMicroservices {
   val integerDataParser = VertxJsonParser(ValueParser.Json.intParser, Categories.bloodPressureCategory)
-  val doubleDataParser = VertxJsonParser(ValueParser.Json.intParser, Categories.hearBeatCategory)
+  val doubleDataParser = VertxJsonParser(ValueParser.Json.intParser, Categories.heartBeatCategory)
   val parserRegistry = DataParserRegistry()
     .registerParser(integerDataParser)
     .registerParser(doubleDataParser)
@@ -37,9 +37,9 @@ object CitizenMicroservices {
 }
 
 object Categories {
-  val hearBeatCategory = LeafCategory("heartbeat", 100)
+  val heartBeatCategory = LeafCategory("heartbeat", 100)
   val bloodPressureCategory = LeafCategory("blood_pressure", 100)
-  val medicalDataCategory = GroupCategory("medical", Set(hearBeatCategory, bloodPressureCategory))
+  val medicalDataCategory = GroupCategory("medical", Set(heartBeatCategory, bloodPressureCategory))
 }
 
 object MockSystemUser {
