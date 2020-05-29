@@ -34,6 +34,11 @@ object CitizenMicroservices {
     citizenService = CitizenService.fromVertx(authenticationService, authorizationService, "50", store, vertx)
     citizenService
   }
+
+  def refresh(): CitizenService = {
+    citizenService = CitizenService(authenticationService, authorizationService, "50", store)
+    citizenService
+  }
 }
 
 object Categories {

@@ -18,6 +18,7 @@ import scala.concurrent.ExecutionContext
  * Abstraction of Citizen Service expressed using main domain concept.
  * key idea: allow to expose the same service through different web technology/interface, e.g. websocket, rest api, ecc...
  */
+//TODO add destroy : release all resource (e.g. observable)
 trait CitizenService {
   def citizenIdentifier : String
   def updateState(who: TokenIdentifier,data: Seq[Data]): FutureService[Seq[String]]

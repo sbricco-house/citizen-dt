@@ -24,6 +24,7 @@ class CitizenMessageDelivery(observableResourceFactory : ObserveData => Option[R
    */
   override def findResource (exchange: Exchange): Resource = {
     val uri = exchange.getRequest.getURI
+
     validObservablePath(exchange.getRequest) match {
       case Some(category) => resources.get(uri)
         .orElse({
@@ -32,7 +33,7 @@ class CitizenMessageDelivery(observableResourceFactory : ObserveData => Option[R
           newResource
         })
         .getOrElse(super.findResource(exchange))
-      case _ => super.findResource(exchange)
+      case _ => null
     }
   }
 

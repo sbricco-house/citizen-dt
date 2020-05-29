@@ -2,7 +2,7 @@ package it.unibo.service.citizen
 
 import io.vertx.core.json.JsonObject
 import io.vertx.scala.ext.web.client.WebClient
-import it.unibo.service.citizen.HttpBootstrap._
+import it.unibo.service.citizen.HttpScope._
 import it.unibo.service.citizen.matcher.DataJsonMatcher
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
@@ -157,12 +157,12 @@ class RestApiTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with 
   }
 
   override def beforeAll(): Unit = {
-    HttpBootstrap.boot()
-    client = HttpBootstrap.webClient()
+    HttpScope.boot()
+    client = HttpScope.webClient()
   }
 
   override def afterAll(): Unit = {
-    HttpBootstrap.teardown()
+    HttpScope.teardown()
     client.close()
   }
 }

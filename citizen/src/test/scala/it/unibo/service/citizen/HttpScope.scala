@@ -9,7 +9,7 @@ import io.vertx.scala.ext.web.client.{HttpRequest, WebClient, WebClientOptions}
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-object HttpBootstrap {
+object HttpScope {
   val STATE_ENDPOINT = s"http://localhost:8080/citizens/50/state"
   val HISTORY_ENDPOINT = s"http://localhost:8080/citizens/50/history"
   val CITIZEN_AUTHORIZED_HEADER = "Authorization" -> "jwt1"

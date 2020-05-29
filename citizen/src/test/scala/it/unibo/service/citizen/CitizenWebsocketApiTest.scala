@@ -2,7 +2,7 @@ package it.unibo.service.citizen
 import io.vertx.lang.scala.json.{Json, JsonArray, JsonObject}
 import io.vertx.scala.core.http.{HttpClient, WebSocket}
 import it.unibo.core.microservice.protocol.{WebsocketRequest, WebsocketResponse, WebsocketUpdate}
-import it.unibo.service.citizen.HttpBootstrap.{STATE_ENDPOINT, _}
+import it.unibo.service.citizen.HttpScope.{STATE_ENDPOINT, _}
 import it.unibo.service.citizen.matcher.DataJsonMatcher
 import it.unibo.service.citizen.websocket.{CitizenProtocol, Ok, Status}
 import org.scalatest.BeforeAndAfterAll
@@ -62,7 +62,7 @@ class CitizenWebsocketApiTest extends AnyFlatSpec with BeforeAndAfterAll with Ma
   "citizen client" should "enable to notified from citizen state rest update " in {
     whenReady(client.webSocketFuture(wsOptions(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER))) {
       channel =>
-        val webClient = HttpBootstrap.webClient()
+        val webClient = HttpScope.webClient()
         val update = awaitUpdate(channel)
         val patchFuture = webClient.patch(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER).sendJsonObjectFuture(postData)
         whenReady(update.zip(patchFuture)) {
@@ -132,12 +132,12 @@ class CitizenWebsocketApiTest extends AnyFlatSpec with BeforeAndAfterAll with Ma
   }
 
   override def beforeAll(): Unit = {
-    HttpBootstrap.boot()
-    client = HttpBootstrap.httpClient()
+    HttpScope.boot()
+    client = HttpScope.httpClient()
   }
 
   override def afterAll(): Unit = {
-    HttpBootstrap.teardown()
+    HttpScope.teardown()
     client.close()
   }
 }
