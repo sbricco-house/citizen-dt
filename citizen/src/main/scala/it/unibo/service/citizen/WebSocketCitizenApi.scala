@@ -82,23 +82,22 @@ trait WebSocketCitizenApi extends WebSocketApi {
     val toCancel = websocketObservable.map(CitizenProtocol.requestParser.encode)
       .fallbackOption { webSocket.writeTextJsonObject(CitizenProtocol.unkwon) }
       .collect { case Some(data) => data }
-      .map(request => (request, request.value.getAsObjectSeq.map(_.map(parser.decode))))
-      .fallback(_._2.nonEmpty, _ => webSocket.writeTextJsonObject(CitizenProtocol.unkwon))
+      .map(request => (request, jsonArrayToData(request.value)))
+      .fallback(_._2.nonEmpty, elem => badCategoryResponse(elem._1))
       .collect { case (request, Some(data)) => (request, data)}
-      .fallback(_._2.forall(_.nonEmpty), elem => badCategoryResponse(elem._1))
       .foreach {
         case (request, elem) => manageRequest(request.id, channel, elem, webSocket)
       }
     toCancel
   }
 
-  private def manageRequest(requestId : Int, channel : CitizenService#PhysicalLink, data : Seq[Option[Data]], webSocket: ServerWebSocket) : Unit = {
+  private def manageRequest(requestId : Int, channel : CitizenService#PhysicalLink, data : Seq[Data], webSocket: ServerWebSocket) : Unit = {
     def produceResponse(futureResult : ServiceResponse[Seq[String]]) = futureResult match {
       case Response(_) =>WebsocketResponse[Status](requestId, Ok)
       case Fail(Unauthorized(_)) => WebsocketResponse[Status](requestId, CitizenProtocol.unothorized)
       case _ => WebsocketResponse[Status](requestId, CitizenProtocol.internalError)
     }
-    channel.updateState(data.map(_.get)).whenComplete {
+    channel.updateState(data).whenComplete {
       element =>
         val result = produceResponse(element)
         webSocket.writeTextMessage(CitizenProtocol.responseParser.decode(result))

@@ -27,7 +27,7 @@ object CitizenProtocol {
     } yield WebsocketResponse[Status](id, status)
   }
 
-  val requestParser  = Parser[String, WebsocketRequest[JsonArray]]{
+  val requestParser = Parser[String, WebsocketRequest[JsonArray]]{
     rep => Json.obj(
       "id" -> rep.id,
       "value" -> rep.value
@@ -48,6 +48,7 @@ object CitizenProtocol {
     data => for {
       json <- JsonConversion.objectFromString(data)
       value <- json.getAsObject("value")
+      if Status.fromJson(value).isEmpty
     } yield WebsocketUpdate[JsonObject](value)
   }
 

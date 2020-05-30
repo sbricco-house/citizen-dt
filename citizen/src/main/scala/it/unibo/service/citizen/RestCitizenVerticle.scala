@@ -43,7 +43,10 @@ class RestCitizenVerticle(protected val citizenService: CitizenService,
   // actually only valid data are parsed and returned
   protected def jsonToState(jsonObject: JsonObject): Option[Seq[Data]] = {
     jsonObject.getAsArray("data")
-      .flatMap(_.getAsObjectSeq)
+      .flatMap(jsonArrayToData)
+  }
+  protected def jsonArrayToData(array: JsonArray): Option[Seq[Data]] = {
+    array.getAsObjectSeq
       .map(json => json.map(_.put("id", UUID.randomUUID().toString))) // assign unique data identifier
       .map(jsonData => jsonData.map(parser.decode))
       .filter(elements => elements.forall(_.nonEmpty))

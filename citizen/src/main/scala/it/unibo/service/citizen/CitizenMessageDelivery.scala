@@ -1,6 +1,7 @@
 package it.unibo.service.citizen
 
 import io.lemonlabs.uri.Uri
+import it.unibo.core.microservice.coap.ScalaCoapServer
 import it.unibo.service.citizen.CitizenMessageDelivery.ObserveData
 import org.eclipse.californium.core.CoapResource
 import org.eclipse.californium.core.coap.Request
@@ -13,8 +14,8 @@ import org.eclipse.californium.core.server.resources.Resource
  * manage variable path (e.g. /citizen/{id}/state?data_category=heartbeat).
  * @param observableResourceFactory the factory used to create the coap resource associated to a specific citizen id and a specific category
  */
-class CitizenMessageDelivery(observableResourceFactory : ObserveData => Option[Resource]) extends ServerMessageDeliverer(new CoapResource(".hide")) {
-  var resources : Map[String, Resource] = Map.empty[String, Resource]
+class CitizenMessageDelivery(citizenIdentifier : String, observableResourceFactory : ObserveData => Option[CoapResource]) extends ServerMessageDeliverer(new CoapResource(".hide")) with ScalaCoapServer.DestroyListener {
+  var resources : Map[String, CoapResource] = Map.empty[String, CoapResource]
   import collection.JavaConverters._
   /*
    * this method contains the logic for creating "observable state" resource on demand, according the
@@ -42,10 +43,12 @@ class CitizenMessageDelivery(observableResourceFactory : ObserveData => Option[R
     val scalaUri = Uri.parse(request.getURI)
     val categoryOpt = scalaUri.toUrl.query.param("data_category")
     elements match {
-      case ("citizen" :: id :: state :: Nil) => categoryOpt.map(ObserveData(id, _))
+      case ("citizen" :: this.citizenIdentifier :: state :: Nil) => categoryOpt.map(ObserveData(citizenIdentifier, _))
       case _ => None
     }
   }
+
+  override def apply(v1: Unit) = this.resources.values.foreach(_.delete())
 }
 
 object CitizenMessageDelivery {

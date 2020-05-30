@@ -1,5 +1,7 @@
 package it.unibo.service.citizen
 
+import java.util.concurrent.ScheduledThreadPoolExecutor
+
 import io.vertx.lang.scala.json.JsonObject
 import it.unibo.core.data.{Data, DataCategory}
 import it.unibo.core.microservice.coap._
@@ -8,35 +10,51 @@ import it.unibo.core.parser.DataParserRegistry
 import it.unibo.core.utils.ServiceError.Unauthorized
 import it.unibo.service.authentication.TokenIdentifier
 import it.unibo.service.citizen.CitizenMessageDelivery.ObserveData
+import monix.execution.CancelableFuture
 import monix.execution.Scheduler.Implicits.global
 import monix.reactive.Observable
 import org.eclipse.californium.core.coap.CoAP.{ResponseCode, Type}
 import org.eclipse.californium.core.coap.MediaTypeRegistry
-import org.eclipse.californium.core.server.resources.{CoapExchange, Resource}
-import org.eclipse.californium.core.{CoapClient, CoapServer}
+import org.eclipse.californium.core.server.resources.CoapExchange
+import org.eclipse.californium.core.{CoapClient, CoapResource, CoapServer}
 
 object CoapObservableApi {
+  //TODO find a better way to put this executor
+  val THREAD_POOL_EXECUTOR : ScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(8)
+
   def apply(citizenService : CitizenService,
             dataParser : DataParserRegistry[JsonObject],
             port : Int = 5683) : CoapServer = {
     val server = CaopApi(port)
-    val observableFactory : ObserveData => Option[Resource] = data => {
+
+    val observableFactory : ObserveData => Option[CoapResource] = data => {
       dataParser.decodeCategory(data.category)
-        .map(new CategoryLink(data.id, _, citizenService, dataParser))
+        .map(new CategoryLink(data.id, _, citizenService, port, dataParser))
     }
-    val messageDelivery = new CitizenMessageDelivery(observableFactory)
+    val messageDelivery = new CitizenMessageDelivery(citizenService.citizenIdentifier, observableFactory)
     server.setMessageDeliverer(messageDelivery)
+    server.addDestroyListener(messageDelivery)
     server
   }
 
   class CategoryLink(citizenId : String,
                      category : DataCategory,
                      citizenService : CitizenService,
+                     port : Int,
                      parser : DataParserRegistry[JsonObject]) extends ObservableResource(citizenId + "/" + category.name, Type.CON) {
     val coapSecret = generateCoapSecret()
-    val innerClient = new CoapClient(s"coap://localhost/citizen/${citizenId}/state?data_category=${category.name}")
+
+    val innerClient = new CoapClient(s"coap://localhost:$port/citizen/${citizenId}/state?data_category=${category.name}")
+    innerClient.setExecutors(THREAD_POOL_EXECUTOR, THREAD_POOL_EXECUTOR, false)
     var elements = "{}"
-    var link : Option[Observable[Data]] = None
+    var categorySource : Option[Observable[Data]] = None
+    var sourceSubscription : Option[CancelableFuture[_]] = None
+
+    override def delete(): Unit = {
+      super.delete()
+      sourceSubscription.foreach(_.cancel())
+      innerClient.shutdown()
+    }
     override def handleGET(coapExchange: CoapExchange): Unit = {
       val exchange = coapExchange.advanced()
       val tokenOpt = coapExchange.getAuthToken
@@ -62,15 +80,17 @@ object CoapObservableApi {
     }
 
     private def createLink(observable : Observable[Data], category : DataCategory) : Unit = {
-      link match {
+
+      def subscriptionStrategy(data : Data) = parser.encode(data) match {
+        case Some(json) =>
+          elements = json.encode()
+          innerClient.putWithOptions(elements, JsonFormat, coapSecret)
+        case _ =>
+      }
+      categorySource match {
         case None =>
-          observable.foreach(data => parser.encode(data) match {
-            case Some(json) =>
-              elements = json.encode()
-              innerClient.putWithOptions(elements, JsonFormat, coapSecret)
-            case _ =>
-          })
-          link = Some(observable)
+          sourceSubscription = Some(observable.foreach(subscriptionStrategy))
+          categorySource = Some(observable)
         case _ =>
       }
     }

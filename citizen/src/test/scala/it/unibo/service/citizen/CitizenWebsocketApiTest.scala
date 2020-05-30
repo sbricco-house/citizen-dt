@@ -186,6 +186,7 @@ object CitizenWebsocketApiTest {
   def awaitResponse(id : Int, websocket : WebSocket) : Future[WebsocketResponse[Status]] = {
     val promise = Promise[WebsocketResponse[Status]]()
     websocket.textMessageHandler(text => {
+      println(text)
       val response = CitizenProtocol.responseParser.encode(text)
       response match {
         case Some(result @ WebsocketResponse(`id`, _)) => promise.success(result)
