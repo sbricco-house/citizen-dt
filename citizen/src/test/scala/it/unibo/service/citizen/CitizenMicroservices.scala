@@ -26,17 +26,17 @@ object CitizenMicroservices {
     ("50", "50") -> Seq(Categories.medicalDataCategory),
     ("46", "50") -> Seq(Categories.medicalDataCategory, Categories.bloodPressureCategory)
   ))
-  val store : Storage[Data, String] = InMemoryStorage[Data, String]()
+  private val store : Storage[Data, String] = InMemoryStorage[Data, String]()
 
-  var citizenService : CitizenService = CitizenService(authenticationService, authorizationService, "50", store)
+  var citizenService : CitizenDigitalTwin = CitizenDigitalTwin(authenticationService, authorizationService, "50", store)
 
-  def injectVertx(vertx : Vertx) : CitizenService = {
-    citizenService = CitizenService.fromVertx(authenticationService, authorizationService, "50", store, vertx)
+  def injectVertx(vertx : Vertx) : CitizenDigitalTwin = {
+    citizenService = CitizenDigitalTwin.fromVertx(authenticationService, authorizationService, "50", InMemoryStorage[Data, String](), vertx)
     citizenService
   }
 
-  def refresh(): CitizenService = {
-    citizenService = CitizenService(authenticationService, authorizationService, "50", store)
+  def refresh(): CitizenDigitalTwin = {
+    citizenService = CitizenDigitalTwin(authenticationService, authorizationService, "50", InMemoryStorage[Data, String]())
     citizenService
   }
 }

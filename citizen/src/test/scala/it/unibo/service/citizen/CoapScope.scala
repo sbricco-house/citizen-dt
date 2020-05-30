@@ -4,6 +4,7 @@ import it.unibo.core.data.DataCategory
 import it.unibo.service.authentication.TokenIdentifier
 import org.eclipse.californium.core.{CoapClient, CoapResponse, CoapServer}
 import it.unibo.core.microservice.coap._
+import it.unibo.service.citizen.coap.CoapObservableApi
 
 import scala.concurrent.Promise
 

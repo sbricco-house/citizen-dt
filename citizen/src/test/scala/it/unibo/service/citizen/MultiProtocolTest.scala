@@ -1,27 +1,21 @@
 package it.unibo.service.citizen
 
-import java.util.UUID
-
 import io.vertx.lang.scala.json.{Json, JsonArray, JsonObject}
 import io.vertx.scala.core.http.{HttpClient, WebSocketBase}
 import io.vertx.scala.ext.web.client.WebClient
 import it.unibo.core.data.{Data, Resource}
-import it.unibo.service.citizen.HttpScope.{CITIZEN_AUTHORIZED_HEADER, STATE_ENDPOINT, wsOptions}
+import it.unibo.core.microservice.protocol.WebsocketRequest
+import it.unibo.service.citizen.HttpScope.{CITIZEN_AUTHORIZED_HEADER, STATE_ENDPOINT, wsOptions, _}
 import it.unibo.service.citizen.matcher.DataJsonMatcher
+import it.unibo.service.citizen.websocket.CitizenProtocol
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.time.{Millis, Seconds, Span}
 
 import scala.concurrent.{Future, Promise}
 import scala.util.Random
-import it.unibo.core.microservice.protocol.{WebsocketRequest, WebsocketUpdate}
-import it.unibo.service.citizen.CitizenWebsocketApiTest.{bloodPressureData, hearbeatData}
-import it.unibo.service.citizen.websocket.CitizenProtocol
-import org.scalatest.time.{Millis, Seconds, Span}
-import HttpScope._
-import CoapScope._
-import CitizenMicroservices._
 class MultiProtocolTest extends AnyFlatSpec with BeforeAndAfterEach with Matchers with ScalaFutures with DataJsonMatcher {
   implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(15, Seconds), interval = Span(100, Millis))
   var timestamp = 0
@@ -96,7 +90,7 @@ class MultiProtocolTest extends AnyFlatSpec with BeforeAndAfterEach with Matcher
       case i if i % 2 == 0 => Categories.bloodPressureCategory
       case _ => Categories.heartBeatCategory
     }
-      .map(Data(UUID.randomUUID().toString, Resource("_"), _, { timestamp += 1; timestamp }, random.nextInt()))
+      .map(Data("_", Resource("_"), _, { timestamp += 1; timestamp }, random.nextInt()))
       .map(CitizenMicroservices.parserRegistry.encode)
       .map(_.get)
   }

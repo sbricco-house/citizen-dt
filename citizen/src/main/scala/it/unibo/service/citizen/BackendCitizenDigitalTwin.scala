@@ -22,12 +22,12 @@ import scala.util.Success
  * @param dataStorage Storage where save the data of citizen
  * @param state Current state of citizen, the default is empty.
  */
-class BackendCitizenService(authenticationService : AuthenticationService,
-                            authorizationService: AuthorizationService,
-                            override val citizenIdentifier : String,
-                            dataStorage : Storage[Data, String],
-                            private var state: State = State.empty,
-                            )(implicit val executionContext: ExecutionContext) extends CitizenService {
+class BackendCitizenDigitalTwin(authenticationService : AuthenticationService,
+                                authorizationService: AuthorizationService,
+                                override val citizenIdentifier : String,
+                                dataStorage : Storage[Data, String],
+                                private var state: State = State.empty,
+                            )(implicit val executionContext: ExecutionContext) extends CitizenDigitalTwin {
   self =>
   private val observableState = PublishSubject[Data]()
   private var channels : Map[PhysicalLink, SystemUser] = Map.empty

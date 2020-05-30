@@ -9,8 +9,9 @@ import it.unibo.core.microservice.vertx.WebSocketApi
 import it.unibo.core.microservice.{Fail, Response, ServiceResponse}
 import it.unibo.core.utils.ServiceError.Unauthorized
 import it.unibo.service.authentication.TokenIdentifier
+import it.unibo.service.citizen.{CitizenDigitalTwin, RestCitizenVerticle}
 import it.unibo.service.citizen.middleware.UserMiddleware
-import it.unibo.service.citizen.{CitizenService, RestCitizenVerticle}
+import it.unibo.service.citizen.websocket.{CitizenProtocol, Ok, Status}
 import monix.execution.Cancelable
 
 import scala.util.{Failure, Success, Try}
@@ -43,7 +44,7 @@ trait WebSocketCitizenApi extends WebSocketApi {
     case _ => Failure(new IllegalArgumentException())
   }
 
-  private def manageChannel(webSocket: ServerWebSocket, channel : CitizenService#PhysicalLink) : Unit = {
+  private def manageChannel(webSocket: ServerWebSocket, channel : CitizenDigitalTwin#PhysicalLink) : Unit = {
     val clientChannel = maintainChannelFromClient(webSocket, channel)
     val serverChannel = maintainChannelFromServer(webSocket, channel)
     webSocket.closeHandler(_ => {
@@ -54,7 +55,7 @@ trait WebSocketCitizenApi extends WebSocketApi {
     webSocket.accept()
   }
 
-  private def maintainChannelFromServer(webSocket: ServerWebSocket, channel : CitizenService#PhysicalLink) : Cancelable = {
+  private def maintainChannelFromServer(webSocket: ServerWebSocket, channel : CitizenDigitalTwin#PhysicalLink) : Cancelable = {
     val toCancel = channel.updateDataStream()
       .map(parser.encode)
       .collect { case Some(obj) => obj }
@@ -69,7 +70,7 @@ trait WebSocketCitizenApi extends WebSocketApi {
     websocket.writeTextMessage(CitizenProtocol.updateParser.decode(updatePacket))
   }
 
-  private def maintainChannelFromClient(webSocket: ServerWebSocket, channel : CitizenService#PhysicalLink) : Cancelable = {
+  private def maintainChannelFromClient(webSocket: ServerWebSocket, channel : CitizenDigitalTwin#PhysicalLink) : Cancelable = {
     import it.unibo.core.observable._
     val websocketObservable = observableFromWebSocket(webSocket)
 
@@ -82,23 +83,22 @@ trait WebSocketCitizenApi extends WebSocketApi {
     val toCancel = websocketObservable.map(CitizenProtocol.requestParser.encode)
       .fallbackOption { webSocket.writeTextJsonObject(CitizenProtocol.unkwon) }
       .collect { case Some(data) => data }
-      .map(request => (request, request.value.getAsObjectSeq.map(_.map(parser.decode))))
-      .fallback(_._2.nonEmpty, _ => webSocket.writeTextJsonObject(CitizenProtocol.unkwon))
+      .map(request => (request, jsonArrayToData(request.value)))
+      .fallback(_._2.nonEmpty, elem => badCategoryResponse(elem._1))
       .collect { case (request, Some(data)) => (request, data)}
-      .fallback(_._2.forall(_.nonEmpty), elem => badCategoryResponse(elem._1))
       .foreach {
         case (request, elem) => manageRequest(request.id, channel, elem, webSocket)
       }
     toCancel
   }
 
-  private def manageRequest(requestId : Int, channel : CitizenService#PhysicalLink, data : Seq[Option[Data]], webSocket: ServerWebSocket) : Unit = {
+  private def manageRequest(requestId : Int, channel : CitizenDigitalTwin#PhysicalLink, data : Seq[Data], webSocket: ServerWebSocket) : Unit = {
     def produceResponse(futureResult : ServiceResponse[Seq[String]]) = futureResult match {
       case Response(_) =>WebsocketResponse[Status](requestId, Ok)
       case Fail(Unauthorized(_)) => WebsocketResponse[Status](requestId, CitizenProtocol.unothorized)
       case _ => WebsocketResponse[Status](requestId, CitizenProtocol.internalError)
     }
-    channel.updateState(data.map(_.get)).whenComplete {
+    channel.updateState(data).whenComplete {
       element =>
         val result = produceResponse(element)
         webSocket.writeTextMessage(CitizenProtocol.responseParser.decode(result))

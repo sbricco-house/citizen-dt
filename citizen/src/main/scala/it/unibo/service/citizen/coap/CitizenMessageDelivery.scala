@@ -1,8 +1,8 @@
-package it.unibo.service.citizen
+package it.unibo.service.citizen.coap
 
 import io.lemonlabs.uri.Uri
 import it.unibo.core.microservice.coap.ScalaCoapServer
-import it.unibo.service.citizen.CitizenMessageDelivery.ObserveData
+import it.unibo.service.citizen.coap.CitizenMessageDelivery.ObserveData
 import org.eclipse.californium.core.CoapResource
 import org.eclipse.californium.core.coap.Request
 import org.eclipse.californium.core.network.Exchange
@@ -12,6 +12,7 @@ import org.eclipse.californium.core.server.resources.Resource
 /**
  * a specific implementation of MessageDelivery for CoapServer. This implementation allow to
  * manage variable path (e.g. /citizen/{id}/state?data_category=heartbeat).
+ * @param citizenIdentifier the citizen identifier accepted by this message router
  * @param observableResourceFactory the factory used to create the coap resource associated to a specific citizen id and a specific category
  */
 class CitizenMessageDelivery(citizenIdentifier : String, observableResourceFactory : ObserveData => Option[CoapResource]) extends ServerMessageDeliverer(new CoapResource(".hide")) with ScalaCoapServer.DestroyListener {
@@ -37,13 +38,15 @@ class CitizenMessageDelivery(citizenIdentifier : String, observableResourceFacto
       case _ => null
     }
   }
-
+  /*
+   * a valid path follows this pattern : /citizen/{citizenIdentifier}/state?data_category="acategory"
+   */
   private def validObservablePath(request : Request) : Option[ObserveData] = {
     val elements = request.getOptions.getUriPath.asScala.toList
     val scalaUri = Uri.parse(request.getURI)
     val categoryOpt = scalaUri.toUrl.query.param("data_category")
     elements match {
-      case ("citizen" :: this.citizenIdentifier :: state :: Nil) => categoryOpt.map(ObserveData(citizenIdentifier, _))
+      case ("citizen" :: this.citizenIdentifier :: "state" :: Nil) => categoryOpt.map(ObserveData(citizenIdentifier, _))
       case _ => None
     }
   }

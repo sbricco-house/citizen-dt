@@ -5,6 +5,7 @@ import java.net.URI
 import io.vertx.scala.core.Vertx
 import io.vertx.scala.core.http.{HttpClient, HttpClientOptions, WebSocketConnectOptions}
 import io.vertx.scala.ext.web.client.{HttpRequest, WebClient, WebClientOptions}
+import it.unibo.service.citizen.websocket.WebSocketCitizenApi
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -29,7 +30,7 @@ object HttpScope {
       CitizenMicroservices.parserRegistry,
     ) with RestCitizenApi with WebSocketCitizenApi
 
-    Await.result(vertx.deployVerticleFuture(citizenVerticle), 5 seconds)
+    Await.result(vertx.deployVerticleFuture(citizenVerticle), Duration.Inf)
   }
 
   def webClient(): WebClient = {
@@ -41,7 +42,7 @@ object HttpScope {
   }
 
   def teardown(): Unit = {
-    Await.result(vertx.closeFuture(), 5 seconds)
+    Await.result(vertx.closeFuture(), Duration.Inf)
   }
 
   implicit class RichHttpRequest[T](request: HttpRequest[T]) {

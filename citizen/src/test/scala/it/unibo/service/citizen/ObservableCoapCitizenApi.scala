@@ -5,18 +5,18 @@ import it.unibo.core.microservice.coap._
 import it.unibo.service.citizen.CoapScope._
 import it.unibo.service.citizen.matcher.DataJsonMatcher
 import org.eclipse.californium.core.{CoapClient, CoapResponse}
-import org.scalatest.BeforeAndAfterEach
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
 
-import scala.concurrent.Promise
-class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with Matchers with ScalaFutures with DataJsonMatcher {
+import scala.concurrent.{Await, Future, Promise}
+  class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with BeforeAndAfterAll with Matchers with ScalaFutures with DataJsonMatcher {
   implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(15, Seconds), interval = Span(100, Millis))
   import ObservableCoapCitizenApi._
   "citizen microservice" should " support coap protocol" in {
-    val coapClient = new CoapClient(s"localhost/citizen/50/state")
+    val coapClient = new CoapClient(s"localhost:${CoapScope.currentPort}/citizen/50/state")
     assert(coapClient.ping())
     coapClient.shutdown()
   }
@@ -36,7 +36,7 @@ class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with 
     val raw = CitizenMicroservices.parserRegistry.encode(heartbeatData).get.encode()
     val coapClient = createClientByCategory(Categories.heartBeatCategory)
     val observePromise = installExpectedOne(coapClient)
-    CitizenMicroservices.citizenService.updateState(CITIZEN_TOKEN, Seq(heartbeatData))
+    CitizenMicroservices.citizenService.updateState(CITIZEN_TOKEN, Seq(heartbeatData)).future
     whenReady(observePromise.future) {
       result => result shouldBe raw
     }
@@ -163,7 +163,6 @@ class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with 
   }
   "citizen resources " should " NOT being observable from unkwon category" in {
     val aData = Data("10", Resource("bi"), Categories.heartBeatCategory, 10, 10)
-    val raw = CitizenMicroservices.parserRegistry.encode(aData).get.encode()
     val coapClient = new CoapClient(s"""localhost:${CoapScope.currentPort}/citizen/50/state?data_category=unkwon""")
     val result = coapClient.observeWithTokenAndWait("jwt1", (data : CoapResponse) => {})
     assert(result.isCanceled)
@@ -183,13 +182,9 @@ class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with 
     observePromise.isCompleted shouldBe false
   }
 
-  override def beforeEach(): Unit = {
-    CoapScope.boot()
-  }
-
-  override def afterEach(): Unit = {
-    CoapScope.teardown()
-  }
+  override def beforeAll(): Unit = CitizenMicroservices.refresh()
+  override def beforeEach(): Unit = CoapScope.boot()
+  override def afterEach(): Unit = CoapScope.teardown()
 }
 
 object ObservableCoapCitizenApi {
