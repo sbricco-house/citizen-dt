@@ -35,7 +35,7 @@ class CitizenWebsocketApiTest extends AnyFlatSpec with BeforeAndAfterAll with Ma
     whenReady(client.webSocketFuture(wsOptions(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER))) {
       channel =>
         val request = WebsocketRequest[JsonArray](1, Json.arr(hearbeatData))
-        val stringRequest = CitizenProtocol.requestParser.decode(request)
+        val stringRequest = CitizenProtocol.requestParser.encode(request)
         channel.writeTextMessage(stringRequest)
         whenReady(awaitResponse(1, channel)) {
           case WebsocketResponse(_, Ok) => succeed
@@ -49,7 +49,7 @@ class CitizenWebsocketApiTest extends AnyFlatSpec with BeforeAndAfterAll with Ma
     whenReady(client.webSocketFuture(wsOptions(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER))) {
       channel =>
         val request = WebsocketRequest[JsonArray](1, Json.arr(hearbeatData))
-        val stringRequest = CitizenProtocol.requestParser.decode(request)
+        val stringRequest = CitizenProtocol.requestParser.encode(request)
         channel.writeTextMessage(stringRequest)
         val update = awaitUpdate(channel)
         whenReady(update) {
@@ -76,7 +76,7 @@ class CitizenWebsocketApiTest extends AnyFlatSpec with BeforeAndAfterAll with Ma
     whenReady(client.webSocketFuture(wsOptions(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER))) {
       channel =>
         val request = WebsocketRequest[JsonArray](1, Json.arr(hearbeatData, bloodPressureData))
-        val stringRequest = CitizenProtocol.requestParser.decode(request)
+        val stringRequest = CitizenProtocol.requestParser.encode(request)
         channel.writeTextMessage(stringRequest)
         whenReady(awaitResponse(1, channel)) {
           case WebsocketResponse(_, Ok) => succeed
@@ -90,7 +90,7 @@ class CitizenWebsocketApiTest extends AnyFlatSpec with BeforeAndAfterAll with Ma
     whenReady(client.webSocketFuture(wsOptions(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER))) {
       channel => {
         val request = WebsocketRequest[JsonArray](1, Json.arr(hearbeatData, bloodPressureData))
-        val stringRequest = CitizenProtocol.requestParser.decode(request)
+        val stringRequest = CitizenProtocol.requestParser.encode(request)
         val restPath = webClient().patch(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER).sendJsonObjectFuture(Useful.postState)
         channel.writeTextMessage(stringRequest)
         val awaitUpdate = awaitResponse(1, channel)
@@ -108,10 +108,10 @@ class CitizenWebsocketApiTest extends AnyFlatSpec with BeforeAndAfterAll with Ma
     whenReady(client.webSocketFuture(wsOptions(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER))) {
       channel =>
         val request = WebsocketRequest[JsonArray](1, Json.arr(unkwonCategoryData))
-        val stringRequest = CitizenProtocol.requestParser.decode(request)
+        val stringRequest = CitizenProtocol.requestParser.encode(request)
         channel.writeTextMessage(stringRequest)
         whenReady(awaitResponse(1, channel)) {
-          case WebsocketResponse(_, CitizenProtocol.unkwonDataCategoryError) => succeed
+          case WebsocketResponse(_, CitizenProtocol.`unknownDataCategoryError`) => succeed
           case _ => fail()
         }
         channel.close()
@@ -121,10 +121,10 @@ class CitizenWebsocketApiTest extends AnyFlatSpec with BeforeAndAfterAll with Ma
     whenReady(client.webSocketFuture(wsOptions(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER))) {
       channel =>
         val request = WebsocketRequest[JsonArray](1, Json.arr(unkwonCategoryData, hearbeatData, bloodPressureData))
-        val stringRequest = CitizenProtocol.requestParser.decode(request)
+        val stringRequest = CitizenProtocol.requestParser.encode(request)
         channel.writeTextMessage(stringRequest)
         whenReady(awaitResponse(1, channel)) {
-          case WebsocketResponse(_, CitizenProtocol.unkwonDataCategoryError) => succeed
+          case WebsocketResponse(_, CitizenProtocol.`unknownDataCategoryError`) => succeed
           case _ => fail()
         }
         channel.close()
@@ -186,8 +186,7 @@ object CitizenWebsocketApiTest {
   def awaitResponse(id : Int, websocket : WebSocket) : Future[WebsocketResponse[Status]] = {
     val promise = Promise[WebsocketResponse[Status]]()
     websocket.textMessageHandler(text => {
-      println(text)
-      val response = CitizenProtocol.responseParser.encode(text)
+      val response = CitizenProtocol.responseParser.decode(text)
       response match {
         case Some(result @ WebsocketResponse(`id`, _)) => promise.success(result)
         case _ =>
@@ -199,7 +198,7 @@ object CitizenWebsocketApiTest {
   def awaitUpdate(websocket : WebSocket) : Future[WebsocketUpdate[JsonObject]] = {
     val promise = Promise[WebsocketUpdate[JsonObject]]()
     websocket.textMessageHandler(text => {
-      val response = CitizenProtocol.updateParser.encode(text)
+      val response = CitizenProtocol.updateParser.decode(text)
       response match {
         case Some(update) => promise.success(update)
         case _ =>

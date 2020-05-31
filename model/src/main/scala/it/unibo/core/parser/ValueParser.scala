@@ -1,31 +1,24 @@
 package it.unibo.core.parser
 
-import io.vertx.lang.scala.json.{Json => Jsonx, JsonObject}
-
-trait ValueParser[Raw] extends Parser[Any, Raw] {
-  override type E[O] = Option[O]
-  def decode(rawData : Raw) : Option[Any]
-  def encode(data : Any) : Option[Raw]
-}
+import io.vertx.lang.scala.json.{JsonObject, Json => Jsonx}
+import it.unibo.core.parser.ParserLike.MismatchableParser
 
 object ValueParser {
-  //TODO do better
+  /**
+   * a type alias used to describe a parser that decode/encode the field value in @Data
+   * @tparam External the representation of data (e.g Json, XML,..)
+   */
+  type ValueParser[External] = MismatchableParser[External, Any]
+
+  /**
+   * some of standard Json value parser.
+   */
   object Json {
     import it.unibo.core.microservice.vertx._
     import it.unibo.macros.util.MacroUtils._
-
-    def apply(decoder : JsonObject => Option[Any])(encoder : Any => Option[JsonObject]) : ValueParser[JsonObject] = new JsonValueParserImpl(decoder, encoder)
-
-    private class JsonValueParserImpl(decoder : JsonObject => Option[Any], encoder : Any => Option[JsonObject]) extends ValueParser[JsonObject] {
-      override def decode(rawData: JsonObject): Option[Any] = decoder(rawData)
-
-      override def encode(data: Any): Option[JsonObject] = encoder(data)
-    }
-
     implicit private def optionAnyToJson(opt : Option[Any]) : Option[JsonObject] = opt.map(data => Jsonx.obj("value"-> data))
-
-    val intParser = apply { _.getAsInt("value") } { Some(_).filter(_.isInstanceOf[Int]) }
-    val doubleParser = apply { _.getAsInt("value") } { Some(_).filter(_.isInstanceOf[Double]) }
-    val stringParser = apply { _.getAsInt("value") } { Some(_).filter(_.isInstanceOf[String]) }
+    val intParser : ValueParser[JsonObject] = ParserLike.mismatchable[JsonObject, Any] { Some(_).filter(_.isInstanceOf[Int]) } { _.getAsInt("value") }
+    val doubleParser : ValueParser[JsonObject] = ParserLike.mismatchable[JsonObject, Any] { Some(_).filter(_.isInstanceOf[Double]) } { _.getAsInt("value") }
+    val stringParser : ValueParser[JsonObject] = ParserLike.mismatchable[JsonObject, Any] { Some(_).filter(_.isInstanceOf[String]) } { _.getAsString("value") }
   }
 }

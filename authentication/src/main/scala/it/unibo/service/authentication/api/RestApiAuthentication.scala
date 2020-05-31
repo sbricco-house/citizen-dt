@@ -50,7 +50,7 @@ trait RestApiAuthentication extends RestApi with RestServiceResponse {
       .getOrElse(FutureService.fail(MissingParameter(s"Missing or malformed request body")))
 
     sendServiceResponseWhenComplete(context, login) {
-      case Response(e: AuthenticationInfo) => (HttpCode.Created, AuthInfoParser.decode(e).encode())
+      case Response(e: AuthenticationInfo) => (HttpCode.Created, AuthInfoParser.encode(e).encode())
     }
   }
 
@@ -61,7 +61,7 @@ trait RestApiAuthentication extends RestApi with RestServiceResponse {
       .getOrElse(FutureService.fail(MissingParameter(s"Missing token")))
 
     sendServiceResponseWhenComplete(context, verify) {
-      case Response(content) => (HttpCode.Ok, SystemUserParser.decode(content).encode())
+      case Response(content) => (HttpCode.Ok, SystemUserParser.encode(content).encode())
     }
   }
 
@@ -83,7 +83,7 @@ trait RestApiAuthentication extends RestApi with RestServiceResponse {
       .getOrElse(FutureService.fail(MissingParameter(s"Missing authorization header")))
 
     sendServiceResponseWhenComplete(context, refresh) {
-      case Response(t : Token) => (HttpCode.Created, TokenParser.decode(t).encode())
+      case Response(t : Token) => (HttpCode.Created, TokenParser.encode(t).encode())
     }
   }
 

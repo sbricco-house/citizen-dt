@@ -22,32 +22,34 @@ import org.eclipse.californium.core.{CoapClient, CoapResource, CoapServer}
 import monix.execution.Scheduler.Implicits.global
 
 object CoapObservableApi {
-  private val THREAD_POOL_EXECUTOR : ScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(8)
+  private def createThreadPool() : ScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(8)
 
   /**
-   * create a coap server that manage observe state request to a specific citizen
-   * @param citizenService: the citizen service that mantain a citizen digital twin
-   * @param dataParser
-   * @param port
-   * @param clientExecutor
+   * Create a coap server that manage observe state request to a specific citizen
+   * @param citizenService The citizen service that maintain a citizen digital twin
+   * @param dataParser The parser used to marshalL/unmarshall data
+   * @param port In which the CoaP server is installed, Default 5683
+   * @param serverExecutor the executor used by server to handle the request. It need 2 Thread at least
    * @return
    */
   def apply(citizenService : CitizenDigitalTwin,
             dataParser : DataParserRegistry[JsonObject],
             port : Int = 5683,
-            clientExecutor: ScheduledThreadPoolExecutor = THREAD_POOL_EXECUTOR) : CoapServer = {
+            serverExecutor: ScheduledThreadPoolExecutor = createThreadPool()) : CoapServer = {
     val server = CaopApi(port)
 
     val observableFactory : ObserveData => Option[CoapResource] = data => {
       dataParser.decodeCategory(data.category)
-        .map(new CategoryDataSource(data.id, _, citizenService, port, dataParser, clientExecutor))
+        .map(new CategoryDataSource(data.id, _, citizenService, port, dataParser, serverExecutor))
     }
     val messageDelivery = new CitizenMessageDelivery(citizenService.citizenIdentifier, observableFactory)
     server.setMessageDeliverer(messageDelivery)
     server.addDestroyListener(messageDelivery)
+    server.setExecutors(serverExecutor, serverExecutor, false)
     server
   }
 
+  //internal implementation of coap resource that handle get and observe request.
   private class CategoryDataSource(citizenId : String,
                                    category : DataCategory,
                                    citizenService : CitizenDigitalTwin,
@@ -67,6 +69,7 @@ object CoapObservableApi {
       sourceSubscription.foreach(_.cancel())
       innerClient.shutdown()
     }
+
     override def handleGET(coapExchange: CoapExchange): Unit = {
       val exchange = coapExchange.advanced()
       val tokenOpt = coapExchange.getAuthToken
@@ -81,13 +84,16 @@ object CoapObservableApi {
           case _ => coapExchange.respond(ResponseCode.INTERNAL_SERVER_ERROR)
         }
       }
-
       def isObservableNecessary = exchange.getRequest.isObserve && ! exchange.getRelation.isEstablished
-
+      def isAlreadyObserved = exchange.getRelation != null && exchange.getRelation.isEstablished
       tokenOpt match {
         case None => coapExchange.respond(ResponseCode.UNAUTHORIZED)
-        case Some(token) if(isObservableNecessary) => manageObserve(token)
-        case Some(token) => coapExchange.respond(ResponseCode.CONTENT, elements, MediaTypeRegistry.APPLICATION_JSON)
+        //create the observer link
+        case Some(token) if isObservableNecessary => manageObserve(token)
+        //the client has been authenticated and the relation is established
+        case Some(_) if isAlreadyObserved => coapExchange.respond(ResponseCode.CONTENT, elements, MediaTypeRegistry.APPLICATION_JSON)
+        //currently, standard get is not supported.
+        case Some(token) => super.handleGET(coapExchange)
       }
     }
 

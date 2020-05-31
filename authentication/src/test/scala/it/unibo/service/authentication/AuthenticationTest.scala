@@ -103,5 +103,5 @@ class AuthenticationTest extends AnyFlatSpec with BeforeAndAfterAll with Matcher
   }
 
   private def getTokenFromLoginResponse(response: HttpResponse[Buffer]): String =
-    AuthInfoParser.encode(response.bodyAsJsonObject().get).get.token.token
+    AuthInfoParser.decode(response.bodyAsJsonObject().get).get.token.token
 }

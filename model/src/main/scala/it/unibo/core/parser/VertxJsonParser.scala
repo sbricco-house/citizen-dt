@@ -3,6 +3,7 @@ package it.unibo.core.parser
 import io.vertx.lang.scala.json.JsonObject
 import it.unibo.core.data.{Data, Feeder, LeafCategory, Resource, Sensor}
 import it.unibo.core.microservice.vertx._
+import it.unibo.core.parser.ValueParser.ValueParser
 
 trait VertxJsonParser extends DataParser[JsonObject]{
   def supportedCategories : Seq[LeafCategory]

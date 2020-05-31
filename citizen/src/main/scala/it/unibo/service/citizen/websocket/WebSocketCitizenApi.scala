@@ -9,17 +9,23 @@ import it.unibo.core.microservice.vertx.WebSocketApi
 import it.unibo.core.microservice.{Fail, Response, ServiceResponse}
 import it.unibo.core.utils.ServiceError.Unauthorized
 import it.unibo.service.authentication.TokenIdentifier
-import it.unibo.service.citizen.{CitizenDigitalTwin, RestCitizenVerticle}
 import it.unibo.service.citizen.middleware.UserMiddleware
-import it.unibo.service.citizen.websocket.{CitizenProtocol, Ok, Status}
+import it.unibo.service.citizen.{CitizenDigitalTwin, CitizenVerticle}
 import monix.execution.Cancelable
 
 import scala.util.{Failure, Success, Try}
 
+/**
+ * Websocket decoration for Citizen Verticle.
+ * an example of usage (a là Cake pattern) follows:
+ *
+ * new CitizenVerticle(...) with WebSocketApi
+ *
+ */
 trait WebSocketCitizenApi extends WebSocketApi {
-  self : RestCitizenVerticle =>
+  self : CitizenVerticle =>
   import it.unibo.core.microservice.vertx._
-  implicit lazy val monixVertxContext = monix.execution.Scheduler(VertxExecutionContext(self.vertx.getOrCreateContext()))
+  implicit lazy private val monixVertxContext = monix.execution.Scheduler(VertxExecutionContext(self.vertx.getOrCreateContext()))
 
   override def webSocketHandler(websocket: ServerWebSocket): Unit = {
     val tokenOption = websocket.headers()
@@ -30,7 +36,7 @@ trait WebSocketCitizenApi extends WebSocketApi {
       case (None, _) => websocket.rejectNotAuthorized()
       case (_, Failure(_)) => websocket.rejectBadContent()
       case (Some(user), Success(_)) =>
-        self.citizenService.createPhysicalLink(user)
+        self.citizenDT.createPhysicalLink(user)
           .whenComplete {
             case Response(channel) => manageChannel(websocket, channel)
             case Fail(Unauthorized(m)) => websocket.rejectNotAuthorized()
@@ -67,7 +73,7 @@ trait WebSocketCitizenApi extends WebSocketApi {
 
   private def consumeData(websocket: ServerWebSocket, data : JsonObject) : Unit = {
     val updatePacket = WebsocketUpdate(data)
-    websocket.writeTextMessage(CitizenProtocol.updateParser.decode(updatePacket))
+    websocket.writeTextMessage(CitizenProtocol.updateParser.encode(updatePacket))
   }
 
   private def maintainChannelFromClient(webSocket: ServerWebSocket, channel : CitizenDigitalTwin#PhysicalLink) : Cancelable = {
@@ -75,13 +81,12 @@ trait WebSocketCitizenApi extends WebSocketApi {
     val websocketObservable = observableFromWebSocket(webSocket)
 
     def badCategoryResponse(request : WebsocketRequest[JsonArray]) : Unit = {
-      val response = WebsocketResponse[Status](request.id, CitizenProtocol.unkwonDataCategoryError)
-      val jsonResponse = CitizenProtocol.responseParser.decode(response)
+      val response = WebsocketResponse[Status](request.id, CitizenProtocol.unknownDataCategoryError)
+      val jsonResponse = CitizenProtocol.responseParser.encode(response)
       webSocket.writeTextMessage(jsonResponse)
     }
-
-    val toCancel = websocketObservable.map(CitizenProtocol.requestParser.encode)
-      .fallbackOption { webSocket.writeTextJsonObject(CitizenProtocol.unkwon) }
+    val toCancel = websocketObservable.map(CitizenProtocol.requestParser.decode)
+      .fallbackOption { webSocket.writeTextJsonObject(CitizenProtocol.unknown) }
       .collect { case Some(data) => data }
       .map(request => (request, jsonArrayToData(request.value)))
       .fallback(_._2.nonEmpty, elem => badCategoryResponse(elem._1))
@@ -95,13 +100,13 @@ trait WebSocketCitizenApi extends WebSocketApi {
   private def manageRequest(requestId : Int, channel : CitizenDigitalTwin#PhysicalLink, data : Seq[Data], webSocket: ServerWebSocket) : Unit = {
     def produceResponse(futureResult : ServiceResponse[Seq[String]]) = futureResult match {
       case Response(_) =>WebsocketResponse[Status](requestId, Ok)
-      case Fail(Unauthorized(_)) => WebsocketResponse[Status](requestId, CitizenProtocol.unothorized)
+      case Fail(Unauthorized(_)) => WebsocketResponse[Status](requestId, CitizenProtocol.unauthorized)
       case _ => WebsocketResponse[Status](requestId, CitizenProtocol.internalError)
     }
     channel.updateState(data).whenComplete {
       element =>
         val result = produceResponse(element)
-        webSocket.writeTextMessage(CitizenProtocol.responseParser.decode(result))
+        webSocket.writeTextMessage(CitizenProtocol.responseParser.encode(result))
     }
   }
 }

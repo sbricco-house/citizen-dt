@@ -4,14 +4,15 @@ import it.unibo.core.data.{Data, Resource}
 import it.unibo.core.microservice.coap._
 import it.unibo.service.citizen.CoapScope._
 import it.unibo.service.citizen.matcher.DataJsonMatcher
+import org.eclipse.californium.core.coap.CoAP.ResponseCode
 import org.eclipse.californium.core.{CoapClient, CoapResponse}
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 
-import scala.concurrent.{Await, Future, Promise}
+import scala.concurrent.Promise
   class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with BeforeAndAfterAll with Matchers with ScalaFutures with DataJsonMatcher {
   implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(15, Seconds), interval = Span(100, Millis))
   import ObservableCoapCitizenApi._
@@ -180,6 +181,11 @@ import scala.concurrent.{Await, Future, Promise}
     CitizenMicroservices.citizenService.updateState(CITIZEN_TOKEN, Seq(heartbeatData))
     Thread.sleep(1000)
     observePromise.isCompleted shouldBe false
+  }
+
+  "citizen resources with coap" should " NOT support get without observe" in {
+    val coapClient = createClientByCategory(Categories.bloodPressureCategory)
+    coapClient.getWithToken(CITIZEN_TOKEN.token).getCode shouldBe ResponseCode.METHOD_NOT_ALLOWED
   }
 
   override def beforeAll(): Unit = CitizenMicroservices.refresh()

@@ -8,9 +8,16 @@ import it.unibo.core.utils.{HttpCode, ServiceError}
 import it.unibo.core.utils.ServiceError.MissingParameter
 import it.unibo.service.citizen.middleware.UserMiddleware
 
+/**
+ * HTTP REST API decoration for Citizen Verticle.
+ * an example of usage (a là Cake pattern) follows:
+ *
+ * new CitizenVerticle(...) with RestCitizenApi
+ *
+ */
 trait RestCitizenApi extends RestApi with RestServiceResponse {
-  self : RestCitizenVerticle =>
-  import RestCitizenVerticle._
+  self : CitizenVerticle =>
+  import CitizenVerticle._
 
   override def createRouter: Router = {
     val router = Router.router(vertx)
@@ -38,9 +45,9 @@ trait RestCitizenApi extends RestApi with RestServiceResponse {
   private def handleGetState(context: RoutingContext): Unit = {
     val token = context.getToken(UserMiddleware.JWT_TOKEN)
     val getOperation = context.queryParams().get(categoryParamName) match {
-      case None => citizenService.readState(token)
+      case None => citizenDT.readState(token)
       case Some(category) => parser.decodeCategory(category)
-        .map(citizenService.readStateByCategory(token, _))
+        .map(citizenDT.readStateByCategory(token, _))
         .getOrElse(FutureService.fail(MissingParameter(s"Invalid query value")))
     }
 
@@ -54,7 +61,7 @@ trait RestCitizenApi extends RestApi with RestServiceResponse {
     val pending = context.getBodyAsJson()
       .map(jsonToState)
       .collect { case Some(data) => data }
-      .map(newState => citizenService.updateState(token, newState))
+      .map(newState => citizenDT.updateState(token, newState))
       .getOrElse(FutureService.fail(MissingParameter(s"Invalid json body")))
 
     sendServiceResponseWhenComplete(context, pending) {
@@ -66,7 +73,7 @@ trait RestCitizenApi extends RestApi with RestServiceResponse {
     val token = context.getToken(UserMiddleware.JWT_TOKEN)
     val dataIdentifier = context.pathParam("data_id").get
 
-    sendServiceResponseWhenComplete(context, citizenService.readHistoryData(token, dataIdentifier)) {
+    sendServiceResponseWhenComplete(context, citizenDT.readHistoryData(token, dataIdentifier)) {
       case Response(data) => (HttpCode.Ok, parser.encode(data).get.encode())
     }
   }
@@ -77,7 +84,7 @@ trait RestCitizenApi extends RestApi with RestServiceResponse {
     val limit = context.queryParams().get("limit").getOrElse("1").toInt
     val pending = dataCategory
       .flatMap(parser.decodeCategory)
-      .map(citizenService.readHistory(token, _, limit))
+      .map(citizenDT.readHistory(token, _, limit))
       .getOrElse(FutureService.fail(MissingParameter(s"Missing or invalid data_category query parameter")))
 
     sendServiceResponseWhenComplete(context, pending) {

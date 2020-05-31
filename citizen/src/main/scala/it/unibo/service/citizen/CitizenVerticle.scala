@@ -10,7 +10,7 @@ import it.unibo.core.microservice.vertx.{BaseVerticle, _}
 import it.unibo.core.parser.DataParserRegistry
 import it.unibo.service.authentication.TokenIdentifier
 
-object RestCitizenVerticle {
+object CitizenVerticle {
   private val CITIZEN_ENDPOINT = s"/citizens/%s/state"
   private val HISTORY_ENDPOINT = s"/citizens/%s/history"
 
@@ -19,15 +19,24 @@ object RestCitizenVerticle {
   }
 }
 
-class RestCitizenVerticle(protected val citizenService: CitizenDigitalTwin,
-                          protected val parser : DataParserRegistry[JsonObject],
-                          port : Int = 8080,
-                          host : String = "localhost") extends BaseVerticle(port, host) {
+/**
+ * describe the context (in terms of http vertx platform) in which citizen logics are involved.
+ * @param citizenDT The logic to manage a citizen (e.g. state update, watching data,...)
+ * @param parser The object used to marshall and unmarshal data
+ * @param port The port in which the http server starts
+ * @param host The host in which the http server starts
+ */
+class CitizenVerticle(protected val citizenDT: CitizenDigitalTwin,
+                      protected val parser : DataParserRegistry[JsonObject],
+                      port : Int = 8080,
+                      host : String = "localhost") extends BaseVerticle(port, host) {
 
-  import RestCitizenVerticle._
-  protected val citizenStateEndpoint = CITIZEN_ENDPOINT.format(citizenService.citizenIdentifier)
-  protected val historyEndpoint = HISTORY_ENDPOINT.format(citizenService.citizenIdentifier)
+  import CitizenVerticle._
+  //some elements used by possible other decorations (e.g. websocket, http rest,..)
+  protected val citizenStateEndpoint = CITIZEN_ENDPOINT.format(citizenDT.citizenIdentifier)
+  protected val historyEndpoint = HISTORY_ENDPOINT.format(citizenDT.citizenIdentifier)
   protected val categoryParamName = "data_category"
+
   // TODO: best way for transform model data to resource response. e.g. using resource mapper for state and history
   protected def stateToJson(state: Seq[Data]): JsonObject = {
     Json.obj("data" -> dataArrayToJson(state))

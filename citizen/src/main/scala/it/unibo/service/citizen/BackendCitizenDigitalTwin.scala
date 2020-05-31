@@ -15,7 +15,7 @@ import scala.concurrent.ExecutionContext
 import scala.util.Success
 
 /**
- * Implementation of backend CitizenService
+ * Implementation of backend Citizen Digital twin
  *
  * @param authenticationService Service for authenticate the user of system
  * @param authorizationService Service for authorize the system user to do some action

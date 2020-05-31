@@ -51,6 +51,13 @@ package object coap {
       ex.observeAndWait(request, coapHandler)
     }
 
+    def getWithToken(token : String) : CoapResponse = {
+      val request = Request.newGet()
+      val options = request.getOptions
+      options.addOption(new CoapOption(TOKEN_HEADER_CODE, token))
+      ex.advanced(request)
+    }
+
     def putWithOptions(payload : String, contentFormat: ContentFormat, optionSequence : (Int, String) *): Unit = {
       val request = Request.newPut()
       request.setPayload(payload)

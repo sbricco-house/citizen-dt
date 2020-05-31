@@ -25,7 +25,7 @@ object HttpScope {
 
   def boot(): Unit = {
     vertx = Vertx.vertx()
-    val citizenVerticle = new RestCitizenVerticle(
+    val citizenVerticle = new CitizenVerticle(
       CitizenMicroservices.injectVertx(vertx),
       CitizenMicroservices.parserRegistry,
     ) with RestCitizenApi with WebSocketCitizenApi

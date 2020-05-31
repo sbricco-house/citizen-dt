@@ -37,7 +37,7 @@ class MultiProtocolTest extends AnyFlatSpec with BeforeAndAfterEach with Matcher
         val httpFuture = sendViaHttp(httpData)
         val websocketParsed = websocketData.zipWithIndex
           .map { case (data, index) => WebsocketRequest[JsonArray](index, Json.arr(data)) }
-          .map(CitizenProtocol.requestParser.decode)
+          .map(CitizenProtocol.requestParser.encode)
         websocketParsed.foreach(websocket.writeTextMessage)
 
         whenReady(coapPromise.future) {
@@ -72,7 +72,7 @@ class MultiProtocolTest extends AnyFlatSpec with BeforeAndAfterEach with Matcher
     val promise = Promise[Set[String]]
     var elements = Set.empty[String]
     websocket.textMessageHandler(text => {
-      val response = CitizenProtocol.updateParser.encode(text)
+      val response = CitizenProtocol.updateParser.decode(text)
       response match {
         case Some(update) =>
           elements += update.value.encode()
