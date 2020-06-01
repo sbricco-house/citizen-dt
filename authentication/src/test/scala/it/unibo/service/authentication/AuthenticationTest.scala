@@ -96,6 +96,7 @@ class AuthenticationTest extends AnyFlatSpec with BeforeAndAfterAll with Matcher
 
   override def afterAll(): Unit = {
     AuthBootstrap.teardown()
+    client.close()
   }
 
   implicit class RichHttpRequest[T](request: HttpRequest[T]) {

@@ -17,7 +17,7 @@ import org.scalatest.time.{Millis, Seconds, Span}
 import scala.concurrent.{Future, Promise}
 import scala.util.Random
 class MultiProtocolTest extends AnyFlatSpec with BeforeAndAfterEach with Matchers with ScalaFutures with DataJsonMatcher {
-  implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(15, Seconds), interval = Span(100, Millis))
+  implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(20, Seconds), interval = Span(100, Millis))
   var timestamp = 0
   val random = new Random()
   var httpClient : WebClient = _

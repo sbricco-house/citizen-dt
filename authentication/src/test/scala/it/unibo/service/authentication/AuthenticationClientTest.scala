@@ -76,5 +76,6 @@ class AuthenticationClientTest extends AnyFlatSpec with BeforeAndAfterAll with M
 
   override def afterAll(): Unit = {
     AuthBootstrap.teardown()
+
   }
 }
