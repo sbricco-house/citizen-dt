@@ -14,7 +14,7 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 
 import scala.concurrent.Promise
 class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with BeforeAndAfterAll with Matchers with ScalaFutures with DataJsonMatcher {
-  implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(5, Seconds), interval = Span(100, Millis))
+  implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(25, Seconds), interval = Span(100, Millis))
   import ObservableCoapCitizenApi._
   "citizen microservice" should " support coap protocol" in {
     val coapClient = new CoapClient(s"localhost:${CoapScope.currentPort}/citizen/50/state")
