@@ -45,6 +45,7 @@ object CoapScope {
     val promise = Promise[Set[String]]
     var elements : Set[String] = Set.empty
     val handler : CoapResponse => Unit = data => {
+      println("data = " + data.getResponseText)
       if(!isEmpty(data)) {
         elements += data.getResponseText
       }
