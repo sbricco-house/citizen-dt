@@ -138,9 +138,9 @@ import scala.concurrent.Promise
 
     val allDecoded : Set[String] = heartBeatsDecoded ++ bloodPressuresDecoded
 
-    val hearthBeatClients = (0 to 50).map(_ => createClientByCategory(Categories.heartBeatCategory))
-    val bloodPressureClients = (0 to 50).map(_ => createClientByCategory(Categories.bloodPressureCategory))
-    val medialClients = (0 to 50).map(_ => createClientByCategory(Categories.medicalDataCategory))
+    val hearthBeatClients = (0 to 10).map(_ => createClientByCategory(Categories.heartBeatCategory))
+    val bloodPressureClients = (0 to 10).map(_ => createClientByCategory(Categories.bloodPressureCategory))
+    val medialClients = (0 to 10).map(_ => createClientByCategory(Categories.medicalDataCategory))
 
     val hearthBeatFutures = hearthBeatClients
       .map(installExpectedMany(_, heartBeatsDecoded.size))
