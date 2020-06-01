@@ -20,7 +20,6 @@ object CoapScope {
 
   def teardown() : Unit = {
     currentPort += 1
-    server.stop()
     server.destroy()
   }
 

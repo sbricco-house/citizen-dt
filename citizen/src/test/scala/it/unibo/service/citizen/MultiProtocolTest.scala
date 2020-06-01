@@ -17,7 +17,7 @@ import org.scalatest.time.{Millis, Seconds, Span}
 import scala.concurrent.{Future, Promise}
 import scala.util.Random
 class MultiProtocolTest extends AnyFlatSpec with BeforeAndAfterEach with Matchers with ScalaFutures with DataJsonMatcher {
-  implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(5, Seconds), interval = Span(100, Millis))
+  implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(15, Seconds), interval = Span(100, Millis))
   var timestamp = 0
   val random = new Random()
   var httpClient : WebClient = _
@@ -52,6 +52,8 @@ class MultiProtocolTest extends AnyFlatSpec with BeforeAndAfterEach with Matcher
             decodedResult.zip(allData).foreach { case (left, right) => right should sameData(left) }
           }
         }
+        websocket.close()
+        coapClient.shutdown()
       }
     }
   }
@@ -105,5 +107,7 @@ class MultiProtocolTest extends AnyFlatSpec with BeforeAndAfterEach with Matcher
   override def afterEach(): Unit = {
     CoapScope.teardown()
     HttpScope.teardown()
+    httpClient.close()
+    websocketClient.close()
   }
 }
