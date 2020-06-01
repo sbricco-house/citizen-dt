@@ -21,10 +21,26 @@ object AuthenticationClient {
   val LOGOUT = s"/logout"
   val REFRESH = s"/refreshToken"
 
+  /**
+   * Create an AuthenticationService proxy client using the same interface of the service.
+   * @param serviceUri Uri where the real Authentication Service is located
+   * @return AuthenticationService instance
+   */
   def apply(serviceUri: URI): AuthenticationService = new AuthenticationClient(serviceUri)
+
+  /**
+   * Create an AuthenticationService proxy client using the same interface of the service.
+   * @param host The http host where the real Authentication Service is located
+   * @param port The http port where the real Authentication Service is located
+   * @return AuthenticationService instance
+   */
   def apply(host: String, port: Int = 8080): AuthenticationService = new AuthenticationClient(URI.create(s"http://$host:$port"))
 }
 
+/**
+ * Authentication client implementation based on vertx webclient. It follow the [[AuthenticationService]] contract.
+ * @param serviceUri  Uri where the real Authentication Service is located.
+ */
 private class AuthenticationClient(serviceUri: URI) extends AuthenticationService with RestApiClient with RestClientServiceResponse {
 
   private val vertx = Vertx.vertx()

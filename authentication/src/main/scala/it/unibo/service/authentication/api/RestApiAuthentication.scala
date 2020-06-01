@@ -20,6 +20,10 @@ object RestApiAuthentication {
   val TOKEN_QUERY = "token"
 }
 
+/**
+ * Expose the [[it.unibo.service.authentication.AuthenticationService]] through HTTP Rest API.
+ * Work as decoration of [[it.unibo.service.authentication.api.RestApiAuthenticationVerticle]].
+ */
 trait RestApiAuthentication extends RestApi with RestServiceResponse {
   self : RestApiAuthenticationVerticle =>
   import RestApiAuthentication._

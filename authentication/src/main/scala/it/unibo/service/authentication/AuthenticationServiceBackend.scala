@@ -15,12 +15,24 @@ import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 import AuthenticationServiceBackend._
+import it.unibo.service.authentication.model.Parsers
 import it.unibo.service.authentication.model.Resources.AuthenticationInfo
 
 object AuthenticationServiceBackend {
-  private val EXPIRE_TIME_MIN = 30
+  /**
+   * Default token expiration time (1 day).
+   */
+  val EXPIRE_TIME_MIN: Int = 60 * 24
 }
 
+/**
+ * Implementation of backend Authentication Service based on Vertx's JWT Token.
+ * It provides the logout functionality using a blacklist system.
+ * In real case scenario this implementation can be improved using Refresh token and Access token.
+ *
+ * @param provider Vertx JWT Token provider, for generate and check the jwt tokens.
+ * @param userStorage Storage that contains the system users. Used for check the right login credentials.
+ */
 class AuthenticationServiceBackend(provider: JWTAuth,
                                    userStorage: Storage[SystemUser, String]) extends AuthenticationService {
 
@@ -87,21 +99,8 @@ class AuthenticationServiceBackend(provider: JWTAuth,
     Response(true)
   }
 
-  protected def claimsToUser(user: JsonObject): SystemUser = {
-    SystemUser(
-      user.getString("email"),
-      user.getString("username"),
-      "", // no password,
-      user.getString("identifier"),
-      user.getString("role")
-    )
-  }
+  // Internal payload (claims) of vertx JWT
+  protected def claimsToUser(user: JsonObject): SystemUser = Parsers.SystemUserParser.decode(user).get
+  protected def userToClaims(user: SystemUser): JsonObject = Parsers.SystemUserParser.encode(user)
 
-  protected def userToClaims(user: SystemUser): JsonObject = {
-    new JsonObject()
-      .put("email", user.email)
-      .put("username", user.username)
-      .put("identifier", user.identifier)
-      .put("role", user.role)
-  }
 }
