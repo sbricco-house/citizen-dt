@@ -53,6 +53,7 @@ class MultiProtocolTest extends AnyFlatSpec with BeforeAndAfterEach with Matcher
           }
         }
         websocket.close()
+        relation.proactiveCancel()
         coapClient.shutdown()
       }
     }
