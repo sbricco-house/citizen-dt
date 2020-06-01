@@ -1,5 +1,7 @@
 language: scala
 install: true
+script:
+  - sbt ++$TRAVIS_SCALA_VERSION -jvm-opts travis/jvmopts test
 branches:
   only:
     - master

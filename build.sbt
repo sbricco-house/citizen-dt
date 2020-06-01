@@ -2,7 +2,7 @@ name := "citizen-system"
 
 version := "0.1"
 
-val scalaBase = "2.12.1"
+val scalaBase = "2.12.8"
 
 val vertxVersion = "3.9.0"
 val monixVersion = "3.2.1"

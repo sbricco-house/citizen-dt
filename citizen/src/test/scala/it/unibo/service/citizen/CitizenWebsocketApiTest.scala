@@ -12,7 +12,8 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
 
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.util.{Failure, Success}
 
 class CitizenWebsocketApiTest extends AnyFlatSpec with BeforeAndAfterEach with Matchers with ScalaFutures with DataJsonMatcher {
   implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(5, Seconds), interval = Span(100, Millis))
@@ -140,9 +141,9 @@ class CitizenWebsocketApiTest extends AnyFlatSpec with BeforeAndAfterEach with M
   }
 
   override def afterEach(): Unit = {
-    HttpScope.teardown()
-    httpClient.close()
     webClient.close()
+    client.close()
+    HttpScope.teardown()
   }
 }
 object CitizenWebsocketApiTest {
