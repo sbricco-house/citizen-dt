@@ -26,6 +26,7 @@ package object vertx {
     def getAsObject(s : String) : Option[JsonObject] = getOrNone(s, json){ json.getJsonObject(s) }
     def getAsLong(s : String) : Option[Long] = getOrNone(s, json){ json.getLong(s) }
     def getAsInt(s : String) : Option[Int] = getOrNone(s, json){ json.getInteger(s) }
+    def getAsDouble(s : String) : Option[Double] = getOrNone(s, json){ json.getDouble(s) }
     def getAsBoolean(s : String) : Option[Boolean] = getOrNone(s, json){ json.getBoolean(s)}
     def getAsArray(s : String) : Option[JsonArray] = getOrNone(s, json) { json.getJsonArray(s)}
   }
@@ -34,9 +35,16 @@ package object vertx {
     def getAsObjectSeq : Option[Seq[JsonObject]] = {
       val elems = json.size() - 1
       try {
-        val objects = (0 to elems).map {
-          json.getJsonObject
-        }
+        val objects = (0 to elems).map (json.getJsonObject)
+        Some(objects)
+      } catch {
+        case exception: Exception => None
+      }
+    }
+    def getAsStringSeq : Option[Seq[String]] = {
+      val elems = json.size() - 1
+      try {
+        val objects = (0 to elems).map(json.getString)
         Some(objects)
       } catch {
         case exception: Exception => None

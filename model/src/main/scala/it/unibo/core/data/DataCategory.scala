@@ -17,9 +17,12 @@ case class GroupCategory(name : String, dataCategory: Set[DataCategory]) extends
 /**
  * a leaf category, described an "atomic" information depending on domain (e.g. HeartBeatCategory)
  * @param name
- * @param TTL: a temporal information to the lifespan.
+ * @param TTL: a temporal information to the lifespan, default -1 -> unlimited.
  */
-case class LeafCategory(name : String, TTL : Long) extends DataCategory
+case class LeafCategory(name : String, TTL : Long = -1) extends DataCategory {
+  def isLimited : Boolean = TTL > 0
+}
+
 
 object DataCategoryOps {
   def allChild(dataCategory: DataCategory) : Set[LeafCategory] = dataCategory match {
