@@ -26,7 +26,7 @@ object CoapScope {
   }
 
 
-  def isEmpty(response : CoapResponse) : Boolean = response.getResponseText == "{}"
+  def isEmpty(response : CoapResponse) : Boolean = response.getResponseText == "{}" || response.getResponseText == ""
   def createClientByCategory(category : DataCategory) : CoapClient = {
     new CoapClient(s"coap://localhost:$currentPort/citizen/50/state?data_category=${category.name}")
   }
@@ -45,7 +45,6 @@ object CoapScope {
     val promise = Promise[Set[String]]
     var elements : Set[String] = Set.empty
     val handler : CoapResponse => Unit = data => {
-      println("data = " + data.getResponseText)
       if(!isEmpty(data)) {
         elements += data.getResponseText
       }
