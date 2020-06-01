@@ -14,7 +14,7 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 
 import scala.concurrent.Promise
   class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with BeforeAndAfterAll with Matchers with ScalaFutures with DataJsonMatcher {
-  implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(15, Seconds), interval = Span(100, Millis))
+  implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(45, Seconds), interval = Span(100, Millis))
   import ObservableCoapCitizenApi._
   "citizen microservice" should " support coap protocol" in {
     val coapClient = new CoapClient(s"localhost:${CoapScope.currentPort}/citizen/50/state")
@@ -138,9 +138,9 @@ import scala.concurrent.Promise
 
     val allDecoded : Set[String] = heartBeatsDecoded ++ bloodPressuresDecoded
 
-    val hearthBeatClients = (0 to 10).map(_ => createClientByCategory(Categories.heartBeatCategory))
-    val bloodPressureClients = (0 to 10).map(_ => createClientByCategory(Categories.bloodPressureCategory))
-    val medialClients = (0 to 10).map(_ => createClientByCategory(Categories.medicalDataCategory))
+    val hearthBeatClients = (0 to 5).map(_ => createClientByCategory(Categories.heartBeatCategory))
+    val bloodPressureClients = (0 to 5).map(_ => createClientByCategory(Categories.bloodPressureCategory))
+    val medialClients = (0 to 5).map(_ => createClientByCategory(Categories.medicalDataCategory))
 
     val hearthBeatFutures = hearthBeatClients
       .map(installExpectedMany(_, heartBeatsDecoded.size))
