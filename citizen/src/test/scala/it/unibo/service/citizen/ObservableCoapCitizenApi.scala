@@ -13,8 +13,8 @@ import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 
 import scala.concurrent.Promise
-  class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with BeforeAndAfterAll with Matchers with ScalaFutures with DataJsonMatcher {
-  implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(45, Seconds), interval = Span(100, Millis))
+class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with BeforeAndAfterAll with Matchers with ScalaFutures with DataJsonMatcher {
+  implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(5, Seconds), interval = Span(100, Millis))
   import ObservableCoapCitizenApi._
   "citizen microservice" should " support coap protocol" in {
     val coapClient = new CoapClient(s"localhost:${CoapScope.currentPort}/citizen/50/state")
@@ -167,12 +167,14 @@ import scala.concurrent.Promise
     val coapClient = new CoapClient(s"""localhost:${CoapScope.currentPort}/citizen/50/state?data_category=unkwon""")
     val result = coapClient.observeWithTokenAndWait("jwt1", (data : CoapResponse) => {})
     assert(result.isCanceled)
+    coapClient.shutdown()
   }
 
   "citizen resources " should " NOT support state observing without token" in {
     val coapClient = createClientByCategory(Categories.medicalDataCategory)
     val observing = coapClient.observeAndWait((data : CoapResponse) => {})
     assert(observing.isCanceled)
+    coapClient.shutdown()
   }
 
   "citizen resources " should " NOT being notified from other categories" in {
@@ -181,11 +183,13 @@ import scala.concurrent.Promise
     CitizenMicroservices.citizenService.updateState(CITIZEN_TOKEN, Seq(heartbeatData))
     Thread.sleep(1000)
     observePromise.isCompleted shouldBe false
+    coapClient.shutdown()
   }
 
   "citizen resources with coap" should " NOT support get without observe" in {
     val coapClient = createClientByCategory(Categories.bloodPressureCategory)
     coapClient.getWithToken(CITIZEN_TOKEN.token).getCode shouldBe ResponseCode.METHOD_NOT_ALLOWED
+    coapClient.shutdown()
   }
 
   override def beforeAll(): Unit = CitizenMicroservices.refresh()

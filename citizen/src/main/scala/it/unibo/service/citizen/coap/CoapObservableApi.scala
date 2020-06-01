@@ -1,6 +1,6 @@
 package it.unibo.service.citizen.coap
 
-import java.util.concurrent.ScheduledThreadPoolExecutor
+import java.util.concurrent.{Executors, ScheduledExecutorService, ScheduledThreadPoolExecutor}
 
 import io.vertx.lang.scala.json.JsonObject
 import it.unibo.core.data.{Data, DataCategory}
@@ -18,12 +18,13 @@ import org.eclipse.californium.core.coap.CoAP.{ResponseCode, Type}
 import org.eclipse.californium.core.coap.MediaTypeRegistry
 import org.eclipse.californium.core.server.resources.CoapExchange
 import org.eclipse.californium.core.{CoapClient, CoapResource, CoapServer}
+
+import scala.concurrent.ExecutionContext
 //implicits
 import monix.execution.Scheduler.Implicits.global
 
 object CoapObservableApi {
-  private def createThreadPool() : ScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(8)
-
+  private def createThreadPool() : ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
   /**
    * Create a coap server that manage observe state request to a specific citizen
    * @param citizenService The citizen service that maintain a citizen digital twin
@@ -35,7 +36,7 @@ object CoapObservableApi {
   def apply(citizenService : CitizenDigitalTwin,
             dataParser : DataParserRegistry[JsonObject],
             port : Int = 5683,
-            serverExecutor: ScheduledThreadPoolExecutor = createThreadPool()) : CoapServer = {
+            serverExecutor: ScheduledExecutorService = createThreadPool()) : CoapServer = {
     val server = CaopApi(port)
 
     val observableFactory : ObserveData => Option[CoapResource] = data => {
@@ -55,11 +56,11 @@ object CoapObservableApi {
                                    citizenService : CitizenDigitalTwin,
                                    port : Int,
                                    parser : DataParserRegistry[JsonObject],
-                                   scheduledThreadPoolExecutor: ScheduledThreadPoolExecutor) extends ObservableResource(citizenId + "/" + category.name, Type.CON) {
+                                   executor : ScheduledExecutorService) extends ObservableResource(citizenId + "/" + category.name, Type.CON) {
     val coapSecret = generateCoapSecret()
 
     val innerClient = new CoapClient(s"coap://localhost:$port/citizen/${citizenId}/state?data_category=${category.name}")
-    innerClient.setExecutors(scheduledThreadPoolExecutor, scheduledThreadPoolExecutor, false)
+    //innerClient.setExecutors(scheduledThreadPoolExecutor, scheduledThreadPoolExecutor, false)
     var elements = "{}"
     var categorySource : Option[Observable[Data]] = None
     var sourceSubscription : Option[CancelableFuture[_]] = None
@@ -82,7 +83,7 @@ object CoapObservableApi {
             coapExchange.respond(ResponseCode.CONTENT, elements, MediaTypeRegistry.APPLICATION_JSON)
           case Fail(Unauthorized(m)) => coapExchange.respond(ResponseCode.FORBIDDEN)
           case _ => coapExchange.respond(ResponseCode.INTERNAL_SERVER_ERROR)
-        }
+        }(ExecutionContext.fromExecutor(executor))
       }
       def isObservableNecessary = exchange.getRequest.isObserve && ! exchange.getRelation.isEstablished
       def isAlreadyObserved = exchange.getRelation != null && exchange.getRelation.isEstablished
