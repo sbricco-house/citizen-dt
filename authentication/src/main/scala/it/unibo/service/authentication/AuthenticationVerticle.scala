@@ -11,6 +11,15 @@ import it.unibo.service.authentication.app.MockUserStorage
 import scala.collection.mutable
 import scala.concurrent.Future
 
+/**
+ * Verticle for bootstrap the AuthenticationService using a vertx JSON config.
+ * @example A complete example of JSON config file. All field are mandatory.
+ *          {
+ *            "api.rest.host" : "localhost",
+ *            "api.rest.port" : 8123,
+ *            "jwt.key": "blabla"
+ *          }
+ */
 class AuthenticationVerticle extends ScalaVerticle {
 
   val userStorage: Storage[SystemUser, String] = MockUserStorage.generateDefault()
