@@ -1,11 +1,18 @@
 package it.unibo.core.utils
 
+/**
+ * Abstraction to HTTP response codes
+ */
 sealed trait HttpCode {
   def code: Int
 }
 
 object HttpCode {
-
+  /**
+   * Return the right HttpCode starting from the numeric representation.
+   * @param code Numeric representation of http code.
+   * @return An HttpCode
+   */
   def apply(code: Int): HttpCode = code match {
     case 200 => Ok
     case 201 => Created
@@ -17,7 +24,7 @@ object HttpCode {
     case _ => InternalError
   }
 
-  protected abstract class BaseCode(override val code : Int) extends HttpCode
+  protected sealed abstract class BaseCode(override val code : Int) extends HttpCode
   sealed trait Success extends HttpCode
   sealed trait Error extends HttpCode
   sealed trait ClientError extends Error

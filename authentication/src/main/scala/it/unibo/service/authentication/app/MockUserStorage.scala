@@ -8,9 +8,7 @@ import it.unibo.service.authentication.utils.Hash
  * A simple object for mock the user storage.
  */
 object MockUserStorage {
-
-  private var userCounter = 0
-
+  
   /**
    * Generate a default user storage composed by 5 citizen and 5 stakeholder.
    * @return A storage of SystemUser using email as key.
@@ -32,7 +30,7 @@ object MockUserStorage {
    */
   def generate(seeds: Seq[(Int, String)]): Storage[SystemUser, String] = {
     val userStorage: Storage[SystemUser, String] = InMemoryStorage[SystemUser, String]()
-    seeds.flatMap(seed => generateSystemUsers(seed._1, seed._2)).foreach(u => userStorage.store(userCounter.toString, u))
+    seeds.flatMap(seed => generateSystemUsers(seed._1, seed._2)).foreach(u => userStorage.store(u.email, u))
     userStorage
   }
 
