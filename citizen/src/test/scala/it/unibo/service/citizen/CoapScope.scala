@@ -5,6 +5,7 @@ import it.unibo.service.authentication.TokenIdentifier
 import org.eclipse.californium.core.{CoapClient, CoapObserveRelation, CoapResponse, CoapServer}
 import it.unibo.core.microservice.coap._
 import it.unibo.service.citizen.coap.CoapObservableApi
+import org.eclipse.californium.core.network.{EndpointManager, RemoteEndpointManager}
 
 import scala.concurrent.Promise
 
@@ -20,6 +21,7 @@ object CoapScope {
 
   def teardown() : Unit = {
     currentPort += 1
+    EndpointManager.reset()
     server.destroy()
   }
 

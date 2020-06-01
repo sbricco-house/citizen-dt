@@ -14,7 +14,7 @@ import org.scalatest.time.{Millis, Seconds, Span}
 
 import scala.concurrent.{Future, Promise}
 
-class CitizenWebsocketApiTest extends AnyFlatSpec with BeforeAndAfterEach with Matchers with ScalaFutures with DataJsonMatcher {
+class CitizenWebsocketApiTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with ScalaFutures with DataJsonMatcher {
   implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(5, Seconds), interval = Span(100, Millis))
   import CitizenWebsocketApiTest._
 
@@ -132,14 +132,14 @@ class CitizenWebsocketApiTest extends AnyFlatSpec with BeforeAndAfterEach with M
     }
   }
 
-  override def beforeEach(): Unit = {
+  override def beforeAll(): Unit = {
     CitizenMicroservices.refresh()
     HttpScope.boot()
     client = HttpScope.httpClient()
     webClient = HttpScope.webClient()
   }
 
-  override def afterEach(): Unit = {
+  override def afterAll(): Unit = {
     HttpScope.teardown()
     httpClient.close()
     webClient.close()
@@ -189,10 +189,11 @@ object CitizenWebsocketApiTest {
   val postData = Json.obj("data" -> Json.arr(bloodPressureData))
   def awaitResponse(id : Int, websocket : WebSocket) : Future[WebsocketResponse[Status]] = {
     val promise = Promise[WebsocketResponse[Status]]()
-    websocket.textMessageHandler(text => {
+    val handler = websocket.textMessageHandler(text => {
       val response = CitizenProtocol.responseParser.decode(text)
       response match {
-        case Some(result @ WebsocketResponse(`id`, _)) => promise.success(result)
+        case Some(result @ WebsocketResponse(`id`, _)) =>
+          promise.success(result)
         case _ =>
       }
     })

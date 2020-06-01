@@ -40,6 +40,7 @@ package object coap {
   implicit class RichClient(ex : CoapClient) {
     def observeWithToken(token : String, coapHandler: CoapHandler) : CoapObserveRelation = {
       val request = Request.newGet().setObserve()
+      ex.getEndpoint
       val options = request.getOptions
       options.addOption(new CoapOption(TOKEN_HEADER_CODE, token))
       ex.observe(request, coapHandler)
