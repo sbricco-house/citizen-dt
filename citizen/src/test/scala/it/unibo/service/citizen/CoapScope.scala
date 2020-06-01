@@ -2,7 +2,7 @@ package it.unibo.service.citizen
 
 import it.unibo.core.data.DataCategory
 import it.unibo.service.authentication.TokenIdentifier
-import org.eclipse.californium.core.{CoapClient, CoapResponse, CoapServer}
+import org.eclipse.californium.core.{CoapClient, CoapObserveRelation, CoapResponse, CoapServer}
 import it.unibo.core.microservice.coap._
 import it.unibo.service.citizen.coap.CoapObservableApi
 
@@ -29,17 +29,17 @@ object CoapScope {
     new CoapClient(s"coap://localhost:$currentPort/citizen/50/state?data_category=${category.name}")
   }
 
-  def installExpectedOne(coapClient: CoapClient) : Promise[String] = {
+  def installExpectedOne(coapClient: CoapClient) : (Promise[String], CoapObserveRelation) = {
     val promise = Promise[String]
     val handler : CoapResponse => Unit = data => {
-      if(!isEmpty(data)) {
+      if(!isEmpty(data) && !promise.isCompleted) {
         promise.success(data.getResponseText)
       }
     }
-    coapClient.observeWithTokenAndWait(CITIZEN_TOKEN.token, handler)
-    promise
+    val relation = coapClient.observeWithTokenAndWait(CITIZEN_TOKEN.token, handler)
+    (promise, relation)
   }
-  def installExpectedMany(coapClient: CoapClient, howMany : Int) : Promise[Set[String]] = {
+  def installExpectedMany(coapClient: CoapClient, howMany : Int) : (Promise[Set[String]], CoapObserveRelation) = {
     val promise = Promise[Set[String]]
     var elements : Set[String] = Set.empty
     val handler : CoapResponse => Unit = data => {
@@ -50,7 +50,7 @@ object CoapScope {
         promise.success(elements)
       }
     }
-    coapClient.observeWithTokenAndWait(CITIZEN_TOKEN.token, handler)
-    promise
+    val relation = coapClient.observeWithTokenAndWait(CITIZEN_TOKEN.token, handler)
+    (promise, relation)
   }
 }

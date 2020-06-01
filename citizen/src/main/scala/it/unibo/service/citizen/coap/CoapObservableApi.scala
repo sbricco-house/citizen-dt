@@ -68,7 +68,7 @@ object CoapObservableApi {
     override def delete(): Unit = {
       super.delete()
       sourceSubscription.foreach(_.cancel())
-      innerClient.shutdown()
+      //innerClient.shutdown()
     }
 
     override def handleGET(coapExchange: CoapExchange): Unit = {
@@ -80,7 +80,7 @@ object CoapObservableApi {
         observable.whenComplete {
           case Response(observable) =>
             createLink(observable, category)
-            coapExchange.respond(ResponseCode.CONTENT, elements, MediaTypeRegistry.APPLICATION_JSON)
+            coapExchange.respond(ResponseCode.CONTENT, "{}", MediaTypeRegistry.APPLICATION_JSON)
           case Fail(Unauthorized(m)) => coapExchange.respond(ResponseCode.FORBIDDEN)
           case _ => coapExchange.respond(ResponseCode.INTERNAL_SERVER_ERROR)
         }(ExecutionContext.fromExecutor(executor))

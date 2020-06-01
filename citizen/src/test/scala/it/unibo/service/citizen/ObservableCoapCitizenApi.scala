@@ -25,22 +25,28 @@ class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with 
   "citizen resources " should "support state observing" in {
     val coapClient = createClientByCategory(Categories.medicalDataCategory)
     val observePromise = Promise[CoapResponse]()
-    val handler : CoapResponse => Unit = data => observePromise.success(data)
-    coapClient.observeWithToken(CITIZEN_TOKEN.token, handler)
+    val handler : CoapResponse => Unit = data => {
+      if(!observePromise.isCompleted) {
+        observePromise.success(data)
+      }
+    }
+    val relation = coapClient.observeWithToken(CITIZEN_TOKEN.token, handler)
     whenReady(observePromise.future) {
       result => result.getResponseText shouldBe "{}"
     }
+    relation.proactiveCancel()
     coapClient.shutdown()
   }
 
   "citizen resources " should " should be notified via coap" in {
     val raw = CitizenMicroservices.parserRegistry.encode(heartbeatData).get.encode()
     val coapClient = createClientByCategory(Categories.heartBeatCategory)
-    val observePromise = installExpectedOne(coapClient)
+    val (observePromise, relation) = installExpectedOne(coapClient)
     CitizenMicroservices.citizenService.updateState(CITIZEN_TOKEN, Seq(heartbeatData)).future
     whenReady(observePromise.future) {
       result => result shouldBe raw
     }
+    relation.proactiveCancel()
     coapClient.shutdown()
   }
 
@@ -50,8 +56,8 @@ class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with 
 
     val heartbeatClient = createClientByCategory(Categories.heartBeatCategory)
     val bloodClient = createClientByCategory(Categories.bloodPressureCategory)
-    val hearthPromise = installExpectedOne(heartbeatClient)
-    val bloodPromise = installExpectedOne(bloodClient)
+    val (hearthPromise, hearthRelation) = installExpectedOne(heartbeatClient)
+    val (bloodPromise, bloodRelation) = installExpectedOne(bloodClient)
 
     CitizenMicroservices.citizenService.updateState(CITIZEN_TOKEN, Seq(heartbeatData, bloodPressureData))
 
@@ -62,6 +68,10 @@ class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with 
       }
     }
     Seq(heartbeatClient, bloodClient).foreach(_.shutdown())
+    heartbeatClient.shutdown()
+    bloodClient.shutdown()
+    hearthRelation.proactiveCancel()
+    bloodRelation.proactiveCancel()
   }
 
   "citizen resources " should " being notified from multiple update" in {
@@ -74,7 +84,7 @@ class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with 
       .map(_.get)
       .map(_.encode)
     val coapClient = createClientByCategory(Categories.heartBeatCategory)
-    val observePromise = installExpectedMany(coapClient, dataList.size)
+    val (observePromise, relation) = installExpectedMany(coapClient, dataList.size)
     CitizenMicroservices.citizenService.updateState(CITIZEN_TOKEN, Seq(aData1))
     CitizenMicroservices.citizenService.updateState(CITIZEN_TOKEN, Seq(aData2))
     CitizenMicroservices.citizenService.updateState(CITIZEN_TOKEN, Seq(aData3))
@@ -83,18 +93,20 @@ class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with 
       result => result shouldBe dataList
     }
     coapClient.shutdown()
+    relation.proactiveCancel()
   }
 
   "citizen resources" should " be observed via group category" in {
     val hearthBeatRaw = CitizenMicroservices.parserRegistry.encode(heartbeatData).get.encode()
     val bloodPressureRaw = CitizenMicroservices.parserRegistry.encode(bloodPressureData).get.encode()
     val coapClient = createClientByCategory(Categories.medicalDataCategory)
-    val observePromise = installExpectedMany(coapClient, 2)
+    val (observePromise, relation) = installExpectedMany(coapClient, 2)
     CitizenMicroservices.citizenService.updateState(CITIZEN_TOKEN, Seq(heartbeatData, bloodPressureData))
     whenReady(observePromise.future) {
       result => result shouldBe Set(hearthBeatRaw, bloodPressureRaw)
     }
     coapClient.shutdown()
+    relation.proactiveCancel()
   }
   "citizen resources " should " be robust from multiple update" in {
     val heartBeats = (0 to 500).map(x => Data(x + "", Resource("y"), Categories.heartBeatCategory, 10, 90)).toSet
@@ -106,7 +118,7 @@ class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with 
       .map(_.encode)
 
     val coapClient = createClientByCategory(Categories.heartBeatCategory)
-    val observePromise = installExpectedMany(coapClient, heartBeatsDecoded.size)
+    val (observePromise, relation) = installExpectedMany(coapClient, heartBeatsDecoded.size)
     val futures = (heartBeats ++ bloodPressures)
       .map(data => CitizenMicroservices.citizenService.updateState(CITIZEN_TOKEN, Seq(data)))
       .map(_.future)
@@ -116,6 +128,7 @@ class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with 
       result => result shouldBe heartBeatsDecoded
     }
     coapClient.shutdown()
+    relation.proactiveCancel()
   }
 
   "citizen resources " should " be robust from multiple update in multiple client" in {
@@ -138,19 +151,16 @@ class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with 
 
     val allDecoded : Set[String] = heartBeatsDecoded ++ bloodPressuresDecoded
 
-    val hearthBeatClients = (0 to 5).map(_ => createClientByCategory(Categories.heartBeatCategory))
-    val bloodPressureClients = (0 to 5).map(_ => createClientByCategory(Categories.bloodPressureCategory))
-    val medialClients = (0 to 5).map(_ => createClientByCategory(Categories.medicalDataCategory))
+    val hearthBeatClients = (0 to 5).map(_ => createClientByCategory(Categories.heartBeatCategory)).map(installExpectedMany(_, heartBeatsDecoded.size))
+    val bloodPressureClients = (0 to 5).map(_ => createClientByCategory(Categories.bloodPressureCategory)).map(installExpectedMany(_, bloodPressuresDecoded.size))
+    val medialClients = (0 to 5).map(_ => createClientByCategory(Categories.medicalDataCategory)).map(installExpectedMany(_, allDecoded.size))
 
     val hearthBeatFutures = hearthBeatClients
-      .map(installExpectedMany(_, heartBeatsDecoded.size))
-      .map(_.future)
+      .map(_._1.future)
     val bloodPressureFutures = bloodPressureClients
-      .map(installExpectedMany(_, bloodPressuresDecoded.size))
-      .map(_.future)
+      .map(_._1.future)
     val medialClientFutures = medialClients
-      .map(installExpectedMany(_, allDecoded.size))
-      .map(_.future)
+      .map(_._1.future)
 
     val futures = (heartBeats ++ bloodPressures)
       .map(data => CitizenMicroservices.citizenService.updateState(CITIZEN_TOKEN, Seq(data)))
@@ -160,7 +170,7 @@ class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with 
     hearthBeatFutures.foreach(whenReady(_) { result => result shouldBe heartBeatsDecoded})
     bloodPressureFutures.foreach(whenReady(_) { result => result shouldBe bloodPressuresDecoded})
     medialClientFutures.foreach(whenReady(_) { result => result shouldBe allDecoded})
-    (hearthBeatClients ++ bloodPressureClients ++ medialClients).foreach(_.shutdown())
+    (hearthBeatClients ++ bloodPressureClients ++ medialClients).foreach(_._2.proactiveCancel())
   }
   "citizen resources " should " NOT being observable from unkwon category" in {
     val aData = Data("10", Resource("bi"), Categories.heartBeatCategory, 10, 10)
@@ -179,11 +189,12 @@ class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with 
 
   "citizen resources " should " NOT being notified from other categories" in {
     val coapClient = createClientByCategory(Categories.bloodPressureCategory)
-    val observePromise = installExpectedOne(coapClient)
+    val (observePromise, relation) = installExpectedOne(coapClient)
     CitizenMicroservices.citizenService.updateState(CITIZEN_TOKEN, Seq(heartbeatData))
     Thread.sleep(1000)
     observePromise.isCompleted shouldBe false
     coapClient.shutdown()
+    relation.proactiveCancel()
   }
 
   "citizen resources with coap" should " NOT support get without observe" in {
@@ -192,9 +203,11 @@ class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with 
     coapClient.shutdown()
   }
 
-  override def beforeAll(): Unit = CitizenMicroservices.refresh()
-  override def beforeEach(): Unit = CoapScope.boot()
-  override def afterEach(): Unit = CoapScope.teardown()
+  override def beforeAll(): Unit = {
+    CitizenMicroservices.refresh()
+    CoapScope.boot()
+  }
+  override def afterAll(): Unit = CoapScope.teardown()
 }
 
 object ObservableCoapCitizenApi {
