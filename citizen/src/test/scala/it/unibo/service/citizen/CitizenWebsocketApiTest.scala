@@ -12,8 +12,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
 
-import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.util.{Failure, Success}
+import scala.concurrent.{Future, Promise}
 
 class CitizenWebsocketApiTest extends AnyFlatSpec with BeforeAndAfterEach with Matchers with ScalaFutures with DataJsonMatcher {
   implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(5, Seconds), interval = Span(100, Millis))
@@ -190,10 +189,11 @@ object CitizenWebsocketApiTest {
   val postData = Json.obj("data" -> Json.arr(bloodPressureData))
   def awaitResponse(id : Int, websocket : WebSocket) : Future[WebsocketResponse[Status]] = {
     val promise = Promise[WebsocketResponse[Status]]()
-    websocket.textMessageHandler(text => {
+    val handler = websocket.textMessageHandler(text => {
       val response = CitizenProtocol.responseParser.decode(text)
       response match {
-        case Some(result @ WebsocketResponse(`id`, _)) => promise.success(result)
+        case Some(result @ WebsocketResponse(`id`, _)) =>
+          promise.success(result)
         case _ =>
       }
     })

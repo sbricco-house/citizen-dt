@@ -22,6 +22,7 @@ class MultiProtocolTest extends AnyFlatSpec with BeforeAndAfterEach with Matcher
   val random = new Random()
   var httpClient : WebClient = _
   var websocketClient : HttpClient = _
+
   "citizen service" should "work with multiple protocols works together" in {
     val httpData = randomData(10)
     val websocketData = randomData(20)
@@ -29,16 +30,16 @@ class MultiProtocolTest extends AnyFlatSpec with BeforeAndAfterEach with Matcher
     val howMany = allData.size
     val coapClient = CoapScope.createClientByCategory(Categories.medicalDataCategory)
     val websocketFuture = createWebsocket()
+    val (coapPromise, relation) = CoapScope.installExpectedMany(coapClient, howMany)
 
     whenReady(websocketFuture){
       websocket => {
-        val (coapPromise, relation) = CoapScope.installExpectedMany(coapClient, howMany)
         val websocketPromise = installObservingOnWebsocket(websocket, howMany)
         val httpFuture = sendViaHttp(httpData)
         val websocketParsed = websocketData.zipWithIndex
           .map { case (data, index) => WebsocketRequest[JsonArray](index, Json.arr(data)) }
           .map(CitizenProtocol.requestParser.encode)
-        websocketParsed.foreach(websocket.writeTextMessage)
+        websocketParsed.foreach(websocket.writeTextMessageFuture)
 
         whenReady(coapPromise.future) {
           result => {
