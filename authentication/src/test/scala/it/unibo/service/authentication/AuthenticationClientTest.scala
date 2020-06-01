@@ -2,19 +2,21 @@ package it.unibo.service.authentication
 
 import it.unibo.core.microservice.{Fail, Response}
 import it.unibo.core.utils.ServiceError.Unauthenticated
+import it.unibo.service.authentication.client.AuthenticationClient
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.duration._
 
 class AuthenticationClientTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with ScalaFutures {
 
   implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(10, Seconds), interval = Span(100, Millis))
   implicit val executionContext: ExecutionContext = ExecutionContext.global
-  private var client: AuthenticationService = _
+  private var client: AuthenticationClient = _
 
 
   "A client" should " be able to login" in {
@@ -75,7 +77,7 @@ class AuthenticationClientTest extends AnyFlatSpec with BeforeAndAfterAll with M
   }
 
   override def afterAll(): Unit = {
+    Await.result(client.close(), 5 seconds)
     AuthBootstrap.teardown()
-
   }
 }

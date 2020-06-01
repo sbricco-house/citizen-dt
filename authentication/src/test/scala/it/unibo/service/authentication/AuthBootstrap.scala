@@ -57,10 +57,10 @@ object AuthBootstrap {
     WebClient.create(vertx, WebClientOptions().setDefaultPort(port))
   }
 
-  def client: AuthenticationService = AuthenticationClient("localhost", port)
+  def client: AuthenticationClient = AuthenticationClient("localhost", port)
 
   def teardown(): Unit = {
-    Await.result(vertx.closeFuture(), 5 seconds)
+    Await.result(vertx.closeFuture(), 10 seconds)
   }
 
   implicit class RichHttpRequest[T](request: HttpRequest[T]) {
