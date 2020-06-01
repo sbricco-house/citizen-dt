@@ -15,6 +15,8 @@ import it.unibo.service.authentication.client.AuthenticationClient._
 import it.unibo.service.authentication.model.Resources.AuthenticationInfo
 import it.unibo.service.authentication.{AuthenticationService, Token, TokenIdentifier}
 
+import scala.concurrent.Future
+
 object AuthenticationClient {
   val LOGIN = s"/login"
   val VERIFY = s"/verify?token=%s"
@@ -26,7 +28,7 @@ object AuthenticationClient {
    * @param serviceUri Uri where the real Authentication Service is located
    * @return AuthenticationService instance
    */
-  def apply(serviceUri: URI): AuthenticationService = new AuthenticationClient(serviceUri)
+  def apply(serviceUri: URI): AuthenticationClient = new AuthenticationClient(serviceUri)
 
   /**
    * Create an AuthenticationService proxy client using the same interface of the service.
@@ -34,14 +36,14 @@ object AuthenticationClient {
    * @param port The http port where the real Authentication Service is located
    * @return AuthenticationService instance
    */
-  def apply(host: String, port: Int = 8080): AuthenticationService = new AuthenticationClient(URI.create(s"http://$host:$port"))
+  def apply(host: String, port: Int = 8080): AuthenticationClient = new AuthenticationClient(URI.create(s"http://$host:$port"))
 }
 
 /**
  * Authentication client implementation based on vertx webclient. It follow the [[AuthenticationService]] contract.
  * @param serviceUri  Uri where the real Authentication Service is located.
  */
-private class AuthenticationClient(serviceUri: URI) extends AuthenticationService with RestApiClient with RestClientServiceResponse {
+class AuthenticationClient(serviceUri: URI) extends AuthenticationService with RestApiClient with RestClientServiceResponse {
 
   private val vertx = Vertx.vertx()
   private val clientOptions =  WebClientOptions()
@@ -79,6 +81,11 @@ private class AuthenticationClient(serviceUri: URI) extends AuthenticationServic
     parseServiceResponseWhenComplete(webClient.get(request).putHeader(getAuthorizationHeader(identifier)).sendFuture()) {
       case (HttpCode.NoContent, "") => true
     }.toFutureService
+  }
+
+  def close(): Future[Unit] = {
+    webClient.close()
+    vertx.closeFuture()
   }
 
   private def getAuthorizationHeader(token: TokenIdentifier): (String, String) = "Authorization" -> s"Bearer ${token.token}"
