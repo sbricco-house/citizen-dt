@@ -8,8 +8,8 @@ import it.unibo.core.microservice.FutureService
 import it.unibo.core.utils.ServiceError.{MissingParameter, MissingResource, Unauthorized}
 import it.unibo.service.authentication.{AuthenticationService, TokenIdentifier}
 import it.unibo.service.permission.AuthorizationService
-import monix.reactive.Observable
-import monix.reactive.subjects.PublishSubject
+import monix.reactive.{MulticastStrategy, Observable}
+import monix.reactive.subjects.{ConcurrentSubject, PublishSubject}
 
 import scala.concurrent.ExecutionContext
 import scala.util.Success
@@ -29,6 +29,7 @@ class BackendCitizenDigitalTwin(authenticationService : AuthenticationService,
                                 private var state: State = State.empty,
                             )(implicit val executionContext: ExecutionContext) extends CitizenDigitalTwin {
   self =>
+
   private val observableState = PublishSubject[Data]()
   private var channels : Map[PhysicalLink, SystemUser] = Map.empty
 

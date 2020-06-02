@@ -12,17 +12,17 @@ import it.unibo.service.authentication.TokenIdentifier
 import it.unibo.service.citizen.CitizenDigitalTwin
 import it.unibo.service.citizen.coap.CitizenMessageDelivery.ObserveData
 import it.unibo.core.microservice.coap._
-import monix.execution.CancelableFuture
+import monix.execution.{Ack, CancelableFuture, Scheduler}
+import monix.execution.ExecutionModel.AlwaysAsyncExecution
 import monix.reactive.Observable
+import monix.reactive.observers.Subscriber
 import org.eclipse.californium.core.coap.CoAP.{ResponseCode, Type}
 import org.eclipse.californium.core.coap.MediaTypeRegistry
 import org.eclipse.californium.core.server.resources.CoapExchange
 import org.eclipse.californium.core.{CoapClient, CoapResource, CoapServer}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 //implicits
-import monix.execution.Scheduler.Implicits.global
-
 object CoapObservableApi {
   private def createThreadPool() : ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
   /**
@@ -59,6 +59,8 @@ object CoapObservableApi {
                                    executor : ScheduledExecutorService) extends ObservableResource(citizenId + "/" + category.name, Type.CON) {
     val coapSecret = generateCoapSecret()
 
+    implicit val monixContext =  monix.execution.Scheduler.singleThread("coap-monix", executionModel = AlwaysAsyncExecution)
+
     val innerClient = new CoapClient(s"coap://localhost:$port/citizen/${citizenId}/state?data_category=${category.name}")
     //innerClient.setExecutors(scheduledThreadPoolExecutor, scheduledThreadPoolExecutor, false)
     var elements = "{}"
@@ -68,7 +70,7 @@ object CoapObservableApi {
     override def delete(): Unit = {
       super.delete()
       sourceSubscription.foreach(_.cancel())
-      //innerClient.shutdown()
+      innerClient.shutdown()
     }
 
     override def handleGET(coapExchange: CoapExchange): Unit = {
@@ -103,12 +105,12 @@ object CoapObservableApi {
         case Some(json) =>
           elements = json.encode()
           innerClient.putWithOptions(elements, JsonFormat, coapSecret)
+
         case _ =>
       }
       categorySource match {
         case None =>
-          categorySource = Some(observable)
-          sourceSubscription = Some(observable.foreach(subscriptionStrategy))
+          sourceSubscription = Some(observable.observeOn(monixContext).foreach(subscriptionStrategy))
         case _ =>
       }
     }

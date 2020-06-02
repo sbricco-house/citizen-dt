@@ -32,7 +32,7 @@ class MultiProtocolTest extends AnyFlatSpec with BeforeAndAfterEach with Matcher
     val howMany = allData.size
     val coapClient = CoapScope.createClientByCategory(Categories.medicalDataCategory)
     val websocketFuture = createWebsocket()
-    val (coapPromise, relation) = CoapScope.installExpectedMany(coapClient, howMany, true)
+    val (coapPromise, relation) = CoapScope.installExpectedMany(coapClient, howMany)
 
     whenReady(websocketFuture){
       websocket => {
