@@ -205,11 +205,11 @@ class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with 
     coapClient.shutdown()
   }
 
-  override def beforeAll(): Unit = {
+  override def beforeEach(): Unit = {
     CitizenMicroservices.refresh()
     CoapScope.boot()
   }
-  override def afterAll(): Unit = {
+  override def afterEach(): Unit = {
     CoapScope.teardown()
   }
 }

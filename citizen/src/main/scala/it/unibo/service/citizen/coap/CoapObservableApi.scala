@@ -12,9 +12,10 @@ import it.unibo.service.authentication.TokenIdentifier
 import it.unibo.service.citizen.CitizenDigitalTwin
 import it.unibo.service.citizen.coap.CitizenMessageDelivery.ObserveData
 import it.unibo.core.microservice.coap._
-import monix.execution.{Ack, CancelableFuture, Scheduler}
+import monix.eval.Task
+import monix.execution.{Ack, CancelableFuture, ExecutionModel, Scheduler}
 import monix.execution.ExecutionModel.AlwaysAsyncExecution
-import monix.reactive.Observable
+import monix.reactive.{Observable, OverflowStrategy}
 import monix.reactive.observers.Subscriber
 import org.eclipse.californium.core.coap.CoAP.{ResponseCode, Type}
 import org.eclipse.californium.core.coap.MediaTypeRegistry
@@ -24,6 +25,8 @@ import org.eclipse.californium.core.{CoapClient, CoapResource, CoapServer}
 import scala.concurrent.{ExecutionContext, Future}
 //implicits
 object CoapObservableApi {
+  implicit val monixContext =  monix.execution.Scheduler.singleThread("coap-monix", executionModel = AlwaysAsyncExecution)
+
   private def createThreadPool() : ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
   /**
    * Create a coap server that manage observe state request to a specific citizen
@@ -57,14 +60,11 @@ object CoapObservableApi {
                                    port : Int,
                                    parser : DataParserRegistry[JsonObject],
                                    executor : ScheduledExecutorService) extends ObservableResource(citizenId + "/" + category.name, Type.CON) {
-    val coapSecret = generateCoapSecret()
-
-    implicit val monixContext =  monix.execution.Scheduler.singleThread("coap-monix", executionModel = AlwaysAsyncExecution)
+    private val coapSecret = generateCoapSecret()
+    private val futureContext = ExecutionContext.fromExecutor(executor)
 
     val innerClient = new CoapClient(s"coap://localhost:$port/citizen/${citizenId}/state?data_category=${category.name}")
-    //innerClient.setExecutors(scheduledThreadPoolExecutor, scheduledThreadPoolExecutor, false)
     var elements = "{}"
-    var categorySource : Option[Observable[Data]] = None
     var sourceSubscription : Option[CancelableFuture[_]] = None
 
     override def delete(): Unit = {
@@ -72,11 +72,10 @@ object CoapObservableApi {
       sourceSubscription.foreach(_.cancel())
       innerClient.shutdown()
     }
-
+    var count = 0
     override def handleGET(coapExchange: CoapExchange): Unit = {
       val exchange = coapExchange.advanced()
       val tokenOpt = coapExchange.getAuthToken
-
       def manageObserve(token : String): Unit = {
         val observable = citizenService.observeState(TokenIdentifier(token), category)
         observable.whenComplete {
@@ -85,7 +84,7 @@ object CoapObservableApi {
             coapExchange.respond(ResponseCode.CONTENT, "{}", MediaTypeRegistry.APPLICATION_JSON)
           case Fail(Unauthorized(m)) => coapExchange.respond(ResponseCode.FORBIDDEN)
           case _ => coapExchange.respond(ResponseCode.INTERNAL_SERVER_ERROR)
-        }(ExecutionContext.fromExecutor(executor))
+        }(futureContext)
       }
       def isObservableNecessary = exchange.getRequest.isObserve && ! exchange.getRelation.isEstablished
       def isAlreadyObserved = exchange.getRelation != null && exchange.getRelation.isEstablished
@@ -94,21 +93,22 @@ object CoapObservableApi {
         //create the observer link
         case Some(token) if isObservableNecessary => manageObserve(token)
         //the client has been authenticated and the relation is established
-        case Some(_) if isAlreadyObserved => coapExchange.respond(ResponseCode.CONTENT, elements, MediaTypeRegistry.APPLICATION_JSON)
+        case Some(_) if isAlreadyObserved =>
+          coapExchange.respond(ResponseCode.CONTENT, elements, MediaTypeRegistry.APPLICATION_JSON)
         //currently, standard get is not supported.
         case Some(token) => super.handleGET(coapExchange)
       }
     }
-
     private def createLink(observable : Observable[Data], category : DataCategory) : Unit = {
       def subscriptionStrategy(data : Data) = parser.encode(data) match {
         case Some(json) =>
+          //println("here..")
+          //println(this + category.toString)
           elements = json.encode()
           innerClient.putWithOptions(elements, JsonFormat, coapSecret)
-
         case _ =>
       }
-      categorySource match {
+      sourceSubscription match {
         case None =>
           sourceSubscription = Some(observable.observeOn(monixContext).foreach(subscriptionStrategy))
         case _ =>

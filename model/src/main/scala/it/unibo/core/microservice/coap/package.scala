@@ -59,7 +59,7 @@ package object coap {
       ex.advanced(request)
     }
 
-    def putWithOptions(payload : String, contentFormat: ContentFormat, optionSequence : (Int, String) *): Unit = {
+    def putWithOptions(payload : String, contentFormat: ContentFormat, optionSequence : (Int, String) *): CoapResponse = {
       val request = Request.newPut()
       request.setPayload(payload)
       val options = request.getOptions
