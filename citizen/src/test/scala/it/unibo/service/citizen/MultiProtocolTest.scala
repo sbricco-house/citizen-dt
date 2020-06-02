@@ -85,7 +85,7 @@ class MultiProtocolTest extends AnyFlatSpec with BeforeAndAfterEach with Matcher
           if(elements.size == howMany) {
             promise.success(elements)
           }
-        case None =>
+        case _ =>
       }
     })
     promise
