@@ -83,7 +83,7 @@ class MultiProtocolTest extends AnyFlatSpec with BeforeAndAfterEach with Matcher
           if(elements.size == howMany) {
             promise.success(elements)
           }
-        case None => promise.failure(new Exception(s"Error update on websocket"))
+        case _ =>
       }
     })
     promise
