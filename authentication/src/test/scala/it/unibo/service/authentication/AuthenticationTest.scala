@@ -9,7 +9,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
 import it.unibo.service.authentication.model.Parsers._
-
+/*
 class AuthenticationTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with ScalaFutures {
 
   implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(20, Seconds), interval = Span(100, Millis))
@@ -105,4 +105,4 @@ class AuthenticationTest extends AnyFlatSpec with BeforeAndAfterAll with Matcher
 
   private def getTokenFromLoginResponse(response: HttpResponse[Buffer]): String =
     AuthInfoParser.decode(response.bodyAsJsonObject().get).get.token.token
-}
+}*/
