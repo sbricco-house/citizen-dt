@@ -40,10 +40,13 @@ object CoapScope {
     val relation = coapClient.observeWithTokenAndWait(CITIZEN_TOKEN.token, handler)
     (promise, relation)
   }
-  def installExpectedMany(coapClient: CoapClient, howMany : Int) : (Promise[Set[String]], CoapObserveRelation) = {
+  def installExpectedMany(coapClient: CoapClient, howMany : Int, debug : Boolean = false) : (Promise[Set[String]], CoapObserveRelation) = {
     val promise = Promise[Set[String]]
     var elements : Set[String] = Set.empty
     val handler : CoapResponse => Unit = data => {
+      if(debug) {
+        print(data.getResponseText + " _;_ ")
+      }
       if(!isEmpty(data)) {
         elements += data.getResponseText
       }
@@ -52,7 +55,6 @@ object CoapScope {
       }
     }
     val relation = coapClient.observeWithTokenAndWait(CITIZEN_TOKEN.token, handler)
-    println(relation.isCanceled)
     (promise, relation)
   }
 }
