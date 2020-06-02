@@ -1,5 +1,7 @@
 package it.unibo.service.citizen
 
+import java.net.NetworkInterface
+
 import it.unibo.core.data.{Data, Resource}
 import it.unibo.core.microservice.coap._
 import it.unibo.service.citizen.CoapScope._
@@ -207,7 +209,9 @@ class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with 
     CitizenMicroservices.refresh()
     CoapScope.boot()
   }
-  override def afterAll(): Unit = CoapScope.teardown()
+  override def afterAll(): Unit = {
+    CoapScope.teardown()
+  }
 }
 
 object ObservableCoapCitizenApi {

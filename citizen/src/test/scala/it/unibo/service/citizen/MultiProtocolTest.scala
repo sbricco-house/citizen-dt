@@ -1,5 +1,7 @@
 package it.unibo.service.citizen
 
+import java.net.NetworkInterface
+
 import io.vertx.lang.scala.json.{Json, JsonArray, JsonObject}
 import io.vertx.scala.core.http.{HttpClient, WebSocketBase}
 import io.vertx.scala.ext.web.client.WebClient
@@ -24,12 +26,13 @@ class MultiProtocolTest extends AnyFlatSpec with BeforeAndAfterEach with Matcher
   var websocketClient : HttpClient = _
 
   "citizen service" should "work with multiple protocols works together" in {
-    val httpData = randomData(10)
-    val websocketData = randomData(20)
+    val httpData = randomData(400)
+    val websocketData = randomData(600)
     val allData = (httpData ++ websocketData).sortBy(_.getLong("timestamp"))
     val howMany = allData.size
     val coapClient = CoapScope.createClientByCategory(Categories.medicalDataCategory)
     val websocketFuture = createWebsocket()
+    println("MULTI TEST = ")
     val (coapPromise, relation) = CoapScope.installExpectedMany(coapClient, howMany)
 
     whenReady(websocketFuture){

@@ -13,7 +13,7 @@ import scala.concurrent.Promise
 
 object CoapScope {
   val CITIZEN_TOKEN = TokenIdentifier("jwt1")
-  var currentPort = 5683
+  var currentPort = 10000
 
   var server : CoapServer = _
   def boot() : Unit = {
@@ -54,6 +54,7 @@ object CoapScope {
       }
     }
     val relation = coapClient.observeWithTokenAndWait(CITIZEN_TOKEN.token, handler)
+    println(relation.isCanceled)
     (promise, relation)
   }
 }
