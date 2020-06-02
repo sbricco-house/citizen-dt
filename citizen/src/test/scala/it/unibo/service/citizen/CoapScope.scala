@@ -1,19 +1,17 @@
 package it.unibo.service.citizen
 
-import java.net.Socket
-
 import it.unibo.core.data.DataCategory
-import it.unibo.service.authentication.TokenIdentifier
-import org.eclipse.californium.core.{CoapClient, CoapObserveRelation, CoapResponse, CoapServer}
 import it.unibo.core.microservice.coap._
+import it.unibo.service.authentication.TokenIdentifier
 import it.unibo.service.citizen.coap.CoapObservableApi
-import org.eclipse.californium.core.network.{EndpointManager, RemoteEndpointManager}
+import org.eclipse.californium.core.network.EndpointManager
+import org.eclipse.californium.core.{CoapClient, CoapObserveRelation, CoapResponse, CoapServer}
 
 import scala.concurrent.Promise
 
 object CoapScope {
   val CITIZEN_TOKEN = TokenIdentifier("jwt1")
-  var currentPort = 5683
+  var currentPort = 10000
 
   var server : CoapServer = _
   def boot() : Unit = {
@@ -54,6 +52,7 @@ object CoapScope {
       }
     }
     val relation = coapClient.observeWithTokenAndWait(CITIZEN_TOKEN.token, handler)
+    println(relation.isCanceled)
     (promise, relation)
   }
 }

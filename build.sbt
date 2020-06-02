@@ -23,7 +23,7 @@ lazy val commonSetting = Seq(
     "io.lemonlabs" %% "scala-uri" % "2.2.2",
     "io.vertx" %% "vertx-web-client-scala" % vertxVersion,
     "org.eclipse.californium" % "californium-core" % "2.2.2",
-    "org.slf4j" % "slf4j-simple" % "1.7.30" //TODO use this to check coap errors
+    //"org.slf4j" % "slf4j-simple" % "1.7.30" //TODO use this to check coap errors
   )
 ) ++ coreSetting
 
