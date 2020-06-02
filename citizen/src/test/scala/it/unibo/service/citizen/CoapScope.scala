@@ -1,5 +1,7 @@
 package it.unibo.service.citizen
 
+import java.net.Socket
+
 import it.unibo.core.data.DataCategory
 import it.unibo.service.authentication.TokenIdentifier
 import org.eclipse.californium.core.{CoapClient, CoapObserveRelation, CoapResponse, CoapServer}
@@ -24,7 +26,6 @@ object CoapScope {
     EndpointManager.reset()
     server.destroy()
   }
-
 
   def isEmpty(response : CoapResponse) : Boolean = response.getResponseText == "{}" || response.getResponseText == ""
   def createClientByCategory(category : DataCategory) : CoapClient = {
