@@ -26,8 +26,8 @@ class MultiProtocolTest extends AnyFlatSpec with BeforeAndAfterEach with Matcher
   var websocketClient : HttpClient = _
 
   "citizen service" should "work with multiple protocols works together" in {
-    val httpData = randomData(400)
-    val websocketData = randomData(600)
+    val httpData = randomData(10)
+    val websocketData = randomData(10)
     val allData = (httpData ++ websocketData).sortBy(_.getLong("timestamp"))
     val howMany = allData.size
     val coapClient = CoapScope.createClientByCategory(Categories.medicalDataCategory)
@@ -86,7 +86,7 @@ class MultiProtocolTest extends AnyFlatSpec with BeforeAndAfterEach with Matcher
           if(elements.size == howMany) {
             promise.success(elements)
           }
-        case _ =>
+        case None =>
       }
     })
     promise
