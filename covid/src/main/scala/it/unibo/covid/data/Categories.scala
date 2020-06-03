@@ -2,7 +2,7 @@ package it.unibo.covid.data
 
 import java.net.NetworkInterface
 
-import it.unibo.core.data.{GroupCategory, LeafCategory}
+import it.unibo.core.data.{DataCategory, GroupCategory, LeafCategory}
 
 //TODO categories could be loaded from a JSON file
 //TODO put a TTL
@@ -22,4 +22,5 @@ object Categories {
   //position
   val positionCategory = LeafCategory("position")
   val locationCategory = GroupCategory("location", Set(positionCategory))
+
 }

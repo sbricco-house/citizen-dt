@@ -72,7 +72,6 @@ object CoapObservableApi {
       sourceSubscription.foreach(_.cancel())
       innerClient.shutdown()
     }
-    var count = 0
     override def handleGET(coapExchange: CoapExchange): Unit = {
       val exchange = coapExchange.advanced()
       val tokenOpt = coapExchange.getAuthToken
@@ -93,8 +92,7 @@ object CoapObservableApi {
         //create the observer link
         case Some(token) if isObservableNecessary => manageObserve(token)
         //the client has been authenticated and the relation is established
-        case Some(_) if isAlreadyObserved =>
-          coapExchange.respond(ResponseCode.CONTENT, elements, MediaTypeRegistry.APPLICATION_JSON)
+        case Some(_) if isAlreadyObserved => coapExchange.respond(ResponseCode.CONTENT, elements, MediaTypeRegistry.APPLICATION_JSON)
         //currently, standard get is not supported.
         case Some(token) => super.handleGET(coapExchange)
       }
@@ -102,15 +100,12 @@ object CoapObservableApi {
     private def createLink(observable : Observable[Data], category : DataCategory) : Unit = {
       def subscriptionStrategy(data : Data) = parser.encode(data) match {
         case Some(json) =>
-          //println("here..")
-          //println(this + category.toString)
           elements = json.encode()
           innerClient.putWithOptions(elements, JsonFormat, coapSecret)
         case _ =>
       }
       sourceSubscription match {
-        case None =>
-          sourceSubscription = Some(observable.observeOn(monixContext).foreach(subscriptionStrategy))
+        case None => sourceSubscription = Some(observable.observeOn(monixContext).foreach(subscriptionStrategy))
         case _ =>
       }
     }

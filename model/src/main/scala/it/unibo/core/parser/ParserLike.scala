@@ -64,4 +64,14 @@ object ParserLike {
       override def decode(data: External): Option[Internal] = decodeFunction(data)
     }
   }
+
+  /**
+   * create a mismatchable parser that fail always encode function.
+   * @param decodeFunction The mapping form External to Internal
+   * @tparam External The "external" representation of data to manage (e.g. Json, XML, String,..)
+   * @tparam Internal The "internal" representation (e.g. Data, Any,..)
+   * @return A mismatchable parser that decode External to Internal data
+   */
+  def decodeOnly[External, Internal](decodeFunction : External => Option[Internal]) : MismatchableParser[External, Internal] = mismatchable((_ : Internal) => None)(decodeFunction)
+
 }
