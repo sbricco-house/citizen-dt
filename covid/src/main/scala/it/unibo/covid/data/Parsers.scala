@@ -1,8 +1,10 @@
 package it.unibo.covid.data
 
-import io.vertx.lang.scala.json.{Json, JsonObject}
+import io.vertx.lang.scala.json.{Json, JsonArray, JsonObject}
+import it.unibo.core.data.LeafCategory
 import it.unibo.core.microservice.vertx._
-import it.unibo.core.parser.{DataParserRegistry, ValueParser, VertxJsonParser}
+import it.unibo.core.parser.ValueParser.ValueParser
+import it.unibo.core.parser.{DataParser, DataParserRegistry, ValueParser, VertxJsonParser}
 object Parsers {
   import Categories._
   val positionParser = ValueParser.Json {
@@ -44,4 +46,19 @@ object Parsers {
     //location data
     .registerParser(VertxJsonParser(positionParser, positionCategory))
     .registerGroupCategory(locationCategory)
+
+
+  def configureRegistryFromJson(jsonArray: JsonArray,
+                                supportedParser: String => Option[ValueParser[JsonObject]] = parserByType) : DataParserRegistry[JsonObject] = {
+    DataParserRegistryFactory.fromJson(jsonArray, supportedParser)
+  }
+
+  def parserByType(parserType: String): Option[ValueParser[JsonObject]] = parserType.toLowerCase match {
+    case "float" | "double" => Some(ValueParser.Json.doubleParser)
+    case "string" => Some(ValueParser.Json.stringParser)
+    case "string[]" => Some(seqStringParser)
+    case "location" => Some(positionParser)
+    case "temperature" => Some(temperatureParser)
+    case _ => None
+  }
 }

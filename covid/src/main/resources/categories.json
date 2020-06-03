@@ -1,0 +1,56 @@
+[
+  {
+    "name": "bodyTemperature",
+    "ttl": 10,
+    "type": "double",
+    "groups": ["medical"]
+  },
+  {
+    "name": "spo2",
+    "ttl": 10,
+    "type": "double",
+    "groups": ["medicalData"]
+  },
+  {
+    "name": "heartbeat",
+    "ttl": 10,
+    "type": "double",
+    "groups": ["medicalData"]
+  },
+  {
+    "name": "medicalRecord",
+    "ttl": 10,
+    "type": "double",
+    "groups": ["medicalData"]
+  },
+  {
+    "name": "name",
+    "ttl": 10,
+    "type": "double",
+    "groups": ["personal"]
+  },
+  {
+    "name": "surname",
+    "ttl": 10,
+    "type": "double",
+    "groups": ["personal"]
+  },
+  {
+  "name": "birthdate",
+  "ttl": 10,
+  "type": "double",
+  "groups": ["personal"]
+  },
+  {
+    "name": "cf",
+    "ttl": 10,
+    "type": "double",
+    "groups": ["personal"]
+  },
+  {
+    "name": "position",
+    "ttl": 10,
+    "type": "double",
+    "groups": ["location"]
+  }
+]

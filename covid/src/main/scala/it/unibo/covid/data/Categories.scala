@@ -2,6 +2,7 @@ package it.unibo.covid.data
 
 import java.net.NetworkInterface
 
+import io.vertx.lang.scala.json.JsonObject
 import it.unibo.core.data.{DataCategory, GroupCategory, LeafCategory}
 
 //TODO categories could be loaded from a JSON file
@@ -22,5 +23,4 @@ object Categories {
   //position
   val positionCategory = LeafCategory("position")
   val locationCategory = GroupCategory("location", Set(positionCategory))
-
 }
