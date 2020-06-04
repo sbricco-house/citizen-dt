@@ -27,9 +27,9 @@ object DemoFromJson extends App {
     (json : JsonObject) => Some(InMemoryStorage[Data, String]())
   }
 
-
   def jsonObjectFromFile(file : String) : JsonObject = Json.fromObjectString(Source.fromResource(file).mkString)
   def jsonArrayFromFile(file: String) : JsonArray = Json.fromArrayString(file)
+
   private val empty = Json.obj(
     "id" -> "gianluca",
     "coap_port" -> 5683,
