@@ -11,6 +11,7 @@ import io.vertx.scala.ext.web.client.{WebClient, WebClientOptions}
 import it.unibo.core.authentication.SystemUser
 import it.unibo.core.data.InMemoryStorage
 import it.unibo.service.authentication.api.{RestApiAuthentication, RestApiAuthenticationVerticle}
+import it.unibo.service.authentication.app.MockUserStorage
 import it.unibo.service.authentication.client.AuthenticationClient
 
 import scala.concurrent.duration._
@@ -49,7 +50,10 @@ object AuthBootstrap {
   def boot(): Unit = {
     vertx = Vertx.vertx()
 
-    val deploy = vertx.deployVerticleFuture(new AuthenticationVerticle(), DeploymentOptions().setConfig(config))
+    val storage = MockUserStorage.generateDefault()
+    val options = JWTAuthOptions().addPubSecKey(PubSecKeyOptions().setAlgorithm("HS256").setPublicKey("blabla").setSymmetric(true))
+    val service = AuthenticationService(JWTAuth.create(vertx, options), storage)
+    val deploy = vertx.deployVerticleFuture(new RestApiAuthenticationVerticle(service, port, "localhost") with RestApiAuthentication)
     Await.result(deploy, 10 seconds)
   }
 

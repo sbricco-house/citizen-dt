@@ -12,6 +12,7 @@ import it.unibo.core.microservice.FutureService
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.utils.HttpCode
 import it.unibo.service.authentication.client.AuthenticationClient._
+import it.unibo.service.authentication.model.Parsers
 import it.unibo.service.authentication.model.Resources.AuthenticationInfo
 import it.unibo.service.authentication.{AuthenticationService, Token, TokenIdentifier}
 
@@ -91,33 +92,14 @@ class AuthenticationClient(serviceUri: URI) extends AuthenticationService with R
   private def getAuthorizationHeader(token: TokenIdentifier): (String, String) = "Authorization" -> s"Bearer ${token.token}"
 
   protected def parseAuthenticationInfo(jsonObject: JsonObject): AuthenticationInfo = {
-    AuthenticationInfo(parseToken(jsonObject), parseUser(jsonObject))
+    Parsers.AuthInfoParser.decode(jsonObject).get
   }
 
   protected def parseToken(jsonObject: JsonObject): Token = {
-    Token(jsonObject.getString("token"), jsonObject.getInteger("expirationInMinute"))
+    Parsers.TokenParser.decode(jsonObject).get
   }
 
   protected def parseUser(jsonObject: JsonObject): SystemUser = {
-    SystemUser(
-      jsonObject.getAsString("email").getOrElse(""),
-      jsonObject.getAsString("username").getOrElse(""),
-      jsonObject.getAsString("password").getOrElse(""),
-      jsonObject.getAsString("identifier").getOrElse(""),
-      jsonObject.getAsString("role").getOrElse("")
-    )
+    Parsers.SystemUserParser.decode(jsonObject).get
   }
-
-  protected def parseLoginUser(jsonObject: JsonObject): Option[SystemUser] = {
-    val emailOption = jsonObject.getAsString("email")
-    val username = jsonObject.getAsString("username")
-    val passwordOption = jsonObject.getAsString("password")
-    val identifierOption = jsonObject.getAsString("identifier")
-    val roleOption = jsonObject.getAsString("role")
-    for {
-      email <- emailOption
-      password <- passwordOption
-    } yield SystemUser(email, username.getOrElse(""), password, identifierOption.getOrElse(""), roleOption.getOrElse(""))
-  }
-
 }
