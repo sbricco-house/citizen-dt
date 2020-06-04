@@ -3,29 +3,36 @@ package it.unibo.covid.data
 import io.vertx.lang.scala.json.{Json, JsonArray, JsonObject}
 import it.unibo.core.data.{GroupCategory, LeafCategory}
 import it.unibo.core.microservice.vertx._
+import it.unibo.core.parser.ParserLike.Parser
 import it.unibo.core.parser.ValueParser.ValueParser
 import it.unibo.core.parser.{DataParserRegistry, VertxJsonParser}
+import it.unibo.covid.data.DataParserRegistryParser.ValueParserMap
 
-object DataParserRegistryFactory {
-
+object DataParserRegistryParser {
   type ValueParserMap = String => Option[ValueParser[JsonObject]]
+  def apply(valueParserMap: ValueParserMap) = new DataParserRegistryParser(valueParserMap)
+}
 
-  def fromJson(jsonObject: JsonArray, valueParserMap: ValueParserMap): DataParserRegistry[JsonObject] = {
-    val categories = extractDataCategorySections(jsonObject)
-    val leafCategoryParsers = extractLeafCategories(categories, valueParserMap)
-    val validGroups = extractGroupCategories(categories, leafCategoryParsers.values.flatten.toSeq)
-
-    var registry = DataParserRegistry[JsonObject]()
-    leafCategoryParsers.foreach { t =>
-      registry = registry.registerParser(VertxJsonParser(t._1, t._2: _*))
-    }
-    validGroups.foreach { g =>
-      registry = registry.registerGroupCategory(g)
-    }
-    registry
-  }
+class DataParserRegistryParser(valueParserMap: ValueParserMap) extends Parser[JsonArray, DataParserRegistry[JsonObject]] {
 
   private case class DataCategorySection(name: String, ttl: Int, parseType: String, groups: Seq[String])
+
+  override def encode(rawData: DataParserRegistry[JsonObject]): JsonArray = ??? // TODO: implement but is not necessary
+
+  override def decode(data: JsonArray): Option[DataParserRegistry[JsonObject]] = {
+    val categories = extractDataCategorySections(data)
+    val leafCategoryEntries = extractLeafEntries(categories, valueParserMap)
+    val groupCategoryEntries = extractGroupEntries(categories, leafCategoryEntries.values.flatten.toSeq)
+
+    var registry = DataParserRegistry[JsonObject]()
+    leafCategoryEntries.foreach { t =>
+      registry = registry.registerParser(VertxJsonParser(t._1, t._2: _*))
+    }
+    groupCategoryEntries.foreach { g =>
+      registry = registry.registerGroupCategory(g)
+    }
+    Some(registry)
+  }
 
   private def extractDataCategorySections(json: JsonArray): Seq[DataCategorySection] = {
     val items = json.getAsObjectSeq.getOrElse(Seq(Json.emptyObj()))
@@ -38,23 +45,26 @@ object DataParserRegistryFactory {
     } yield DataCategorySection(name, ttl, parserType, groups.getAsStringSeq.getOrElse(Seq()))
   }
 
-  private def extractLeafCategories(sections: Seq[DataCategorySection], valueParserMap: ValueParserMap): Map[ValueParser[JsonObject], Seq[LeafCategory]] = {
-    sections.map(s => (s.parseType, LeafCategory(s.name, s.ttl)))
-      .flatMap(kv => valueParserMap(kv._1).map(parser => (parser, kv._2)))
+  private def extractLeafEntries(sections: Seq[DataCategorySection], valueParserMap: ValueParserMap): Map[ValueParser[JsonObject], Seq[LeafCategory]] = {
+    sections.flatMap(s => valueParserMap(s.parseType).map(parser => (parser, LeafCategory(s.name, s.ttl))))
       .foldRight(Map[ValueParser[JsonObject], Seq[LeafCategory]]()) {
         case ((parser, category), acc) => addWithoutCollision(acc, parser, category)
       }
   }
 
-  private def extractGroupCategories(sections: Seq[DataCategorySection], leafSupported: Seq[LeafCategory]): Set[GroupCategory] = {
+  private def extractGroupEntries(sections: Seq[DataCategorySection], leafSupported: Seq[LeafCategory]): Seq[GroupCategory] = {
+    def getManyLeafsByName(supported: Seq[LeafCategory], categoryNames: Seq[String]): Seq[LeafCategory] = {
+      categoryNames.flatMap(leaf => supported.find(sl => sl.name == leaf))
+    }
+
     sections.filter(s => leafSupported.exists(l => l.name == s.name))
       .flatMap(s => s.groups.map(g => (s.name, g)))
       .foldRight(Map[String, Seq[String]]()) {
         case ((category, group), acc) => addWithoutCollision(acc, group, category)
       }
-      .mapValues(leafs => leafs.map(leafName => leafSupported.find(_.name == leafName).get))
+      .mapValues(leafs => getManyLeafsByName(leafSupported, leafs))
       .map(kv => GroupCategory(kv._1, kv._2.toSet))
-      .toSet
+      .toSeq
   }
 
   private def addWithoutCollision[K, V](map: Map[K, Seq[V]], key: K, value: V): Map[K, Seq[V]] = {

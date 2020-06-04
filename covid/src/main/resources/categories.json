@@ -2,7 +2,7 @@
   {
     "name": "bodyTemperature",
     "ttl": 10,
-    "type": "double",
+    "type": "string[]",
     "groups": ["medical"]
   },
   {
@@ -20,37 +20,37 @@
   {
     "name": "medicalRecord",
     "ttl": 10,
-    "type": "double",
+    "type": "string[]",
     "groups": ["medicalData"]
   },
   {
     "name": "name",
     "ttl": 10,
-    "type": "double",
+    "type": "string",
     "groups": ["personal"]
   },
   {
     "name": "surname",
     "ttl": 10,
-    "type": "double",
+    "type": "string",
     "groups": ["personal"]
   },
   {
   "name": "birthdate",
   "ttl": 10,
-  "type": "double",
+  "type": "string",
   "groups": ["personal"]
   },
   {
     "name": "cf",
     "ttl": 10,
-    "type": "double",
+    "type": "string",
     "groups": ["personal"]
   },
   {
     "name": "position",
     "ttl": 10,
-    "type": "double",
+    "type": "position",
     "groups": ["location"]
   }
 ]

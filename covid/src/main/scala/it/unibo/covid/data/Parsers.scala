@@ -50,14 +50,14 @@ object Parsers {
 
   def configureRegistryFromJson(jsonArray: JsonArray,
                                 supportedParser: String => Option[ValueParser[JsonObject]] = parserByType) : DataParserRegistry[JsonObject] = {
-    DataParserRegistryFactory.fromJson(jsonArray, supportedParser)
+    DataParserRegistryParser(supportedParser).decode(jsonArray).get
   }
 
   def parserByType(parserType: String): Option[ValueParser[JsonObject]] = parserType.toLowerCase match {
     case "float" | "double" => Some(ValueParser.Json.doubleParser)
     case "string" => Some(ValueParser.Json.stringParser)
     case "string[]" => Some(seqStringParser)
-    case "location" => Some(positionParser)
+    case "position" => Some(positionParser)
     case "temperature" => Some(temperatureParser)
     case _ => None
   }
