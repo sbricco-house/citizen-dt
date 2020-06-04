@@ -2,6 +2,7 @@ package it.unibo.covid.demo
 
 import java.net.URI
 
+import io.vertx.core.json.JsonArray
 import io.vertx.lang.scala.json.{Json, JsonObject}
 import it.unibo.core.data.{Data, InMemoryStorage, Storage}
 import it.unibo.core.microservice.vertx._
@@ -26,9 +27,9 @@ object DemoFromJson extends App {
     (json : JsonObject) => Some(InMemoryStorage[Data, String]())
   }
 
-  val bootstrapper = new CitizenBootstrap(authorizationParser, authenticationParser, storageParser)
 
   def jsonObjectFromFile(file : String) : JsonObject = Json.fromObjectString(Source.fromResource(file).mkString)
+  def jsonArrayFromFile(file: String) : JsonArray = Json.fromArrayString(file)
   private val empty = Json.obj(
     "id" -> "gianluca",
     "coap_port" -> 5683,
@@ -36,6 +37,10 @@ object DemoFromJson extends App {
   )
 
   val json = args.headOption.map(jsonObjectFromFile).getOrElse(empty)
+  val jsonRegistry = jsonArrayFromFile(args(1))
+
+  val registry = Parsers.configureRegistryFromJson(jsonRegistry)
+  val bootstrapper = new CitizenBootstrap(authorizationParser, authenticationParser, registry, storageParser)
 
   bootstrapper.runtimeFromJson(json) match {
     case Success(runtime) => runtime.start()

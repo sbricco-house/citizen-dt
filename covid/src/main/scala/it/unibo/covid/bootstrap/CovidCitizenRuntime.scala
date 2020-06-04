@@ -1,5 +1,6 @@
 package it.unibo.covid.bootstrap
 
+import io.vertx.lang.scala.json.JsonObject
 import io.vertx.scala.core.Vertx
 import it.unibo.core.parser.DataParserRegistry
 import it.unibo.covid.data.Parsers
@@ -17,8 +18,7 @@ class HttpOnlyRuntime(httpPort : Int,
                       citizen : CitizenDigitalTwin,
                       parserRegistry: DataParserRegistry[JsonObject]) extends CovidCitizenRuntime {
   val citizenVerticle = new CitizenVerticle(citizen, parserRegistry, httpPort) with RestCitizenApi with WebSocketCitizenApi
-class HttpOnlyRuntime(httpPort : Int, vertx: Vertx, citizen : CitizenDigitalTwin) extends CovidCitizenRuntime {
-  val citizenVerticle = new CitizenVerticle(citizen, Parsers.configureRegistry(), httpPort) with RestCitizenApi with WebSocketCitizenApi
+
   override def start(): Unit = {
     vertx.deployVerticle(citizenVerticle)
   }
