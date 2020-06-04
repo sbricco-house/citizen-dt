@@ -1,36 +1,33 @@
 package it.unibo.covid.bootstrap
 
-import io.vertx.lang.scala.json.{JsonArray, JsonObject}
+import io.vertx.lang.scala.json.JsonObject
 import io.vertx.scala.core.Vertx
 import it.unibo.core.data.{Data, Storage}
 import it.unibo.core.microservice.vertx._
-import it.unibo.core.parser.DataParserRegistry
-import it.unibo.core.parser.ParserLike.Parser
+import it.unibo.core.parser.ParserLike.{MismatchableParser, Parser}
 import it.unibo.service.authentication.AuthenticationService
 import it.unibo.service.citizen.CitizenDigitalTwin
 import it.unibo.service.permission.AuthorizationService
 
 import scala.util.{Failure, Success, Try}
-class CitizenBootstrap(authorizationServiceParser : Parser[JsonObject, AuthorizationService],
-                       authenticationServiceParser : Parser[JsonObject, AuthenticationService],
-                       dataRegistryParser: Parser[JsonObject, DataParserRegistry[JsonObject]],
-                       storageParser : Parser[JsonObject, Storage[Data, String]])  {
+class CitizenBootstrap(authorizationServiceParser : MismatchableParser[JsonObject, AuthorizationService],
+                       authenticationServiceParser : MismatchableParser[JsonObject, AuthenticationService],
+                       dataRegistryParser: MismatchableParser[JsonObject, DataParserRegistry[JsonObject]],
+                       storageParser : MismatchableParser[JsonObject, Storage[Data, String]])  {
   def runtimeFromJson(json : JsonObject) : Try[CovidCitizenRuntime] = {
     val vertx = Vertx.vertx()
     val authorizationTry = tryCreate(json, authorizationServiceParser, "wrong string for authorization")
     val authenticationTry = tryCreate(json, authenticationServiceParser, "wrong string for authentication")
-    val dataParserRegistryTry = tryCreate(json, dataRegistryParser, "wrong json format for data parsers registry")
     val storageTry = tryCreate(json, storageParser, "wrong storage option")
     for {
       storage <- storageTry
       authorization <- authorizationTry
       authentication <- authenticationTry
-      dataRegistry <- dataParserRegistryTry
       citizen <- tryCreateCitizen(vertx, json, authentication, authorization, storage)
-    } yield createRuntime(json, vertx, dataRegistry, citizen)
+    } yield createRuntime(json, vertx, citizen)
   }
 
-  def tryCreate[S](json : JsonObject, parser : Parser[JsonObject, S], errorString : String) : Try[S] = {
+  private def tryCreate[S](json : JsonObject, parser : MismatchableParser[JsonObject, S], errorString : String) : Try[S] = {
     parser.decode(json)
       .map(service => Success(service))
       .getOrElse(Failure(new IllegalArgumentException(errorString)))
@@ -40,7 +37,6 @@ class CitizenBootstrap(authorizationServiceParser : Parser[JsonObject, Authoriza
                        json: JsonObject,
                        authenticationService: AuthenticationService,
                        authorizationService: AuthorizationService,
-
                        storage: Storage[Data, String]) : Try[CitizenDigitalTwin] = {
     json.getAsString("id")
       .map(CitizenDigitalTwin.fromVertx(authenticationService, authorizationService, _, storage, vertx))

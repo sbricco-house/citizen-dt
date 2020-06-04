@@ -8,22 +8,34 @@ import it.unibo.core.parser.{DataParser, DataParserRegistry, ValueParser, VertxJ
 object Parsers {
   import Categories._
   val positionParser = ValueParser.Json {
-    case (x : Double, y : Double) => Some(Json.obj("lat" -> x, "lng" -> y))
+    case (x : Double, y : Double) =>
+      val result = Json.obj(
+        "value" -> Json.obj("lat" -> x, "lng" -> y)
+      )
+      Some(result)
     case _ => None
   } {
-    json => for {
-      first <- json.getAsDouble("lat")
-      second <- json.getAsDouble("lng")
-    } yield (first, second)
+    json => {
+      for {
+        value <- json.getAsObject("value")
+        first <- value.getAsDouble("lat")
+        second <- value.getAsDouble("lng")
+      } yield (first, second)
+    }
   }
 
   val temperatureParser = ValueParser.Json {
-    case (x : Double, y : String) => Some(Json.obj("val" -> x, "um" -> y))
+    case (x : Double, y : String) =>
+      val result = Json.obj(
+        "value" -> Json.obj("val" -> x, "um" -> y)
+      )
+      Some(result)
     case _ => None
   } {
     json => for {
-      temperature <- json.getAsDouble("val")
-      unitOfMeasure <- json.getAsString("um")
+      value <- json.getAsObject("value")
+      temperature <- value.getAsDouble("val")
+      unitOfMeasure <- value.getAsString("um")
     } yield (temperature, unitOfMeasure)
   }
 
@@ -39,9 +51,9 @@ object Parsers {
     .registerParser(VertxJsonParser(ValueParser.Json.stringParser, nameCategory, surnameCategory, birthdateCategory, fiscalCodeCategory))
     .registerGroupCategory(personalDataCategory)
     //medical data
-    .registerParser(VertxJsonParser(ValueParser.Json.doubleParser, heartbeatCategory, bloodOxygenCategory))
+    .registerParser(VertxJsonParser(ValueParser.Json.doubleParser, bodyTemperatureCategory, bloodOxygenCategory))
+    .registerParser(VertxJsonParser(ValueParser.Json.intParser, heartbeatCategory))
     .registerParser(VertxJsonParser(seqStringParser, medicalRecordCategory))
-    .registerParser(VertxJsonParser(seqStringParser, bodyTemperatureCategory))
     .registerGroupCategory(medicalDataCategory)
     //location data
     .registerParser(VertxJsonParser(positionParser, positionCategory))

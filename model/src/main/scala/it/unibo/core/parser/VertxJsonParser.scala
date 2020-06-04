@@ -24,6 +24,7 @@ trait VertxJsonParser extends DataParser[JsonObject]{
 
   override def encode(data: Data): Option[JsonObject] = {
     Some(data)
+      .filter(data => supportedCategories.contains(data.category))
       .flatMap(_ => encodeStrategy(data.value).map {
         obj => obj
           .put("category", data.category.name)

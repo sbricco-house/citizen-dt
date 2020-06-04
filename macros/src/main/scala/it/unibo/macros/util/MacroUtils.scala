@@ -8,7 +8,7 @@ object MacroUtils {
     import c.universe._
     val code =
       q"""${value}.asInstanceOf[Any] match {
-        case x : ${weakTypeTag[T].tpe} => Some(x.asInstanceOf[Any])
+        case x : ${weakTypeTag[T].tpe} => Some(x.asInstanceOf[${weakTypeTag[T].tpe}])
         case _ => None
       }"""
     c.Expr[Option[Any]](code)

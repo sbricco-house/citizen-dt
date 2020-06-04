@@ -3,10 +3,18 @@ package it.unibo.service.permission
 import it.unibo.core.authentication.SystemUser
 import it.unibo.core.data.{DataCategory, DataCategoryOps, GroupCategory, LeafCategory}
 import it.unibo.core.microservice.{Fail, FutureService, Response}
+import it.unibo.core.parser.DataParserRegistry
 import it.unibo.core.utils.ServiceError.Unauthorized
 
 object MockAuthorization {
   def apply(authorization: Map[(String, String), Seq[DataCategory]]): MockAuthorization = new MockAuthorization(authorization)
+
+  def acceptAll(registry : DataParserRegistry[_]) : AuthorizationService = new AuthorizationService {
+    override def authorizeRead(who: SystemUser, citizen: String, category: DataCategory): FutureService[DataCategory] = FutureService.response(category)
+    override def authorizeWrite(who: SystemUser, citizen: String, category: DataCategory): FutureService[DataCategory] = FutureService.response(category)
+    override def authorizedReadCategories(who: SystemUser, citizen: String): FutureService[Seq[DataCategory]] = FutureService.response(registry.supportedCategories)
+    override def authorizedWriteCategories(who: SystemUser, citizen: String): FutureService[Seq[DataCategory]] = FutureService.response(registry.supportedCategories)
+  }
 }
 
 class MockAuthorization(private val authorization: Map[(String, String), Seq[DataCategory]]) extends AuthorizationService {
