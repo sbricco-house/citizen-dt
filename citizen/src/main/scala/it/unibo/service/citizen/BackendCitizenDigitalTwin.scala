@@ -36,14 +36,12 @@ class BackendCitizenDigitalTwin(authenticationService : AuthenticationService,
   override def readState(who: TokenIdentifier): FutureService[Seq[Data]] = {
     authenticationService.verifyToken(who)
       .flatMap(authorizationService.authorizedReadCategories(_, citizen = citizenIdentifier))
-      .map(categories => categories.flatMap(DataCategoryOps.allChild))
       .map(categories => state.get(categories))
   }
 
   override def readStateByCategory(who: TokenIdentifier, category: DataCategory): FutureService[Seq[Data]] = {
     authenticationService.verifyToken(who)
       .flatMap(authorizationService.authorizeRead(_, citizen = citizenIdentifier, category))
-      .map(category => DataCategoryOps.allChild(category).toSeq)
       .map(categories => state.get(categories))
   }
 

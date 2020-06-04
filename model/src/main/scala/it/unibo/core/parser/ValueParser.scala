@@ -3,6 +3,7 @@ package it.unibo.core.parser
 import io.vertx.core.json.Json
 import io.vertx.lang.scala.json.{JsonObject, Json => Jsonx}
 import it.unibo.core.parser.ParserLike.MismatchableParser
+import it.unibo.macros.util.MacroUtils
 
 object ValueParser {
   /**
@@ -19,7 +20,7 @@ object ValueParser {
     import it.unibo.core.microservice.vertx._
     implicit private def optionAnyToJson(opt : Option[Any]) : Option[JsonObject] = opt.map(data => Jsonx.obj("value"-> data))
     val intParser : ValueParser[JsonObject] = ParserLike.mismatchable[JsonObject, Any] { Some(_).filter(_.isInstanceOf[Int]) } { _.getAsInt("value") }
-    val doubleParser : ValueParser[JsonObject] = ParserLike.mismatchable[JsonObject, Any] { Some(_).filter(_.isInstanceOf[Double]) } { _.getAsInt("value") }
+    val doubleParser : ValueParser[JsonObject] = ParserLike.mismatchable[JsonObject, Any] { Some(_).filter(_.isInstanceOf[Double]) } { _.getAsDouble("value") }
     val stringParser : ValueParser[JsonObject] = ParserLike.mismatchable[JsonObject, Any] { Some(_).filter(_.isInstanceOf[String]) } { _.getAsString("value") }
   }
 }
