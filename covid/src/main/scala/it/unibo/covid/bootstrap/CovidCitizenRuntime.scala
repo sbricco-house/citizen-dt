@@ -10,7 +10,7 @@ sealed trait CovidCitizenRuntime {
   def start() : Unit
   def stop() : Unit
 }
-
+//TODO pass parser as an argument
 class HttpOnlyRuntime(httpPort : Int, vertx: Vertx, citizen : CitizenDigitalTwin) extends CovidCitizenRuntime {
   val citizenVerticle = new CitizenVerticle(citizen, Parsers.configureRegistry(), httpPort) with RestCitizenApi with WebSocketCitizenApi
   override def start(): Unit = {

@@ -11,7 +11,11 @@ object MockAuthenticationClient {
     new MockAuthenticationClient(users.map(u => (u._1, u._2)).toMap)
 
   private class MockAuthenticationClient(users: Map[TokenIdentifier, SystemUser]) extends AuthenticationService {
-    override def login(email: String, password: String): FutureService[Resources.AuthenticationInfo] = ???
+    override def login(email: String, password: String): FutureService[Resources.AuthenticationInfo] = {
+      users.find { case (_, user) => user.email == email && user.password == password }
+        .map { case (token, user) => FutureService.response(Resources.AuthenticationInfo(Token(token.token, 30), user)) }
+        .getOrElse(FutureService.fail(MissingResource(s"User not found")))
+    }
 
     override def refresh(identifier: TokenIdentifier): FutureService[Token] = ???
 
