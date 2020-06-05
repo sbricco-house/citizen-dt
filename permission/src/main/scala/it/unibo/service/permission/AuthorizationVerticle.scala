@@ -1,6 +1,7 @@
 package it.unibo.service.permission
 
 import io.vertx.lang.scala.json.{Json, JsonArray, JsonObject}
+import io.vertx.scala.ext.auth.PubSecKeyOptions
 import io.vertx.scala.ext.auth.jwt.{JWTAuth, JWTAuthOptions}
 import io.vertx.scala.ext.web.{Router, RoutingContext}
 import it.unibo.core.authentication.SystemUser
@@ -20,8 +21,9 @@ class AuthorizationVerticle(authorization : AuthorizationService,
   val categoryParamName = "data_category"
   val authorizationEndpointWrite = s"/authorization/:$pathCitizenId/write"
   val authorizationEndpointRead = s"/authorization/:$pathCitizenId/read"
+  private val options = JWTAuthOptions().addPubSecKey(PubSecKeyOptions().setAlgorithm("HS256").setPublicKey("blabla").setSymmetric(true))
 
-  val provider = JWTAuth.create(vertx, JWTAuthOptions())
+  lazy val provider = JWTAuth.create(vertx, options)
   override def createRouter: Router = {
     val router = Router.router(vertx)
     val userMiddleware = UserMiddleware(provider, vertx)

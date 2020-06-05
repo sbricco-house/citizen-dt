@@ -20,7 +20,7 @@ object UserMiddleware {
 }
 
 class UserMiddleware private(provider: JWTAuth, vertx : Vertx) extends Handler[RoutingContext] {
-  private implicit val context: ExecutionContext = VertxExecutionContext.apply(vertx.getOrCreateContext())
+  private implicit val ctx: ExecutionContext = VertxExecutionContext.apply(vertx.getOrCreateContext())
 
   override def handle(context: RoutingContext): Unit = {
     val pending = context.request().headers()

@@ -14,7 +14,6 @@ import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 
 class AuthenticationClientTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with ScalaFutures {
-
   implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(10, Seconds), interval = Span(100, Millis))
   implicit val executionContext: ExecutionContext = ExecutionContext.global
   private var client: AuthenticationClient = _

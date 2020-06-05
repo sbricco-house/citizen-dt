@@ -5,6 +5,7 @@ import io.vertx.core.buffer.Buffer
 import io.vertx.lang.scala.VertxExecutionContext
 import io.vertx.lang.scala.json.JsonObject
 import io.vertx.scala.core.Vertx
+import io.vertx.scala.ext.auth.PubSecKeyOptions
 import io.vertx.scala.ext.auth.jwt.{JWTAuth, JWTAuthOptions}
 import io.vertx.scala.ext.web.client.{HttpRequest, HttpResponse, WebClient, WebClientOptions}
 import it.unibo.core.authentication.{AuthenticationParsers, SystemUser}
@@ -27,7 +28,9 @@ class AuthorizationClient(uri : URI, dataParserRegistry: DataParserRegistry[Json
 
   private val stringPath = uri.toString
   private val vertx = Vertx.vertx()
-  private val provider = JWTAuth.create(vertx, JWTAuthOptions())
+  private val options = JWTAuthOptions().addPubSecKey(PubSecKeyOptions().setAlgorithm("HS256").setPublicKey("blabla").setSymmetric(true))
+
+  private val provider = JWTAuth.create(vertx, options)
   private val clientOptions =  WebClientOptions()
     .setFollowRedirects(true)
     .setDefaultPort(uri.getPort)
@@ -39,7 +42,6 @@ class AuthorizationClient(uri : URI, dataParserRegistry: DataParserRegistry[Json
   override def authorizeRead(who: SystemUser, citizen: String, category: DataCategory): FutureService[DataCategory] = {
     val request = prepareWebClient(stringPath + READ.format(citizen), who)
       .addQueryParam("data_category", category.name).sendFuture()
-
     manageSingleCategoryResponse(request, category)
   }
 

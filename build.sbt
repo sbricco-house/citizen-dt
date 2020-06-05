@@ -49,6 +49,7 @@ lazy val citizen_service = (project in file("citizen"))
 
 lazy val permission_service = (project in file("permission"))
   .dependsOn(macros, model)
+  .settings(testSetting)
 
 lazy val authentication_service = (project in file("authentication"))
   .dependsOn(macros, model)
