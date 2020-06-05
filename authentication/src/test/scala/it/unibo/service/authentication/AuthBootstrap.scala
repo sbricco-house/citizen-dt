@@ -8,7 +8,7 @@ import io.vertx.scala.core.{DeploymentOptions, Vertx}
 import io.vertx.scala.ext.auth.PubSecKeyOptions
 import io.vertx.scala.ext.auth.jwt.{JWTAuth, JWTAuthOptions}
 import io.vertx.scala.ext.web.client.{WebClient, WebClientOptions}
-import it.unibo.core.authentication.SystemUser
+import it.unibo.core.authentication.{SystemUser, VertxJWTProvider}
 import it.unibo.core.data.InMemoryStorage
 import it.unibo.service.authentication.api.{RestApiAuthentication, RestApiAuthenticationVerticle}
 import it.unibo.service.authentication.app.MockUserStorage
@@ -51,8 +51,8 @@ object AuthBootstrap {
     vertx = Vertx.vertx()
 
     val storage = MockUserStorage.generateDefault()
-    val options = JWTAuthOptions().addPubSecKey(PubSecKeyOptions().setAlgorithm("HS256").setPublicKey("blabla").setSymmetric(true))
-    val service = AuthenticationService(JWTAuth.create(vertx, options), storage)
+    val jwtProvider = VertxJWTProvider.fromSymmetric("blabla", vertx)
+    val service = AuthenticationService(jwtProvider, storage)
     val deploy = vertx.deployVerticleFuture(new RestApiAuthenticationVerticle(service, port, "localhost") with RestApiAuthentication)
     Await.result(deploy, 10 seconds)
   }
