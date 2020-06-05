@@ -5,7 +5,6 @@ import java.util.concurrent.Executors
 import io.vertx.core.json.JsonObject
 import io.vertx.scala.ext.auth.User
 import io.vertx.scala.ext.auth.jwt.{JWTAuth, JWTOptions}
-import it.unibo.core.authentication.SystemUser
 import it.unibo.core.data.Storage
 import it.unibo.core.microservice.{Fail, FutureService, Response, ServiceResponse, _}
 import it.unibo.core.utils.ServiceError.Unauthenticated
@@ -15,8 +14,8 @@ import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 import AuthenticationServiceBackend._
-import it.unibo.service.authentication.model.Parsers
-import it.unibo.service.authentication.model.Resources.AuthenticationInfo
+import it.unibo.core.authentication.Resources.AuthenticationInfo
+import it.unibo.core.authentication.{AuthenticationParsers, SystemUser, Token, TokenIdentifier}
 
 object AuthenticationServiceBackend {
   /**
@@ -100,7 +99,7 @@ class AuthenticationServiceBackend(provider: JWTAuth,
   }
 
   // Internal payload (claims) of vertx JWT
-  protected def claimsToUser(user: JsonObject): SystemUser = Parsers.SystemUserParser.decode(user).get
-  protected def userToClaims(user: SystemUser): JsonObject = Parsers.SystemUserParser.encode(user)
+  protected def claimsToUser(user: JsonObject): SystemUser = AuthenticationParsers.SystemUserParser.decode(user).get
+  protected def userToClaims(user: SystemUser): JsonObject = AuthenticationParsers.SystemUserParser.encode(user)
 
 }

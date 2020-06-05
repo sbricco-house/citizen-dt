@@ -2,8 +2,8 @@ package it.unibo.service.citizen.middleware
 
 import io.vertx.core.Handler
 import io.vertx.scala.ext.web.RoutingContext
+import it.unibo.core.authentication.TokenIdentifier
 import it.unibo.core.microservice.vertx._
-import it.unibo.service.authentication.TokenIdentifier
 import it.unibo.service.citizen.middleware.UserMiddleware._
 
 object UserMiddleware {

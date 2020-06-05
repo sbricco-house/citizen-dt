@@ -3,12 +3,12 @@ package it.unibo.service.citizen.websocket
 import io.vertx.lang.scala.VertxExecutionContext
 import io.vertx.lang.scala.json.{JsonArray, JsonObject}
 import io.vertx.scala.core.http.ServerWebSocket
+import it.unibo.core.authentication.TokenIdentifier
 import it.unibo.core.data.Data
 import it.unibo.core.microservice.protocol.{WebsocketRequest, WebsocketResponse, WebsocketUpdate}
 import it.unibo.core.microservice.vertx.WebSocketApi
 import it.unibo.core.microservice.{Fail, Response, ServiceResponse}
 import it.unibo.core.utils.ServiceError.Unauthorized
-import it.unibo.service.authentication.TokenIdentifier
 import it.unibo.service.citizen.middleware.UserMiddleware
 import it.unibo.service.citizen.{CitizenDigitalTwin, CitizenVerticle}
 import monix.execution.Cancelable

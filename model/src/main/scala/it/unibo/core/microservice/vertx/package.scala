@@ -8,6 +8,8 @@ package object vertx {
   object JsonConversion {
     def objectFromString(buffer : String) : Option[JsonObject] = tryOrNone(Json.fromObjectString(buffer))
 
+    def arrayFromString(buffer : String) : Option[JsonArray] = tryOrNone(Json.fromArrayString(buffer))
+
     protected[vertx] def tryOrNone[E](some : => E) : Option[E] = try {
       Some(some)
     } catch {

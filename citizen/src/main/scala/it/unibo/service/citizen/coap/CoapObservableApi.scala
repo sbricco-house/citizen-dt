@@ -3,12 +3,12 @@ package it.unibo.service.citizen.coap
 import java.util.concurrent.{Executors, ScheduledExecutorService, ScheduledThreadPoolExecutor}
 
 import io.vertx.lang.scala.json.JsonObject
+import it.unibo.core.authentication.TokenIdentifier
 import it.unibo.core.data.{Data, DataCategory}
 import it.unibo.core.microservice.coap.{CaopApi, JsonFormat, ObservableResource, generateCoapSecret}
 import it.unibo.core.microservice.{Fail, Response}
 import it.unibo.core.parser.DataParserRegistry
 import it.unibo.core.utils.ServiceError.Unauthorized
-import it.unibo.service.authentication.TokenIdentifier
 import it.unibo.service.citizen.CitizenDigitalTwin
 import it.unibo.service.citizen.coap.CitizenMessageDelivery.ObserveData
 import it.unibo.core.microservice.coap._

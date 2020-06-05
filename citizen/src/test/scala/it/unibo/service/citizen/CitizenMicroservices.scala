@@ -1,10 +1,10 @@
 package it.unibo.service.citizen
 
 import io.vertx.scala.core.Vertx
-import it.unibo.core.authentication.SystemUser
+import it.unibo.core.authentication.{SystemUser, TokenIdentifier}
 import it.unibo.core.data.{Data, GroupCategory, InMemoryStorage, LeafCategory, Storage}
 import it.unibo.core.parser.{DataParserRegistry, ValueParser, VertxJsonParser}
-import it.unibo.service.authentication.{AuthenticationService, TokenIdentifier}
+import it.unibo.service.authentication.AuthenticationService
 import it.unibo.service.citizen.authentication.MockAuthenticationClient
 import it.unibo.service.permission.{AuthorizationService, MockAuthorization}
 

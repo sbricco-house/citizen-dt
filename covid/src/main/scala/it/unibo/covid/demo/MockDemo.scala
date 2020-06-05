@@ -1,19 +1,16 @@
 package it.unibo.covid.demo
 
+import io.vertx.core.json.JsonArray
 import io.vertx.scala.core.Vertx
-import it.unibo.core.authentication.SystemUser
-import it.unibo.covid.data.{Categories, DataParserRegistryParser, Parsers}
-import it.unibo.service.authentication.TokenIdentifier
+import it.unibo.core.authentication.{SystemUser, TokenIdentifier}
+import it.unibo.core.data.InMemoryStorage
+import it.unibo.covid.bootstrap.HttpCoapRuntime
+import it.unibo.covid.data.Categories._
+import it.unibo.covid.data.{Categories, Parsers}
 import it.unibo.service.citizen.CitizenDigitalTwin
 import it.unibo.service.citizen.authentication.MockAuthenticationClient
 import it.unibo.service.permission.MockAuthorization
-import Categories._
-import io.vertx.core.json.JsonArray
-import it.unibo.core.data.InMemoryStorage
-import it.unibo.core.data.{Data, InMemoryStorage, Sensor}
-import it.unibo.core.parser.{DataParserRegistry, ValueParser}
-import it.unibo.covid.bootstrap.HttpCoapRuntime
-
+import it.unibo.core.microservice.vertx._
 import scala.io.Source
 
 /**
@@ -32,6 +29,8 @@ object MockDemo extends App {
   println(s"citizen = $id")
   println(s"HTTP run on $httpPort port")
   println(s"COAP run on $coapPort port")
+
+  JsonConversion.objectFromString("ciao")
   val user = SystemUser("foo@foo.it", id, id, id, "citizen")
 
   val registry = Parsers.configureRegistryFromJson(new JsonArray(Source.fromResource("categories.json").mkString))

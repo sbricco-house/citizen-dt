@@ -3,8 +3,8 @@ package it.unibo.service.authentication.api
 import io.vertx.core.json.JsonObject
 import it.unibo.core.authentication.SystemUser
 import it.unibo.core.microservice.vertx.{BaseVerticle, _}
-import it.unibo.service.authentication.model.Resources.AuthenticationInfo
-import it.unibo.service.authentication.{AuthenticationService, Token}
+import it.unibo.core.authentication.Resources.AuthenticationInfo
+import it.unibo.service.authentication.AuthenticationService
 
 /**
  * Describe the context (in terms of http vertx platform) in which AuthenticationService are involved.

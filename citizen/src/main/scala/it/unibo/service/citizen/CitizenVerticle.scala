@@ -5,10 +5,10 @@ import java.util.UUID
 import io.vertx.core.json.JsonArray
 import io.vertx.lang.scala.json.{Json, JsonObject}
 import io.vertx.scala.ext.web.RoutingContext
+import it.unibo.core.authentication.TokenIdentifier
 import it.unibo.core.data.Data
 import it.unibo.core.microservice.vertx.{BaseVerticle, _}
 import it.unibo.core.parser.DataParserRegistry
-import it.unibo.service.authentication.TokenIdentifier
 
 object CitizenVerticle {
   private val CITIZEN_ENDPOINT = s"/citizens/%s/state"

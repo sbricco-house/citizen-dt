@@ -2,14 +2,13 @@ package it.unibo.service.authentication.api
 
 import io.vertx.scala.ext.web.handler.BodyHandler
 import io.vertx.scala.ext.web.{Router, RoutingContext}
+import it.unibo.core.authentication.AuthenticationParsers.{AuthInfoParser, SystemUserParser, TokenParser}
+import it.unibo.core.authentication.Resources.AuthenticationInfo
+import it.unibo.core.authentication.{AuthenticationParsers, Token, TokenIdentifier}
 import it.unibo.core.microservice.vertx.{RestApi, _}
 import it.unibo.core.microservice.{FutureService, Response}
 import it.unibo.core.utils.HttpCode
 import it.unibo.core.utils.ServiceError.MissingParameter
-import it.unibo.service.authentication.model.Parsers
-import it.unibo.service.authentication.{Token, TokenIdentifier}
-import it.unibo.service.authentication.model.Resources.AuthenticationInfo
-import Parsers._
 
 object RestApiAuthentication {
   val LOGIN_ENDPOINT = "/login"

@@ -1,10 +1,9 @@
 package it.unibo.service.citizen.authentication
 
-import it.unibo.core.authentication.SystemUser
+import it.unibo.core.authentication.{Resources, SystemUser, Token, TokenIdentifier}
 import it.unibo.core.microservice.FutureService
 import it.unibo.core.utils.ServiceError.MissingResource
-import it.unibo.service.authentication.model.Resources
-import it.unibo.service.authentication.{AuthenticationService, Token, TokenIdentifier}
+import it.unibo.service.authentication.{AuthenticationService}
 
 object MockAuthenticationClient {
   def apply(users: Seq[(TokenIdentifier, SystemUser)]) : AuthenticationService =

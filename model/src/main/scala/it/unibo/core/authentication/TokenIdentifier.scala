@@ -1,4 +1,4 @@
-package it.unibo.service.authentication
+package it.unibo.core.authentication
 
 protected abstract class TokenValue(token: String)
 

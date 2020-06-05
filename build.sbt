@@ -20,6 +20,7 @@ lazy val commonSetting = Seq(
     "io.monix" %% "monix-reactive" % monixVersion,
     "io.vertx" %% "vertx-lang-scala" % vertxVersion,
     "io.vertx" %% "vertx-web-scala" % vertxVersion,
+    "io.vertx" %% "vertx-auth-jwt-scala" % vertxVersion,
     "io.lemonlabs" %% "scala-uri" % "2.2.2",
     "io.vertx" %% "vertx-web-client-scala" % vertxVersion,
     "org.eclipse.californium" % "californium-core" % "2.2.2",
@@ -38,13 +39,6 @@ lazy val testSetting = Seq(
   )
 )
 
-lazy val authenticationSettings = Seq(
-  libraryDependencies ++= Seq(
-    "io.vertx" %% "vertx-auth-jwt-scala" % vertxVersion
-  )
-)
-
-
 lazy val model = (project in file("model"))
   .dependsOn(macros)
   .settings(commonSetting)
@@ -58,7 +52,7 @@ lazy val permission_service = (project in file("permission"))
 
 lazy val authentication_service = (project in file("authentication"))
   .dependsOn(macros, model)
-  .settings(authenticationSettings, testSetting)
+  .settings(testSetting)
 
 lazy val covid = project
   .dependsOn(macros, model, citizen_service, permission_service, authentication_service)

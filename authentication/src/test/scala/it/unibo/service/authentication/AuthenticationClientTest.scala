@@ -1,5 +1,6 @@
 package it.unibo.service.authentication
 
+import it.unibo.core.authentication.TokenIdentifier
 import it.unibo.core.microservice.{Fail, Response}
 import it.unibo.core.utils.ServiceError.Unauthenticated
 import it.unibo.service.authentication.client.AuthenticationClient

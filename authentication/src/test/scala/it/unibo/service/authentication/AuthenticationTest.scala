@@ -8,7 +8,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
-import it.unibo.service.authentication.model.Parsers._
+import it.unibo.core.authentication.AuthenticationParsers._
 
 class AuthenticationTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with ScalaFutures {
 

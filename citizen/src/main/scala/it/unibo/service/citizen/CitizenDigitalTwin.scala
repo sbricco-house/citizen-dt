@@ -4,10 +4,11 @@ import java.util.concurrent.Executors
 
 import io.vertx.lang.scala.VertxExecutionContext
 import io.vertx.scala.core.Vertx
+import it.unibo.core.authentication.TokenIdentifier
 import it.unibo.core.data._
 import it.unibo.core.dt.History.History
 import it.unibo.core.microservice.FutureService
-import it.unibo.service.authentication.{AuthenticationService, TokenIdentifier}
+import it.unibo.service.authentication.AuthenticationService
 import it.unibo.service.permission.AuthorizationService
 import monix.reactive.Observable
 

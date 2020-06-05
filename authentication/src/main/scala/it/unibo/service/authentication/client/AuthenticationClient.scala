@@ -6,15 +6,14 @@ import io.vertx.lang.scala.VertxExecutionContext
 import io.vertx.lang.scala.json.{Json, JsonObject}
 import io.vertx.scala.core.Vertx
 import io.vertx.scala.ext.web.client.{WebClient, WebClientOptions}
-import it.unibo.core.authentication.SystemUser
+import it.unibo.core.authentication.Resources.AuthenticationInfo
+import it.unibo.core.authentication.{AuthenticationParsers, SystemUser, Token, TokenIdentifier}
 import it.unibo.core.client.{RestApiClient, _}
 import it.unibo.core.microservice.FutureService
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.utils.HttpCode
 import it.unibo.service.authentication.client.AuthenticationClient._
-import it.unibo.service.authentication.model.Parsers
-import it.unibo.service.authentication.model.Resources.AuthenticationInfo
-import it.unibo.service.authentication.{AuthenticationService, Token, TokenIdentifier}
+import it.unibo.service.authentication.AuthenticationService
 
 import scala.concurrent.Future
 
@@ -92,14 +91,14 @@ class AuthenticationClient(serviceUri: URI) extends AuthenticationService with R
   private def getAuthorizationHeader(token: TokenIdentifier): (String, String) = "Authorization" -> s"Bearer ${token.token}"
 
   protected def parseAuthenticationInfo(jsonObject: JsonObject): AuthenticationInfo = {
-    Parsers.AuthInfoParser.decode(jsonObject).get
+    AuthenticationParsers.AuthInfoParser.decode(jsonObject).get
   }
 
   protected def parseToken(jsonObject: JsonObject): Token = {
-    Parsers.TokenParser.decode(jsonObject).get
+    AuthenticationParsers.TokenParser.decode(jsonObject).get
   }
 
   protected def parseUser(jsonObject: JsonObject): SystemUser = {
-    Parsers.SystemUserParser.decode(jsonObject).get
+    AuthenticationParsers.SystemUserParser.decode(jsonObject).get
   }
 }

@@ -1,8 +1,8 @@
 package it.unibo.service.citizen
 
+import it.unibo.core.authentication.TokenIdentifier
 import it.unibo.core.data.DataCategory
 import it.unibo.core.microservice.coap._
-import it.unibo.service.authentication.TokenIdentifier
 import it.unibo.service.citizen.coap.CoapObservableApi
 import org.eclipse.californium.core.network.EndpointManager
 import org.eclipse.californium.core.{CoapClient, CoapObserveRelation, CoapResponse, CoapServer}

@@ -1,17 +1,15 @@
-package it.unibo.service.authentication.model
+package it.unibo.core.authentication
 
 import io.vertx.lang.scala.json.JsonObject
-import it.unibo.core.authentication.SystemUser
-import it.unibo.core.microservice.vertx._
+import it.unibo.core.authentication.Resources.AuthenticationInfo
 import it.unibo.core.parser.ParserLike.Parser
-import it.unibo.service.authentication.Token
-import it.unibo.service.authentication.model.Resources.AuthenticationInfo
+import it.unibo.core.microservice.vertx._
 
 /**
  * A collection of main parser used by the Authentication Service Rest API.
  * It allow marshalling and unmarshalling operation for each domain concept.
  */
-object Parsers {
+object AuthenticationParsers {
 
   object TokenParser extends Parser[JsonObject, Token] {
     override def encode(rawData: Token): JsonObject = new JsonObject()
