@@ -23,8 +23,8 @@ object CitizenMicroservices {
   ))
 
   val authorizationService : AuthorizationService = MockAuthorization(Map(
-    ("50", "50") -> Seq(Categories.medicalDataCategory),
-    ("46", "50") -> Seq(Categories.medicalDataCategory, Categories.bloodPressureCategory)
+    ("jwt1", "50") -> Seq(Categories.medicalDataCategory),
+    ("jwt3", "50") -> Seq(Categories.medicalDataCategory, Categories.bloodPressureCategory)
   ))
   private val store : Storage[Data, String] = InMemoryStorage[Data, String]()
 

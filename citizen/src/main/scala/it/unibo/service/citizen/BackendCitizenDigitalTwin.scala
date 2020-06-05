@@ -31,27 +31,27 @@ class BackendCitizenDigitalTwin(authenticationService : AuthenticationService,
   self =>
 
   private val observableState = PublishSubject[Data]()
-  private var channels : Map[PhysicalLink, SystemUser] = Map.empty
+  private var channels : Map[PhysicalLink, TokenIdentifier] = Map.empty
 
   override def readState(who: TokenIdentifier): FutureService[Seq[Data]] = {
     authenticationService.verifyToken(who)
-      .flatMap(authorizationService.authorizedReadCategories(_, citizen = citizenIdentifier))
+      .flatMap(_ => authorizationService.authorizedReadCategories(who, citizen = citizenIdentifier))
       .map(categories => state.get(categories))
   }
 
   override def readStateByCategory(who: TokenIdentifier, category: DataCategory): FutureService[Seq[Data]] = {
     authenticationService.verifyToken(who)
-      .flatMap(authorizationService.authorizeRead(_, citizen = citizenIdentifier, category))
+      .flatMap(_ => authorizationService.authorizeRead(who, citizen = citizenIdentifier, category))
       .map(categories => state.get(categories))
   }
 
   override def updateState(who: TokenIdentifier, data: Seq[Data]): FutureService[Seq[String]] = {
-    authenticationService.verifyToken(who).flatMap(user => updateState(user, data))
+    authenticationService.verifyToken(who).flatMap(user => internalUpdateState(who, data))
   }
 
   override def readHistory(who: TokenIdentifier, dataCategory: DataCategory, maxSize: Int): FutureService[History] = {
     authenticationService.verifyToken(who)
-      .flatMap(user => authorizationService.authorizeRead(user, citizenIdentifier, dataCategory))
+      .flatMap(user => authorizationService.authorizeRead(who, citizenIdentifier, dataCategory))
       .map(category => findHistoryInStorage(category, maxSize))
   }
 
@@ -59,9 +59,9 @@ class BackendCitizenDigitalTwin(authenticationService : AuthenticationService,
     authenticationService.verifyToken(who)
       .map(user => (user, findDataInStorage(dataIdentifier)))
       .flatMap {
-        case (user, pendingData) => pendingData.flatMap {
+        case (_, pendingData) => pendingData.flatMap {
           data => {
-            authorizationService.authorizeRead(user, citizenIdentifier, data.category).map(_ => data)
+            authorizationService.authorizeRead(who, citizenIdentifier, data.category).map(_ => data)
           }
         }
       }
@@ -70,14 +70,14 @@ class BackendCitizenDigitalTwin(authenticationService : AuthenticationService,
   override def createPhysicalLink(who: TokenIdentifier): FutureService[PhysicalLink] = {
     authenticationService.verifyToken(who)
       .flatMap(user => {
-        authorizationService.authorizedReadCategories(user, self.citizenIdentifier)
-          .map(categories => new SourceImpl(user, categories))
+        authorizationService.authorizedReadCategories(who, self.citizenIdentifier)
+          .map(categories => new SourceImpl(who, categories))
       })
   }
 
   override def observeState(who: TokenIdentifier, dataCategory: DataCategory): FutureService[Observable[Data]] = {
     authenticationService.verifyToken(who)
-      .flatMap(user => authorizationService.authorizeRead(user, citizenIdentifier, dataCategory))
+      .flatMap(user => authorizationService.authorizeRead(who, citizenIdentifier, dataCategory))
       .map(DataCategoryOps.allChild)
       .map(categories => observableState.filter(data => categories.contains(data.category)))
   }
@@ -97,7 +97,7 @@ class BackendCitizenDigitalTwin(authenticationService : AuthenticationService,
     }
   }
 
-  protected def updateState(who : SystemUser, data : Seq[Data]) : FutureService[Seq[String]] ={
+  protected def internalUpdateState(who : TokenIdentifier, data : Seq[Data]) : FutureService[Seq[String]] ={
     data.map(_.category) match {
       case Nil => FutureService.fail(MissingParameter(s"Invalid set of data"))
       case categoriesToUpdate => authorizationService.authorizedWriteCategories(who, citizen = citizenIdentifier)
@@ -124,12 +124,12 @@ class BackendCitizenDigitalTwin(authenticationService : AuthenticationService,
     }
   }
 
-  private class SourceImpl(user : SystemUser, categories : Seq[DataCategory]) extends PhysicalLink {
+  private class SourceImpl(user : TokenIdentifier, categories : Seq[DataCategory]) extends PhysicalLink {
     self.channels += this -> user
     private val flattenCategory = categories.flatMap(DataCategoryOps.allChild).toSet
     private val publishChannel = self.observableState.filter(data => flattenCategory.contains(data.category))
     //TODO this method may avoid to call update state, it has categories already
-    override def updateState(data: Seq[Data]): FutureService[Seq[String]] = self.updateState(user, data)
+    override def updateState(data: Seq[Data]): FutureService[Seq[String]] = self.internalUpdateState(user, data)
 
     override def close(): Unit = self.channels -= this
 
