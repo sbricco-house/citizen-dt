@@ -20,5 +20,5 @@ object RealCaseDemo extends App {
   }
   val key = authenticationPart.getString("jwt.key")
   val vertx = Vertx.vertx()
-  println(MockRoleBasedAuthorization.fromJson(authorizationPart, authProvider, registry))
+  //println(MockRoleBasedAuthorization.fromJson(authorizationPart, authProvider, registry))
 }

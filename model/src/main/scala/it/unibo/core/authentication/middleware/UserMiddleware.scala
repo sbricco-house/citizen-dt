@@ -15,10 +15,19 @@ class UserMiddleware private() extends Handler[RoutingContext] {
   import UserMiddleware._
   override def handle(context: RoutingContext): Unit = {
     val pending = context.request().headers().get(AUTHORIZATION_HEADER)
+        .flatMap(extractToken)
         .map(token => TokenIdentifier(token))
     pending match  {
       case Some(jwt) => context.put(JWT_TOKEN, jwt); context.next()
       case _ => context.response().setBadRequest()
     }
+  }
+
+  private def extractToken(authorizationHeader: String): Option[String] = {
+    val bearer = "Bearer"
+    authorizationHeader.split(bearer)
+      .map(_.trim)
+      .filter(_.nonEmpty)
+      .find(_ != bearer)
   }
 }

@@ -23,6 +23,8 @@ trait RestCitizenApi extends RestApi with RestServiceResponse {
     val router = Router.router(vertx)
     val userMiddleware = UserMiddleware()
 
+//    CorsSupport.enableTo(router)
+
     router.get(self.citizenStateEndpoint)
       .handler(userMiddleware)
       .handler(handleGetState)

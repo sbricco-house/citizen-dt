@@ -1,5 +1,5 @@
 {
   "api.rest.host": "localhost",
-  "api.rest.port": 8080,
+  "api.rest.port": 8081,
   "jwt.key": "paggandpedr"
 }

@@ -18,9 +18,6 @@ import scala.io.Source
 import scala.util.{Failure, Success}
 
 object DemoFromJson extends App {
-  def jsonObjectFromFile(file : String) : JsonObject = Json.fromObjectString(Source.fromResource(file).mkString)
-  def jsonArrayFromFile(file: String) : JsonArray = Json.fromArrayString(Source.fromResource(file).mkString)
-
   val json = args.headOption.orElse(Some("default-citizen.json")).map(jsonObjectFromFile).get
   val registry = args.lift(1) match {
     case None => Parsers.configureRegistry()
