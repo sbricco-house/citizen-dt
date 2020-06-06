@@ -30,6 +30,7 @@ trait WebSocketCitizenApi extends WebSocketApi {
   override def webSocketHandler(websocket: ServerWebSocket): Unit = {
     val tokenOption = websocket.headers()
       .get(UserMiddleware.AUTHORIZATION_HEADER)
+      .flatMap(UserMiddleware.extractToken)
       .map(TokenIdentifier)
     val pathCorrectness = evalPath(websocket)
     (tokenOption, pathCorrectness) match {

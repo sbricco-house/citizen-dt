@@ -21,14 +21,14 @@ object VertxJWTProvider {
     JWTAuth.create(vertx, publicKeyOptions(publicKey))
   }
 
-  private def symmetricOptions(key: String): JWTAuthOptions = {
+  def symmetricOptions(key: String): JWTAuthOptions = {
     val opts = PubSecKeyOptions().setAlgorithm("HS256")
       .setPublicKey(key)
       .setSymmetric(true)
     JWTAuthOptions().addPubSecKey(opts)
   }
 
-  private def asymmetricOptions(privateKey: String, publicKey: String): JWTAuthOptions = {
+  def asymmetricOptions(privateKey: String, publicKey: String): JWTAuthOptions = {
     val opts = PubSecKeyOptions().setAlgorithm("RS256")
       .setSecretKey(privateKey)
       .setPublicKey(publicKey)
@@ -37,7 +37,7 @@ object VertxJWTProvider {
     JWTAuthOptions().addPubSecKey(opts)
   }
 
-  private def publicKeyOptions(publicKey: String): JWTAuthOptions = {
+  def publicKeyOptions(publicKey: String): JWTAuthOptions = {
     val opts = PubSecKeyOptions().setAlgorithm("RS256")
         .setPublicKey(publicKey)
         .setSymmetric(false)

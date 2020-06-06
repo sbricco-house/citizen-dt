@@ -9,6 +9,16 @@ object UserMiddleware {
   val AUTHORIZATION_HEADER = "Authorization"
   val JWT_TOKEN = "jwt_token"
   def apply() = new UserMiddleware()
+  private val bearer = "Bearer"
+
+  def extractToken(authorizationHeader: String): Option[String] = {
+    Some(authorizationHeader)
+      .filter(_.contains(bearer))
+      .map(_.split(" "))
+      .flatMap(sequence => sequence.find(_ != bearer))
+  }
+
+  def asToken(token : String) : String =  s"$bearer $token"
 }
 
 class UserMiddleware private() extends Handler[RoutingContext] {
@@ -21,13 +31,5 @@ class UserMiddleware private() extends Handler[RoutingContext] {
       case Some(jwt) => context.put(JWT_TOKEN, jwt); context.next()
       case _ => context.response().setBadRequest()
     }
-  }
-
-  private def extractToken(authorizationHeader: String): Option[String] = {
-    val bearer = "Bearer"
-    authorizationHeader.split(bearer)
-      .map(_.trim)
-      .filter(_.nonEmpty)
-      .find(_ != bearer)
   }
 }

@@ -4,7 +4,7 @@ import io.vertx.lang.scala.json.JsonObject
 import io.vertx.scala.core.Vertx
 import io.vertx.scala.ext.auth.PubSecKeyOptions
 import io.vertx.scala.ext.auth.jwt.{JWTAuth, JWTAuthOptions}
-import it.unibo.core.authentication.SystemUser
+import it.unibo.core.authentication.{SystemUser, VertxJWTProvider}
 import it.unibo.core.data.Storage
 import it.unibo.core.microservice.ServiceRuntime
 import it.unibo.core.microservice.vertx._
@@ -34,12 +34,9 @@ class AuthenticationBootstrap(userStorage: Storage[SystemUser, String]) {
     json =>
       val host = json.getString("api.rest.host", "localhost")
       val port = json.getInteger("api.rest.port", 8123)
-      json.getAsString("jwt.key").map {
-          key => JWTAuthOptions().setPubSecKeys(mutable.Buffer(PubSecKeyOptions()
-            .setAlgorithm("HS256")
-            .setPublicKey(key)
-            .setSymmetric(true)))
-        }.map(AuthenticationConfig(host, port, _))
+      json.getAsString("jwt.key")
+        .map(VertxJWTProvider.symmetricOptions)
+        .map(AuthenticationConfig(host, port, _))
   }
 
   private case class AuthenticationConfig(host: String, port: Int, jwtAuthOptions: JWTAuthOptions)
