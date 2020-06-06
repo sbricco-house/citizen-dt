@@ -15,6 +15,8 @@ object MockAuthorization {
     override def authorizeWrite(who: TokenIdentifier, citizen: String, category: DataCategory): FutureService[DataCategory] = FutureService.response(category)
     override def authorizedReadCategories(who: TokenIdentifier, citizen: String): FutureService[Seq[DataCategory]] = FutureService.response(registry.supportedCategories)
     override def authorizedWriteCategories(who: TokenIdentifier, citizen: String): FutureService[Seq[DataCategory]] = FutureService.response(registry.supportedCategories)
+
+    override def toString: String = s"AuthorizationAcceptAll ${registry.supportedCategories}"
   }
 }
 

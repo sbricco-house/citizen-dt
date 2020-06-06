@@ -22,6 +22,8 @@ class InMemoryStorage[D, ID] private() extends Storage [D, ID]{
   override def findMany(policy: D => Boolean, maxElements: Int = InMemoryStorage.NO_LIMIT): Try[Seq[D]] = {
     Success(memory.values.filter(policy).take(maxElements).toSeq)
   }
+
+  override def toString = s"InMemoryStorage($memory)"
 }
 
 object InMemoryStorage {

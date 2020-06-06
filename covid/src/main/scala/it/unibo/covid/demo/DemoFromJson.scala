@@ -1,20 +1,12 @@
 package it.unibo.covid.demo
 
-import java.net.URI
-
-import io.vertx.core.json.JsonArray
-import io.vertx.lang.scala.json.{Json, JsonObject}
+import io.vertx.lang.scala.json.JsonObject
 import it.unibo.core.data.{Data, InMemoryStorage, Storage}
-import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.ParserLike
 import it.unibo.covid.bootstrap.CitizenBootstrap
 import it.unibo.covid.data.Parsers
-import it.unibo.service.authentication.AuthenticationService
-import it.unibo.service.authentication.client.AuthenticationClient
-import it.unibo.service.permission.AuthorizationService
-import it.unibo.service.permission.client.AuthorizationClient
+import it.unibo.covid.demo.ClientParsers._
 
-import scala.io.Source
 import scala.util.{Failure, Success}
 
 object DemoFromJson extends App {
@@ -24,12 +16,6 @@ object DemoFromJson extends App {
     case Some(file) => Parsers.configureRegistryFromJson(jsonArrayFromFile(file))
   }
 
-  private val authorizationParser = ParserLike.decodeOnly[JsonObject, AuthorizationService] {
-    (json : JsonObject) => json.getAsString("authorization_client_uri").map(new URI(_)).map(AuthorizationClient(_, registry))
-  }
-  private val authenticationParser = ParserLike.decodeOnly[JsonObject, AuthenticationService] {
-    (json : JsonObject) => json.getAsString("authentication_client_uri").map(new URI(_)).map(AuthenticationClient(_))
-  }
   private val storageParser = ParserLike.decodeOnly[JsonObject, Storage[Data,String]] {
     (json : JsonObject) => Some(InMemoryStorage[Data, String]())
   }

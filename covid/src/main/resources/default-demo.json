@@ -1,16 +1,51 @@
 {
-  "citizen" : {
-    "id" : "gianluca",
-    "coap_port" : 5683,
-    "authentication_client_uri" : "http://localhost:8081",
-    "authorization_client_uri" : "http://localhost:8082"
-  },
+  "citizen" : [
+    {
+      "id" : "gianluca",
+      "coap_port" : 5683,
+      "authentication_client_uri" : "http://localhost:8081",
+      "authorization_client_uri" : "http://localhost:8082"
+    }
+  ],
   "authentication" : {
     "api.rest.host": "localhost",
-    "api.rest.port": 8080,
+    "api.rest.port": 8081,
     "jwt.key": "paggandpedr"
   },
+  "users" : [
+    {
+      "identifier" : "gianluca",
+      "username" : "gianluca",
+      "email" : "gianluca@unibo.it",
+      "password" : "12345678",
+      "role" : "citizen"
+    },
+    {
+      "identifier" : "andrea",
+      "username" : "pedro",
+      "email" : "andrea@unibo.it",
+      "password" : "12345678",
+      "role" : "policeman"
+    },
+    {
+      "identifier" : "stefano",
+      "username" : "stefano",
+      "email" : "stefano@unibo.it",
+      "password" : "12345678",
+      "role" : "medical"
+    },
+    {
+      "identifier" : "francesco",
+      "username" : "francesco",
+      "email" : "francesco@unibo.it",
+      "password" : "12345678",
+      "role" : "medical"
+    }
+  ],
   "authorization" : {
+    "api.rest.host": "localhost",
+    "api.rest.port": 8082,
+    "type" : "role_based",
     "read_map_permission" : [
       {
         "role" : "medic",

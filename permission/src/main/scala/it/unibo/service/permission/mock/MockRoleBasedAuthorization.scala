@@ -70,6 +70,8 @@ object MockRoleBasedAuthorization {
         .map(Response(_))
         .getOrElse(Fail(Unauthorized(s"User $who cannot access")))
     }
+
+    override def toString: Role = s"RoleBased ${allCategories}, ${citizenWriteCategories}, ${readPermissionMap}, ${writePermissionMap}"
   }
 
   def fromJson(json : JsonObject, authProvider : JWTAuth, dataParserRegistry: DataParserRegistry[_]) : Option[AuthorizationService] = {
@@ -103,4 +105,6 @@ object MockRoleBasedAuthorization {
       writeCitizenFetched <- writeCitizen.getAsStringSeq
     } yield MockRoleBasedAuthorization(authProvider, decodeCategories(allCategoriesFetched), decodeCategories(writeCitizenFetched), readMapFetched, writeMapFetched)
   }
+
+  override def toString = s"MockRoleBasedAuthorization()"
 }

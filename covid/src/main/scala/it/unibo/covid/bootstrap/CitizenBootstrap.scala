@@ -15,7 +15,7 @@ import scala.util.{Failure, Success, Try}
 class CitizenBootstrap(authorizationServiceParser : MismatchableParser[JsonObject, AuthorizationService],
                        authenticationServiceParser : MismatchableParser[JsonObject, AuthenticationService],
                        dataRegistryParser: DataParserRegistry[JsonObject],
-                       storageParser : MismatchableParser[JsonObject, Storage[Data, String]])  {
+                       storageParser : MismatchableParser[JsonObject, Storage[Data, String]]) extends ServiceBootstrap[JsonObject] {
   def runtimeFromJson(json : JsonObject) : Try[ServiceRuntime] = {
     val vertx = Vertx.vertx()
     val authorizationTry = tryCreate(json, authorizationServiceParser, "wrong string for authorization")

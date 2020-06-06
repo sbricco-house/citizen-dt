@@ -13,9 +13,9 @@ import scala.concurrent.duration._
 object HttpScope {
   val STATE_ENDPOINT = s"http://localhost:8080/citizens/50/state"
   val HISTORY_ENDPOINT = s"http://localhost:8080/citizens/50/history"
-  val CITIZEN_AUTHORIZED_HEADER = "Authorization" -> "jwt1"
-  val STAKEHOLDER_AUTHENTICATED_HEADER = "Authorization" -> "jwt2"
-  val STAKEHOLDER_AUTHORIZED_HEADER = "Authorization" -> "jwt3"
+  val CITIZEN_AUTHORIZED_HEADER = "Authorization" -> "Bearer jwt1"
+  val STAKEHOLDER_AUTHENTICATED_HEADER = "Authorization" -> "Bearer jwt2"
+  val STAKEHOLDER_AUTHORIZED_HEADER = "Authorization" -> "Bearer jwt3"
   val HISTORY_LIMIT = 5
   val HEARTHBEAT_CATEGORY = "heartbeat"
   val UNKNOWN = "_"

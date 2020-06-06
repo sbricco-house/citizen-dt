@@ -36,7 +36,6 @@ class AuthorizationVerticle(authorization : AuthorizationService,
     router.get(authorizationEndpointRead)
       .handler(userMiddleware)
       .handler(handleGetWriteRead(_, Read))
-
     router
   }
 
