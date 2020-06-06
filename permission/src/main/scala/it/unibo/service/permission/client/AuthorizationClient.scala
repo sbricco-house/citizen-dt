@@ -1,20 +1,20 @@
-package it.unibo.service.permission
+package it.unibo.service.permission.client
+
 import java.net.URI
 
 import io.vertx.core.buffer.Buffer
 import io.vertx.lang.scala.VertxExecutionContext
-import io.vertx.lang.scala.json.{Json, JsonObject}
+import io.vertx.lang.scala.json.JsonObject
 import io.vertx.scala.core.Vertx
-import io.vertx.scala.ext.auth.PubSecKeyOptions
-import io.vertx.scala.ext.auth.jwt.{JWTAuth, JWTAuthOptions}
 import io.vertx.scala.ext.web.client.{HttpRequest, HttpResponse, WebClient, WebClientOptions}
-import it.unibo.core.authentication.{AuthenticationParsers, SystemUser, TokenIdentifier}
+import it.unibo.core.authentication.TokenIdentifier
 import it.unibo.core.client.{RestApiClient, RestClientServiceResponse}
 import it.unibo.core.data.DataCategory
-import it.unibo.core.microservice.{FutureService, Response}
-import it.unibo.core.utils.HttpCode
+import it.unibo.core.microservice.FutureService
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.DataParserRegistry
+import it.unibo.core.utils.HttpCode
+import it.unibo.service.permission.AuthorizationService
 
 import scala.concurrent.Future
 

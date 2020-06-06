@@ -6,6 +6,7 @@ import io.vertx.scala.ext.auth.PubSecKeyOptions
 import io.vertx.scala.ext.auth.jwt.{JWTAuth, JWTAuthOptions}
 import it.unibo.core.authentication.SystemUser
 import it.unibo.core.data.Storage
+import it.unibo.core.microservice.ServiceRuntime
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.ParserLike
 import it.unibo.service.authentication.AuthenticationService
@@ -14,20 +15,9 @@ import it.unibo.service.authentication.api.{RestApiAuthentication, RestApiAuthen
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
-trait AuthenticationRuntime {
-  def start()
-  def stop()
-}
+case class AuthenticationHttpRuntime(val host: String, val port: Int, val vertx: Vertx, authService: AuthenticationService)
+  extends VertxRuntime(vertx, () => { new RestApiAuthenticationVerticle(authService, port, host) with RestApiAuthentication })
 
-case class AuthenticationHttpRuntime(host: String, port: Int, vertx: Vertx, authService: AuthenticationService) extends AuthenticationRuntime {
-  override def start(): Unit = {
-    val verticle = new RestApiAuthenticationVerticle(authService, port, host) with RestApiAuthentication
-    vertx.deployVerticleFuture(verticle)
-  }
-  override def stop(): Unit = {
-    vertx.close()
-  }
-}
 
 /**
  * Bootstrap class for AuthenticationService using starting from a JSON config.
@@ -54,7 +44,7 @@ class AuthenticationBootstrap(userStorage: Storage[SystemUser, String]) {
 
   private case class AuthenticationConfig(host: String, port: Int, jwtAuthOptions: JWTAuthOptions)
 
-  def runtimeFromJson(json: JsonObject): Try[AuthenticationRuntime] = {
+  def runtimeFromJson(json: JsonObject): Try[ServiceRuntime] = {
     val vertx = Vertx.vertx()
     configParser.decode(json) match {
       case Some(AuthenticationConfig(host, port, jwtOptions)) =>

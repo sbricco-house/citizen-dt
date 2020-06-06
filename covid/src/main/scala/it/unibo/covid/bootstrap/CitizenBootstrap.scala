@@ -3,6 +3,7 @@ package it.unibo.covid.bootstrap
 import io.vertx.lang.scala.json.JsonObject
 import io.vertx.scala.core.Vertx
 import it.unibo.core.data.{Data, Storage}
+import it.unibo.core.microservice.ServiceRuntime
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.DataParserRegistry
 import it.unibo.core.parser.ParserLike.MismatchableParser
@@ -15,7 +16,7 @@ class CitizenBootstrap(authorizationServiceParser : MismatchableParser[JsonObjec
                        authenticationServiceParser : MismatchableParser[JsonObject, AuthenticationService],
                        dataRegistryParser: DataParserRegistry[JsonObject],
                        storageParser : MismatchableParser[JsonObject, Storage[Data, String]])  {
-  def runtimeFromJson(json : JsonObject) : Try[CovidCitizenRuntime] = {
+  def runtimeFromJson(json : JsonObject) : Try[ServiceRuntime] = {
     val vertx = Vertx.vertx()
     val authorizationTry = tryCreate(json, authorizationServiceParser, "wrong string for authorization")
     val authenticationTry = tryCreate(json, authenticationServiceParser, "wrong string for authentication")
@@ -45,7 +46,7 @@ class CitizenBootstrap(authorizationServiceParser : MismatchableParser[JsonObjec
       .getOrElse(Failure(new IllegalArgumentException("wrong citizen option")))
   }
 
-  def createRuntime(json: JsonObject, vertx: Vertx, citizen : CitizenDigitalTwin, dataParserRegistry: DataParserRegistry[JsonObject]) : CovidCitizenRuntime = {
+  def createRuntime(json: JsonObject, vertx: Vertx, citizen : CitizenDigitalTwin, dataParserRegistry: DataParserRegistry[JsonObject]) : ServiceRuntime = {
     val httpPort = json.getAsInt("http_port").getOrElse(8080)
     json.getAsInt("coap_port") match {
       case None => new HttpOnlyRuntime(httpPort, vertx, citizen, dataParserRegistry)

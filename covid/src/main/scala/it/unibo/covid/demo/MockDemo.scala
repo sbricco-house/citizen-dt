@@ -10,7 +10,7 @@ import it.unibo.covid.data.Categories._
 import it.unibo.covid.data.Parsers
 import it.unibo.service.citizen.CitizenDigitalTwin
 import it.unibo.service.citizen.authentication.MockAuthenticationClient
-import it.unibo.service.permission.MockAuthorization
+import it.unibo.service.permission.mock.MockAuthorization
 
 import scala.io.Source
 

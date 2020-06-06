@@ -6,7 +6,8 @@ import it.unibo.core.data.{Data, GroupCategory, InMemoryStorage, LeafCategory, S
 import it.unibo.core.parser.{DataParserRegistry, ValueParser, VertxJsonParser}
 import it.unibo.service.authentication.AuthenticationService
 import it.unibo.service.citizen.authentication.MockAuthenticationClient
-import it.unibo.service.permission.{AuthorizationService, MockAuthorization}
+import it.unibo.service.permission.AuthorizationService
+import it.unibo.service.permission.mock.MockAuthorization
 
 object CitizenMicroservices {
   val integerDataParser = VertxJsonParser(ValueParser.Json.intParser, Categories.bloodPressureCategory)

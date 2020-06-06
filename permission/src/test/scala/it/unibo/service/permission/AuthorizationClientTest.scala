@@ -8,6 +8,8 @@ import it.unibo.core.authentication.{SystemUser, TokenIdentifier}
 import it.unibo.core.data.LeafCategory
 import it.unibo.core.microservice.Response
 import it.unibo.core.parser.{DataParser, DataParserRegistry, ValueParser, VertxJsonParser}
+import it.unibo.service.permission.client.AuthorizationClient
+import it.unibo.service.permission.mock.MockAuthorization
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec

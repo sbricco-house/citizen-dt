@@ -1,18 +1,19 @@
-package it.unibo.service.permission
+package it.unibo.service.permission.mock
 
 import io.vertx.lang.scala.json.{JsonArray, JsonObject}
 import io.vertx.scala.ext.auth.jwt.JWTAuth
-import it.unibo.core.authentication.{SystemUser, TokenIdentifier}
+import it.unibo.core.authentication.{SystemUser, TokenIdentifier, VertxJWTProvider}
 import it.unibo.core.data.{DataCategory, DataCategoryOps, GroupCategory, LeafCategory}
-import it.unibo.core.microservice.FutureService
-import it.unibo.core.authentication.VertxJWTProvider._
-import it.unibo.core.microservice._
+import it.unibo.core.microservice.{Fail, FutureService, Response, ServiceResponse}
 import it.unibo.core.parser.DataParserRegistry
 import it.unibo.core.utils.ServiceError.Unauthorized
+import it.unibo.service.permission.AuthorizationService
+import it.unibo.core.microservice._
 import it.unibo.core.microservice.vertx._
-
+import it.unibo.core.authentication.VertxJWTProvider._
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
+
 object MockRoleBasedAuthorization {
   type Role = String
   type PermissionMap = Map[Role, Set[DataCategory]]
@@ -71,7 +72,7 @@ object MockRoleBasedAuthorization {
     }
   }
 
-  def fromJson(authProvider : JWTAuth, json : JsonObject, dataParserRegistry: DataParserRegistry[_]) : Option[AuthorizationService] = {
+  def fromJson(json : JsonObject, authProvider : JWTAuth, dataParserRegistry: DataParserRegistry[_]) : Option[AuthorizationService] = {
     implicit val ctx = scala.concurrent.ExecutionContext.global
     def decodeCategories(categories : Seq[String]) : Set[DataCategory] = categories
       .map(dataParserRegistry.decodeCategory)

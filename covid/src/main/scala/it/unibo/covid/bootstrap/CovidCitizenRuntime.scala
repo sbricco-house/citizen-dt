@@ -2,29 +2,19 @@ package it.unibo.covid.bootstrap
 
 import io.vertx.lang.scala.json.JsonObject
 import io.vertx.scala.core.Vertx
+import it.unibo.core.microservice.ServiceRuntime
+import it.unibo.core.microservice.vertx.VertxRuntime
 import it.unibo.core.parser.DataParserRegistry
 import it.unibo.service.citizen.coap.CoapObservableApi
 import it.unibo.service.citizen.websocket.WebSocketCitizenApi
 import it.unibo.service.citizen.{CitizenDigitalTwin, CitizenVerticle, RestCitizenApi}
 
-sealed trait CovidCitizenRuntime {
-  def start() : Unit
-  def stop() : Unit
-}
-
 class HttpOnlyRuntime(httpPort : Int,
                       vertx: Vertx,
                       citizen : CitizenDigitalTwin,
-                      parserRegistry: DataParserRegistry[JsonObject]) extends CovidCitizenRuntime {
-  val citizenVerticle = new CitizenVerticle(citizen, parserRegistry, httpPort) with RestCitizenApi with WebSocketCitizenApi
+                      parserRegistry: DataParserRegistry[JsonObject])
+  extends VertxRuntime(vertx, () => new CitizenVerticle(citizen, parserRegistry, httpPort) with RestCitizenApi with WebSocketCitizenApi)
 
-  override def start(): Unit = {
-    vertx.deployVerticle(citizenVerticle)
-  }
-  override def stop(): Unit = {
-    vertx.close()
-  }
-}
 
 class HttpCoapRuntime(httpPort : Int,
                       coapPort : Int,

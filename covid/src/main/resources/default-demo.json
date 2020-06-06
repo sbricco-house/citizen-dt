@@ -1,0 +1,37 @@
+{
+  "citizen" : {
+    "id" : "gianluca",
+    "coap_port" : 5683,
+    "authentication_client_uri" : "http://localhost:8081",
+    "authorization_client_uri" : "http://localhost:8082"
+  },
+  "authentication" : {
+    "api.rest.host": "localhost",
+    "api.rest.port": 8080,
+    "jwt.key": "paggandpedr"
+  },
+  "authorization" : {
+    "read_map_permission" : [
+      {
+        "role" : "medic",
+        "categories" : ["medicalData", "personal"]
+      },
+      {
+        "role" : "policeman",
+        "categories" : ["location", "personal"]
+      }
+    ],
+    "write_map_permission" : [
+      {
+        "role" : "medic",
+        "categories" : ["medicalData", "personal"]
+      },
+      {
+        "role" : "policeman",
+        "categories" : ["location", "personal"]
+      }
+    ],
+    "categories" : ["medicalData", "personal", "location"],
+    "write_citizen_permission" : ["medicalData", "location"]
+  }
+}
