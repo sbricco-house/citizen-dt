@@ -21,6 +21,8 @@ import scala.concurrent.Future
 object AuthorizationClient {
   val READ = "/authorization/%s/read"
   val WRITE = "/authorization/%s/read"
+
+  def apply(uri : URI, dataParserRegistry: DataParserRegistry[JsonObject]) : AuthorizationClient = new AuthorizationClient(uri, dataParserRegistry)
 }
 class AuthorizationClient(uri : URI, dataParserRegistry: DataParserRegistry[JsonObject]) extends AuthorizationService with RestApiClient with RestClientServiceResponse {
   import AuthorizationClient._
@@ -28,9 +30,6 @@ class AuthorizationClient(uri : URI, dataParserRegistry: DataParserRegistry[Json
 
   private val stringPath = uri.toString
   private val vertx = Vertx.vertx()
-  private val options = JWTAuthOptions().addPubSecKey(PubSecKeyOptions().setAlgorithm("HS256").setPublicKey("blabla").setSymmetric(true))
-
-  private val provider = JWTAuth.create(vertx, options)
   private val clientOptions =  WebClientOptions()
     .setFollowRedirects(true)
     .setDefaultPort(uri.getPort)

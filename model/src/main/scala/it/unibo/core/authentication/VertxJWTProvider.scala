@@ -1,8 +1,11 @@
 package it.unibo.core.authentication
 
+import io.vertx.lang.scala.json.Json
 import io.vertx.scala.core.Vertx
 import io.vertx.scala.ext.auth.PubSecKeyOptions
 import io.vertx.scala.ext.auth.jwt.{JWTAuth, JWTAuthOptions}
+
+import scala.concurrent.{ExecutionContext, Future}
 
 object VertxJWTProvider {
 
@@ -39,5 +42,17 @@ object VertxJWTProvider {
         .setPublicKey(publicKey)
         .setSymmetric(false)
     JWTAuthOptions().addPubSecKey(opts)
+  }
+
+  implicit class RichAuthProvider(auth : JWTAuth) {
+    def extractSystemUser(token : TokenIdentifier)(implicit context : ExecutionContext) : Future[SystemUser] = {
+      auth.authenticateFuture(Json.obj("jwt" -> token.token))
+        .map(_.principal())
+        .map(AuthenticationParsers.SystemUserParser.decode)
+        .flatMap {
+          case Some(user) => Future.successful(user)
+          case _ => Future.failed(new IllegalArgumentException("token not found"))
+        }
+    }
   }
 }

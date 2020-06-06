@@ -3,7 +3,6 @@ package it.unibo.covid.bootstrap
 import io.vertx.lang.scala.json.JsonObject
 import io.vertx.scala.core.Vertx
 import it.unibo.core.parser.DataParserRegistry
-import it.unibo.covid.data.Parsers
 import it.unibo.service.citizen.coap.CoapObservableApi
 import it.unibo.service.citizen.websocket.WebSocketCitizenApi
 import it.unibo.service.citizen.{CitizenDigitalTwin, CitizenVerticle, RestCitizenApi}

@@ -4,13 +4,14 @@ import io.vertx.core.json.JsonArray
 import io.vertx.scala.core.Vertx
 import it.unibo.core.authentication.{SystemUser, TokenIdentifier}
 import it.unibo.core.data.InMemoryStorage
+import it.unibo.core.microservice.vertx._
 import it.unibo.covid.bootstrap.HttpCoapRuntime
 import it.unibo.covid.data.Categories._
-import it.unibo.covid.data.{Categories, Parsers}
+import it.unibo.covid.data.Parsers
 import it.unibo.service.citizen.CitizenDigitalTwin
 import it.unibo.service.citizen.authentication.MockAuthenticationClient
 import it.unibo.service.permission.MockAuthorization
-import it.unibo.core.microservice.vertx._
+
 import scala.io.Source
 
 /**

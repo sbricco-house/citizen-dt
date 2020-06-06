@@ -5,7 +5,7 @@ import io.vertx.scala.core.Vertx
 import it.unibo.core.data.{Data, Storage}
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.DataParserRegistry
-import it.unibo.core.parser.ParserLike.{MismatchableParser, Parser}
+import it.unibo.core.parser.ParserLike.MismatchableParser
 import it.unibo.service.authentication.AuthenticationService
 import it.unibo.service.citizen.CitizenDigitalTwin
 import it.unibo.service.permission.AuthorizationService

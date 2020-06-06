@@ -1,9 +1,6 @@
 package it.unibo.covid.data
 
-import java.net.NetworkInterface
-
-import io.vertx.lang.scala.json.JsonObject
-import it.unibo.core.data.{DataCategory, GroupCategory, LeafCategory}
+import it.unibo.core.data.{GroupCategory, LeafCategory}
 
 //TODO categories could be loaded from a JSON file
 //TODO put a TTL

@@ -1,10 +1,9 @@
 package it.unibo.covid.data
 
 import io.vertx.lang.scala.json.{Json, JsonArray, JsonObject}
-import it.unibo.core.data.LeafCategory
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.ValueParser.ValueParser
-import it.unibo.core.parser.{DataParser, DataParserRegistry, ValueParser, VertxJsonParser}
+import it.unibo.core.parser.{DataParserRegistry, ValueParser, VertxJsonParser}
 object Parsers {
   import Categories._
   val positionParser = ValueParser.Json {
