@@ -2,11 +2,11 @@ package it.unibo.service.citizen
 
 import io.vertx.scala.ext.web.handler.BodyHandler
 import io.vertx.scala.ext.web.{Router, RoutingContext}
+import it.unibo.core.authentication.middleware.UserMiddleware
 import it.unibo.core.microservice.vertx.{RestApi, _}
 import it.unibo.core.microservice.{FutureService, Response}
 import it.unibo.core.utils.{HttpCode, ServiceError}
 import it.unibo.core.utils.ServiceError.MissingParameter
-import it.unibo.service.citizen.middleware.UserMiddleware
 
 /**
  * HTTP REST API decoration for Citizen Verticle.

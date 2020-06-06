@@ -58,12 +58,12 @@ object CitizenProtocol {
 
   val updateParser = ParserLike[String, WebsocketUpdate[JsonObject]]{
     rep => Json.obj(
-      "value" -> rep.value
+      "updated" -> rep.value
     ).toString
   }{
     data => for {
       json <- JsonConversion.objectFromString(data)
-      value <- json.getAsObject("value")
+      value <- json.getAsObject("updated")
       if Status.fromJson(value).isEmpty
     } yield WebsocketUpdate[JsonObject](value)
   }

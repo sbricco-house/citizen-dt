@@ -4,7 +4,7 @@ import java.net.URI
 
 import io.vertx.lang.scala.json.JsonObject
 import io.vertx.scala.core.Vertx
-import it.unibo.core.authentication.SystemUser
+import it.unibo.core.authentication.{SystemUser, TokenIdentifier}
 import it.unibo.core.data.LeafCategory
 import it.unibo.core.microservice.Response
 import it.unibo.core.parser.{DataParser, DataParserRegistry, ValueParser, VertxJsonParser}
@@ -15,36 +15,38 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
 
 import scala.concurrent.ExecutionContext
-class AuthorizationClientTest extends AnyFlatSpec with BeforeAndAfterEach with Matchers with ScalaFutures {
+class AuthorizationClientTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with ScalaFutures {
   import AuthorizationBootstrapper._
   implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(10, Seconds), interval = Span(100, Millis))
   implicit val executionContext: ExecutionContext = ExecutionContext.global
 
   "authorization client" should "verify category access" in {
-    whenReady(authorizationClient.authorizeRead(userA, userA.identifier, categoryA).future) {
+    whenReady(authorizationClient.authorizeRead(userA, userA.token, categoryA).future) {
       case Response(`categoryA`) => succeed
-      case _ => fail()
+      case other => println(other)
     }
-    whenReady(authorizationClient.authorizeWrite(userA, userA.identifier, categoryA).future) {
+    whenReady(authorizationClient.authorizeWrite(userA, userA.token, categoryA).future) {
       case Response(`categoryA`) => succeed
       case _ => fail()
     }
   }
 
   "authorization client" should "verify what user can access" in {
-    whenReady(authorizationClient.authorizedReadCategories(userA, userA.identifier).future) {
+    whenReady(authorizationClient.authorizedReadCategories(userA, userA.token).future) {
       case Response(Seq(`categoryA`, `categoryB`, `categoryC`)) => succeed
       case _ => fail()
     }
-    whenReady(authorizationClient.authorizedReadCategories(userB, userA.identifier).future) {
+    whenReady(authorizationClient.authorizedReadCategories(userB, userA.token).future) {
       case Response(Seq(`categoryB`)) => succeed
       case _ => fail()
     }
-    whenReady(authorizationClient.authorizedReadCategories(userC, userA.identifier).future) {
+    whenReady(authorizationClient.authorizedReadCategories(userC, userA.token).future) {
       case Response(Seq(`categoryA`)) => succeed
       case _ => fail()
     }
   }
+
+  override def afterAll(): Unit = vertx.close()
 }
 
 object AuthorizationBootstrapper {
@@ -54,19 +56,19 @@ object AuthorizationBootstrapper {
   val categoryParser = DataParserRegistry[JsonObject]()
     .registerParser(VertxJsonParser(ValueParser.Json.intParser, categoryA, categoryB, categoryC))
   private def nameAndRole(name : String, role : String) : SystemUser = SystemUser("", name, "", name, name)
-  val userA = nameAndRole("A", "citizen")
-  val userB = nameAndRole("B", "medic")
-  val userC = nameAndRole("C", "cop")
+  val userA = TokenIdentifier("A")
+  val userB = TokenIdentifier("B")
+  val userC = TokenIdentifier("C")
   val mockAuthorization = MockAuthorization{
     Map(
-      (userA.identifier -> userA.identifier) -> Seq(categoryA, categoryB, categoryC),
-      (userB.identifier -> userA.identifier) -> Seq(categoryB),
-      (userC.identifier -> userA.identifier) -> Seq(categoryA),
+      (userA.token -> userA.token) -> Seq(categoryA, categoryB, categoryC),
+      (userB.token -> userA.token) -> Seq(categoryB),
+      (userC.token -> userA.token) -> Seq(categoryA),
     )
   }
 
   private val verticle = new AuthorizationVerticle(mockAuthorization, categoryParser)
-  private val vertx = Vertx.vertx()
+  val vertx = Vertx.vertx()
   vertx.deployVerticle(verticle)
   val authorizationClient = new AuthorizationClient(new URI("http://localhost:8080"), categoryParser)
 }

@@ -1,10 +1,9 @@
-package it.unibo.service.citizen.middleware
+package it.unibo.core.authentication.middleware
 
 import io.vertx.core.Handler
 import io.vertx.scala.ext.web.RoutingContext
 import it.unibo.core.authentication.TokenIdentifier
 import it.unibo.core.microservice.vertx._
-import it.unibo.service.citizen.middleware.UserMiddleware._
 
 object UserMiddleware {
   val AUTHORIZATION_HEADER = "Authorization"
@@ -13,6 +12,7 @@ object UserMiddleware {
 }
 
 class UserMiddleware private() extends Handler[RoutingContext] {
+  import UserMiddleware._
   override def handle(context: RoutingContext): Unit = {
     val pending = context.request().headers().get(AUTHORIZATION_HEADER)
         .flatMap(extractToken)

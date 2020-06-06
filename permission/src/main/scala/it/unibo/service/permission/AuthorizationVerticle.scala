@@ -4,10 +4,11 @@ import io.vertx.lang.scala.json.{Json, JsonArray, JsonObject}
 import io.vertx.scala.ext.auth.PubSecKeyOptions
 import io.vertx.scala.ext.auth.jwt.{JWTAuth, JWTAuthOptions}
 import io.vertx.scala.ext.web.{Router, RoutingContext}
-import it.unibo.core.authentication.SystemUser
+import it.unibo.core.authentication.TokenIdentifier
+import it.unibo.core.authentication.middleware.UserMiddleware
 import it.unibo.core.data.DataCategory
-import it.unibo.core.microservice.{FutureService, Response}
 import it.unibo.core.microservice.vertx.{BaseVerticle, RestApi, RestServiceResponse}
+import it.unibo.core.microservice.{FutureService, Response}
 import it.unibo.core.parser.DataParserRegistry
 import it.unibo.core.utils.HttpCode
 import it.unibo.core.utils.ServiceError.MissingParameter
@@ -26,7 +27,7 @@ class AuthorizationVerticle(authorization : AuthorizationService,
   lazy val provider = JWTAuth.create(vertx, options)
   override def createRouter: Router = {
     val router = Router.router(vertx)
-    val userMiddleware = UserMiddleware(provider, vertx)
+    val userMiddleware = UserMiddleware()
 
     router.get(authorizationEndpointWrite)
       .handler(userMiddleware)
@@ -44,7 +45,7 @@ class AuthorizationVerticle(authorization : AuthorizationService,
   case object Write extends Mode
 
   private def handleGetWriteRead(context : RoutingContext, mode : Mode) : Unit = {
-    val user = context.get[SystemUser](UserMiddleware.USER)
+    val user = context.get[TokenIdentifier](UserMiddleware.JWT_TOKEN)
     val id = context.pathParam(pathCitizenId).get
     def singleCategory(dataCategory: DataCategory) : FutureService[DataCategory] = mode match {
       case Write => authorization.authorizeWrite(user, id, dataCategory)
