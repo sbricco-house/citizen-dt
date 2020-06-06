@@ -120,7 +120,7 @@ class BackendCitizenDigitalTwin(authenticationService : AuthenticationService,
   // TODO: move from here
   private def checkPermission(categoriesToUpdate: Seq[LeafCategory], authorizedCategories: Seq[DataCategory]): Seq[LeafCategory] = {
     categoriesToUpdate.filter {
-      leaf => authorizedCategories.exists(DataCategoryOps.allChild(_).contains(leaf))
+      leaf => authorizedCategories.exists(DataCategoryOps.allChild(_).exists(leaf.name == _.name))
     }
   }
 

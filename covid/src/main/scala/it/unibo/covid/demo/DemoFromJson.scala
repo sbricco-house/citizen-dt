@@ -4,7 +4,7 @@ import java.net.URI
 
 import io.vertx.core.json.JsonArray
 import io.vertx.lang.scala.json.{Json, JsonObject}
-import it.unibo.core.data.{Data, InMemoryStorage, Storage}
+import it.unibo.core.data.{Data, InMemoryStorage, LeafCategory, Sensor, Storage}
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.ParserLike
 import it.unibo.covid.bootstrap.CitizenBootstrap
@@ -28,16 +28,28 @@ object DemoFromJson extends App {
   }
 
   def jsonObjectFromFile(file : String) : JsonObject = Json.fromObjectString(Source.fromResource(file).mkString)
-  def jsonArrayFromFile(file: String) : JsonArray = Json.fromArrayString(file)
+  def jsonArrayFromFile(file: String) : JsonArray = Json.fromArrayString(Source.fromFile(file).mkString)
 
   private val empty = Json.obj(
-    "id" -> "gianluca",
+    "id" -> "citizen1",
     "coap_port" -> 5683,
-    "auth_client_uri" -> "unkown"
+    "http_port" -> 8082,
+    "auth_client_uri" -> "http://localhost:8081"
   )
+  private val categories = Json.fromArrayString(
+    """
+      |[
+      |  {
+      |    "name": "spo2",
+      |    "ttl": -1,
+      |    "type": "double",
+      |    "groups": ["medicalData"]
+      |  }
+      |]
+      |""".stripMargin)
 
   val json = args.headOption.map(jsonObjectFromFile).getOrElse(empty)
-  val jsonRegistry = jsonArrayFromFile(args(1))
+  val jsonRegistry = args.lastOption.map(jsonArrayFromFile).getOrElse(categories)
 
   val registry = Parsers.configureRegistryFromJson(jsonRegistry)
   val bootstrapper = new CitizenBootstrap(authorizationParser, authenticationParser, registry, storageParser)

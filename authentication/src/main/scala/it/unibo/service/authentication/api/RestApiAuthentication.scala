@@ -4,7 +4,7 @@ import io.vertx.scala.ext.web.handler.BodyHandler
 import io.vertx.scala.ext.web.{Router, RoutingContext}
 import it.unibo.core.authentication.AuthenticationParsers.{AuthInfoParser, SystemUserParser, TokenParser}
 import it.unibo.core.authentication.Resources.AuthenticationInfo
-import it.unibo.core.authentication.{AuthenticationParsers, Token, TokenIdentifier}
+import it.unibo.core.authentication.{Token, TokenIdentifier}
 import it.unibo.core.microservice.vertx.{RestApi, _}
 import it.unibo.core.microservice.{FutureService, Response}
 import it.unibo.core.utils.HttpCode
@@ -29,6 +29,7 @@ trait RestApiAuthentication extends RestApi with RestServiceResponse {
 
   override def createRouter: Router = {
     val router = Router.router(vertx)
+    //CorsSupport.enableTo(router)
 
     router.post(LOGIN_ENDPOINT)
       .handler(BodyHandler.create())

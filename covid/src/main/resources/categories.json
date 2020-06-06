@@ -3,7 +3,7 @@
     "name": "bodyTemperature",
     "ttl": 10,
     "type": "string[]",
-    "groups": ["medical"]
+    "groups": ["medicalData"]
   },
   {
     "name": "spo2",
