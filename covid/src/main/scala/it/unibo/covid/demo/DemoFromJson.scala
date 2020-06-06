@@ -11,7 +11,7 @@ import it.unibo.covid.bootstrap.CitizenBootstrap
 import it.unibo.covid.data.Parsers
 import it.unibo.service.authentication.AuthenticationService
 import it.unibo.service.authentication.client.AuthenticationClient
-import it.unibo.service.permission.{AuthorizationService, MockAuthorization}
+import it.unibo.service.permission.{AuthorizationClient, AuthorizationService, MockAuthorization}
 
 import scala.io.Source
 import scala.util.{Failure, Success}
