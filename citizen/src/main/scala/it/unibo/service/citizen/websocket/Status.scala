@@ -18,7 +18,7 @@ case object Ok extends Status
  * @param reason The reason associated to this operation fail.
  */
 case class Failed(reason : String) extends Status
-
+//TODO fix, Ok must report the id of data
 object Status {
   //some utilities for status management
   import it.unibo.core.microservice.vertx._

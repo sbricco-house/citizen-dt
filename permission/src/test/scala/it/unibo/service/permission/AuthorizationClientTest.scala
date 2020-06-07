@@ -7,10 +7,10 @@ import io.vertx.scala.core.Vertx
 import it.unibo.core.authentication.{SystemUser, TokenIdentifier}
 import it.unibo.core.data.LeafCategory
 import it.unibo.core.microservice.Response
-import it.unibo.core.parser.{DataParser, DataParserRegistry, ValueParser, VertxJsonParser}
+import it.unibo.core.parser.{DataParserRegistry, ValueParser, VertxJsonParser}
 import it.unibo.service.permission.client.AuthorizationClient
 import it.unibo.service.permission.mock.MockAuthorization
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -19,6 +19,7 @@ import org.scalatest.time.{Millis, Seconds, Span}
 import scala.concurrent.ExecutionContext
 class AuthorizationClientTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with ScalaFutures {
   import AuthorizationBootstrapper._
+  import PermissionScope._
   implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(10, Seconds), interval = Span(100, Millis))
   implicit val executionContext: ExecutionContext = ExecutionContext.global
 
@@ -52,15 +53,7 @@ class AuthorizationClientTest extends AnyFlatSpec with BeforeAndAfterAll with Ma
 }
 
 object AuthorizationBootstrapper {
-  val categoryA = LeafCategory("A")
-  val categoryB = LeafCategory("B")
-  val categoryC = LeafCategory("C")
-  val categoryParser = DataParserRegistry[JsonObject]()
-    .registerParser(VertxJsonParser(ValueParser.Json.intParser, categoryA, categoryB, categoryC))
-  private def nameAndRole(name : String, role : String) : SystemUser = SystemUser("", name, "", name, name)
-  val userA = TokenIdentifier("A")
-  val userB = TokenIdentifier("B")
-  val userC = TokenIdentifier("C")
+  import PermissionScope._
   val mockAuthorization = MockAuthorization{
     Map(
       (userA.token -> userA.token) -> Seq(categoryA, categoryB, categoryC),

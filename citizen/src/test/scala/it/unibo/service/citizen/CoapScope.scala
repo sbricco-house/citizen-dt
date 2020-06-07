@@ -27,7 +27,7 @@ object CoapScope {
 
   def isEmpty(response : CoapResponse) : Boolean = response.getResponseText == "{}" || response.getResponseText == ""
   def createClientByCategory(category : DataCategory) : CoapClient = {
-    new CoapClient(s"coap://localhost:$currentPort/citizen/50/state?data_category=${category.name}")
+    new CoapClient(s"coap://localhost:$currentPort/citizens/50/state?data_category=${category.name}")
   }
 
   def installExpectedOne(coapClient: CoapClient) : (Promise[String], CoapObserveRelation) = {

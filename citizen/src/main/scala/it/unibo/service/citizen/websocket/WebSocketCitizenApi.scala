@@ -100,7 +100,7 @@ trait WebSocketCitizenApi extends WebSocketApi {
 
   private def manageRequest(requestId : Int, channel : CitizenDigitalTwin#PhysicalLink, data : Seq[Data], webSocket: ServerWebSocket) : Unit = {
     def produceResponse(futureResult : ServiceResponse[Seq[String]]) = futureResult match {
-      case Response(_) =>WebsocketResponse[Status](requestId, Ok)
+      case Response(_) => WebsocketResponse[Status](requestId, Ok)
       case Fail(Unauthorized(_)) => WebsocketResponse[Status](requestId, CitizenProtocol.unauthorized)
       case _ => WebsocketResponse[Status](requestId, CitizenProtocol.internalError)
     }

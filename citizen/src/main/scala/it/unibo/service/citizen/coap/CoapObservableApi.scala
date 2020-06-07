@@ -63,7 +63,7 @@ object CoapObservableApi {
     private val coapSecret = generateCoapSecret()
     private val futureContext = ExecutionContext.fromExecutor(executor)
 
-    val innerClient = new CoapClient(s"coap://localhost:$port/citizen/${citizenId}/state?data_category=${category.name}")
+    val innerClient = new CoapClient(s"coap://localhost:$port/citizens/${citizenId}/state?data_category=${category.name}")
     var elements = "{}"
     var sourceSubscription : Option[CancelableFuture[_]] = None
 

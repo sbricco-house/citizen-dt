@@ -36,7 +36,6 @@ class CitizenVerticle(protected val citizenDT: CitizenDigitalTwin,
   protected val citizenStateEndpoint = CITIZEN_ENDPOINT.format(citizenDT.citizenIdentifier)
   protected val historyEndpoint = HISTORY_ENDPOINT.format(citizenDT.citizenIdentifier)
   protected val categoryParamName = "data_category"
-
   // TODO: best way for transform model data to resource response. e.g. using resource mapper for state and history
   protected def stateToJson(state: Seq[Data]): JsonObject = {
     Json.obj("data" -> dataArrayToJson(state))

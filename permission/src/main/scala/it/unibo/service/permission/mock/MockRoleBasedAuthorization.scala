@@ -60,7 +60,7 @@ object MockRoleBasedAuthorization {
 
     private def isOperationEnabled(authorizeCategories: Set[DataCategory], requestCategory: DataCategory): Boolean = requestCategory match {
       case GroupCategory(name, _) => authorizeCategories.exists(_.name == name)
-      case LeafCategory(name, _) => DataCategoryOps.allChild(requestCategory).exists(leaf => leaf.name == name)
+      case LeafCategory(name, _) => authorizeCategories.flatMap(DataCategoryOps.allChild).exists(_ == requestCategory)
     }
 
     private def getCategoriesFromOther(mapPermission : PermissionMap, who : SystemUser) : ServiceResponse[Seq[DataCategory]] = {

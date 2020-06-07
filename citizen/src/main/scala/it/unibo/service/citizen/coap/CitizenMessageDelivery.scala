@@ -46,7 +46,7 @@ class CitizenMessageDelivery(citizenIdentifier : String, observableResourceFacto
     val scalaUri = Uri.parse(request.getURI)
     val categoryOpt = scalaUri.toUrl.query.param("data_category")
     elements match {
-      case ("citizen" :: this.citizenIdentifier :: "state" :: Nil) => categoryOpt.map(ObserveData(citizenIdentifier, _))
+      case ("citizens" :: this.citizenIdentifier :: "state" :: Nil) => categoryOpt.map(ObserveData(citizenIdentifier, _))
       case _ => None
     }
   }
