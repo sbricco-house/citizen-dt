@@ -10,7 +10,7 @@ import it.unibo.service.authentication.client.AuthenticationClient
 import javax.swing._
 
 class LoginFrame(authenticationClient: AuthenticationClient, implicit val swingExecutionContext: SwingExecutionContext) extends JFrame {
-
+  this.setTitle("Covid demo")
   val emailField = new JTextField()
   val passwordField = new JTextField()
   val loginButton = new JButton("Login")
@@ -43,7 +43,7 @@ class LoginFrame(authenticationClient: AuthenticationClient, implicit val swingE
     val citizenId = if(authInfo.user.role == "citizen") authInfo.user.identifier else promptCitizenSelection()
 
     val dashboard = new DashboardFrame(provider, citizenId)
-    dashboard.setSize(500, 200)
+    dashboard.setSize(1000, 400)
     dashboard.setVisible(true)
     setVisible(false)
   }

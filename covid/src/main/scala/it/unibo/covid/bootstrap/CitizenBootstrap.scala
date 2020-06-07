@@ -2,7 +2,6 @@ package it.unibo.covid.bootstrap
 
 import io.vertx.lang.scala.json.JsonObject
 import io.vertx.scala.core.Vertx
-import it.unibo.core.data.{Data, Storage}
 import it.unibo.core.microservice.MicroserviceRuntime
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.DataParserRegistry

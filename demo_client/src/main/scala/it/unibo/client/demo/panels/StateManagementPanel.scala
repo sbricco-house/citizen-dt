@@ -35,7 +35,7 @@ class StateManagementPanel(controller: CDTController, implicit val swingExecutio
   })
 
   observeCitizen.addActionListener(e => {
-    if(!observeCategory.getText.isBlank) {
+    if(!observeCategory.getText.isEmpty) {
       controller.observe(observeCategory.getText).whenComplete {
         case Response(_) => JOptionPane.showMessageDialog(null, s"Observing ${observeCategoryLabel.getText}")
         case Fail(error) => JOptionPane.showMessageDialog(null, "Observe error: " + error)

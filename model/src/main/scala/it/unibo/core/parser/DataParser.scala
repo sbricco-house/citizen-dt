@@ -10,8 +10,7 @@ import it.unibo.core.parser.ParserLike.MismatchableParser
  */
 trait DataParser[External] extends MismatchableParser[External, Data] {
   /**
-   *
-   * @return
+   * @return all categories supported by this data parser
    */
   def supportedCategories : Seq[LeafCategory]
 }

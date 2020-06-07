@@ -13,6 +13,7 @@ import javax.swing.JFrame
 import scala.io.Source
 
 class DashboardFrame(authUserProvider: AuthUserProvider, citizenId: String) extends JFrame {
+  this.setTitle(s"$citizenId observing Dashboard")
 
   val executionContext = new SwingExecutionContext()
   val registry = Parsers.configureRegistryFromJson(new JsonArray(Source.fromResource("categories.json").mkString))

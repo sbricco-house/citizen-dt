@@ -1,6 +1,5 @@
 package it.unibo.service.citizen.client
 
-import java.net.URI
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentMap, Executors}
 
 import io.vertx.lang.scala.VertxExecutionContext
@@ -9,7 +8,6 @@ import io.vertx.scala.core.Vertx
 import io.vertx.scala.core.http.{WebSocketBase, WebSocketConnectOptions}
 import io.vertx.scala.ext.web.client.{WebClient, WebClientOptions}
 import it.unibo.core.authentication.TokenIdentifier
-import it.unibo.core.authentication.middleware.UserMiddleware
 import it.unibo.core.client.{RestApiClient, RestClientServiceResponse}
 import it.unibo.core.data.{Data, DataCategory}
 import it.unibo.core.dt.History.History
