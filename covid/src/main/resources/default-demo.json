@@ -4,7 +4,13 @@
       "id" : "gianluca",
       "coap_port" : 5683,
       "authentication_client_uri" : "http://localhost:8081",
-      "authorization_client_uri" : "http://localhost:8082"
+      "authorization_client_uri" : "http://localhost:8082",
+      "personal_info" : {
+        "name": "Gianluca",
+        "surname": "Aguzzi",
+        "birthdate": "22/01/1996",
+        "cf": "AGEI39323ALBIBO23"
+      }
     }
   ],
   "authentication" : {

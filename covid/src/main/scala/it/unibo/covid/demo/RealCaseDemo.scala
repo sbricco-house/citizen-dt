@@ -6,6 +6,7 @@ import it.unibo.core.authentication.VertxJWTProvider
 import it.unibo.core.data.{Data, InMemoryStorage, Storage}
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.ParserLike
+import it.unibo.covid.Personalnfo
 import it.unibo.covid.bootstrap.CitizenBootstrap
 import it.unibo.covid.data.Parsers
 import it.unibo.covid.demo.ClientParsers.{authenticationParser, authorizationParser}
@@ -16,7 +17,9 @@ import it.unibo.service.permission.mock.{MockAuthorization, MockAuthorizationBoo
 import scala.util.{Failure, Success}
 object RealCaseDemo extends App {
   private val storageUserParser = ParserLike.decodeOnly[JsonObject, Storage[Data,String]] {
-    (_ : JsonObject) => Some(InMemoryStorage[Data, String]())
+    (json : JsonObject) =>
+      val info = json.getAsObject("personal_info").map(info => Personalnfo.fromJson(info)).getOrElse(Seq())
+      Some(info.foldRight(InMemoryStorage[Data, String]())((data, store) => { store.store(data.identifier, data); store }))
   }
 
   val default = jsonObjectFromFile("default-demo.json")
