@@ -1,9 +1,10 @@
 package it.unibo.covid.demo
 
+import java.net.URI
+
 import io.vertx.lang.scala.json.{Json, JsonObject}
 import io.vertx.scala.core.Vertx
-import it.unibo.core.authentication.VertxJWTProvider
-import it.unibo.core.data.{Data, InMemoryStorage, Storage}
+import it.unibo.core.authentication.{SystemUser, VertxJWTProvider}
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.ParserLike
 import it.unibo.covid.bootstrap.CitizenBootstrap
@@ -12,7 +13,8 @@ import it.unibo.covid.demo.ClientParsers.{authenticationParser, authorizationPar
 import it.unibo.service.authentication.app.MockUserStorage
 import it.unibo.service.authentication.bootstrap.AuthenticationBootstrap
 import it.unibo.service.citizen.HistoryStorage
-import it.unibo.service.permission.mock.{MockAuthorization, MockAuthorizationBootstrap, MockRoleBasedAuthorization}
+import it.unibo.service.permission.client.AuthorizationClient
+import it.unibo.service.permission.mock.MockAuthorizationBootstrap
 
 import scala.util.{Failure, Success}
 object RealCaseDemo extends App {

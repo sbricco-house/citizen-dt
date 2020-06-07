@@ -20,7 +20,7 @@ object DemoFromJson extends App {
   private val storageParser = ParserLike.decodeOnly[JsonObject, HistoryStorage] {
     (json : JsonObject) => Some(HistoryStorage.fromInMemory())
   }
-  val bootstrapper = new CitizenBootstrap(authorizationParser, authenticationParser, registry, storageParser)
+  val bootstrapper = new CitizenBootstrap(createAuthorizationParser(registry), authenticationParser, registry, storageParser)
 
   bootstrapper.runtimeFromJson(json) match {
     case Success(runtime) => runtime.start()
