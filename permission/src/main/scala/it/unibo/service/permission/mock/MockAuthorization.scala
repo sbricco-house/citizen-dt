@@ -7,9 +7,26 @@ import it.unibo.core.parser.DataParserRegistry
 import it.unibo.core.utils.ServiceError.Unauthorized
 import it.unibo.service.permission.AuthorizationService
 
+/**
+ * Some mock service logic used to simulate an authorization service.
+ */
 object MockAuthorization {
-  def apply(authorization: Map[(String, String), Seq[DataCategory]], idMapping : String => String = a => a): MockAuthorization = new MockAuthorization(authorization, idMapping)
+  /**
+   * Basic mock authorization logic. Each authorization is expressed in terms of a permission map
+   * (A, B) -> Seq(data categories) means that A could read / write in B the Seq(data categories) passed.
+   * A is the system used identifier. In test context could be a static token. In others, a mapping (idMapping)
+   * is necessary.
+   * @param authorization The permission map in which each tuple is linked to a set of data categories permitted
+   * @param idMapping The function that map the token to an system used id. By default, the function is identity (a => a)
+   * @return the mock service logic created.
+   */
+  def apply(authorization: Map[(String, String), Seq[DataCategory]], idMapping : String => String = a => a): AuthorizationService = new MockAuthorization(authorization, idMapping)
 
+  /**
+   * A service authorization logic that accept all categories.
+   * @param registry The registry used to lists all categories in a certain domain
+   * @return the mock service created
+   */
   def acceptAll(registry : DataParserRegistry[_]) : AuthorizationService = new AuthorizationService {
     override def authorizeRead(who: TokenIdentifier, citizen: String, category: DataCategory): FutureService[DataCategory] = FutureService.response(category)
     override def authorizeWrite(who: TokenIdentifier, citizen: String, category: DataCategory): FutureService[DataCategory] = FutureService.response(category)
@@ -20,7 +37,7 @@ object MockAuthorization {
   }
 }
 
-class MockAuthorization(private val authorization: Map[(String, String), Seq[DataCategory]], idMapping : String => String) extends AuthorizationService {
+private class MockAuthorization(private val authorization: Map[(String, String), Seq[DataCategory]], idMapping : String => String) extends AuthorizationService {
   override def authorizeRead(who: TokenIdentifier, citizen: String, category: DataCategory): FutureService[DataCategory] =
     checkRW(who.token, citizen, category)
 

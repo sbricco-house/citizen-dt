@@ -46,7 +46,7 @@ class CitizenClient(override val citizenIdentifier : String,
 
   override val webClient: WebClient = WebClient.create(vertx, WebClientOptions().setDefaultHost(host).setDefaultPort(httpPort))
 
-  private def authorizationHeader(token : TokenIdentifier) : (String, String) = "Authorization" -> UserMiddleware.asToken(token.token)
+  private def authorizationHeader(token : TokenIdentifier) : (String, String) = "Authorization" -> token.bearer
 
   private def enrichPathWithCategory(basePath : String, data : DataCategory) : String = basePath + s"?data_category=${data.name}"
 

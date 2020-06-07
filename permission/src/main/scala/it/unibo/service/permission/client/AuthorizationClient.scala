@@ -25,6 +25,12 @@ object AuthorizationClient {
 
   def apply(uri : URI, dataParserRegistry: DataParserRegistry[JsonObject]) : AuthorizationClient = new AuthorizationClient(uri, dataParserRegistry)
 }
+
+/**
+ * The client that communicate with an authorization service.
+ * @param uri The uri in which the microservice is hosted
+ * @param dataParserRegistry The parser used to marshall and unmarshall information
+ */
 class AuthorizationClient(uri : URI, dataParserRegistry: DataParserRegistry[JsonObject]) extends AuthorizationService with RestApiClient with RestClientServiceResponse {
   import AuthorizationClient._
   import it.unibo.core.authentication.middleware.UserMiddleware._
@@ -36,7 +42,6 @@ class AuthorizationClient(uri : URI, dataParserRegistry: DataParserRegistry[Json
     .setDefaultPort(uri.getPort)
 
   override val webClient: WebClient = WebClient.create(vertx, clientOptions)
-
   private implicit val executionContext: VertxExecutionContext = VertxExecutionContext(vertx.getOrCreateContext())
 
   override def authorizeRead(who: TokenIdentifier, citizen: String, category: DataCategory): FutureService[DataCategory] = {
@@ -48,7 +53,6 @@ class AuthorizationClient(uri : URI, dataParserRegistry: DataParserRegistry[Json
   override def authorizeWrite(who: TokenIdentifier, citizen: String, category: DataCategory): FutureService[DataCategory] = {
     val request = prepareWebClient(stringPath + WRITE.format(citizen), who)
       .addQueryParam("data_category", category.name).sendFuture()
-
     manageSingleCategoryResponse(request, category)
   }
 
@@ -63,7 +67,7 @@ class AuthorizationClient(uri : URI, dataParserRegistry: DataParserRegistry[Json
   }
 
   private def prepareWebClient(path : String, who : TokenIdentifier) : HttpRequest[Buffer] = {
-    webClient.get(path).putHeader(AUTHORIZATION_HEADER, UserMiddleware.asToken(who.token))
+    webClient.get(path).putHeader(AUTHORIZATION_HEADER, who.bearer)
   }
 
   private def manageSingleCategoryResponse(future : Future[HttpResponse[Buffer]], category : DataCategory) : FutureService[DataCategory] = {
@@ -71,7 +75,7 @@ class AuthorizationClient(uri : URI, dataParserRegistry: DataParserRegistry[Json
       case (HttpCode.Ok, _) => category
     }.toFutureService
   }
-  //TODO gestisci meglio questa cosa
+  //TODO this method is not clear. clarify it.
   private def manageMultipleCategoryResponse(future : Future[HttpResponse[Buffer]]) : FutureService[Seq[DataCategory]] = {
     parseServiceResponseWhenComplete[Buffer, Seq[DataCategory]](future) {
       case (HttpCode.Ok, response) =>

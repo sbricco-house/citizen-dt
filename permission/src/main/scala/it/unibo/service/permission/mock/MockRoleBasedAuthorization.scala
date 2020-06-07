@@ -14,10 +14,24 @@ import it.unibo.core.authentication.VertxJWTProvider._
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
+/**
+ * more complex logic. In this case, the role of system user is used to verify the authenticity of the
+ * system.
+ */
 object MockRoleBasedAuthorization {
   type Role = String
   type PermissionMap = Map[Role, Set[DataCategory]]
 
+  /**
+   *
+   * @param authProvider
+   * @param allCategories
+   * @param citizenWriteCategories
+   * @param readPermissionMap
+   * @param writePermissionMap
+   * @param c The execution context used internally to manage the authorization request
+   * @return the role based mock created.
+   */
   def apply(authProvider : JWTAuth, allCategories: Set[DataCategory], citizenWriteCategories : Set[DataCategory], readPermissionMap : PermissionMap, writePermissionMap : PermissionMap)(implicit c : ExecutionContext) : AuthorizationService = new AuthorizationService {
     def unauthorized(who : String) = Fail(Unauthorized(s"User $who cannot access to"))
     override def authorizeRead(who: TokenIdentifier, citizen: String, category: DataCategory): FutureService[DataCategory] = {
