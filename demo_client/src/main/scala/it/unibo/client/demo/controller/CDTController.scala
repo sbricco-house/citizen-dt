@@ -1,8 +1,9 @@
-package it.unibo.client.demo
+package it.unibo.client.demo.controller
 
 import java.util.concurrent.Executors
 
-import it.unibo.core.data.{Data, DataCategory}
+import it.unibo.client.demo.AuthUserProvider
+import it.unibo.core.data.{Data, DataCategory, LeafCategory}
 import it.unibo.core.microservice.{Fail, FutureService, Response}
 import it.unibo.service.citizen.client.CitizenClient
 import monix.execution.Scheduler
@@ -12,12 +13,14 @@ import monix.reactive.subjects.PublishSubject
 import scala.concurrent.ExecutionContext
 
 /**
- * This controller provide the gui a unique state point of view through the observable.
+ * This controller provide to the gui a unique CDT State point of view through the observable.
  * It use a citizen client to make request and other things
  * @param authProvider
  * @param client
  */
-class CDTController(authProvider: AuthUserProvider, client: CitizenClient) {
+
+// TODO: maintain a list of observing categories, allowing to close the observation
+class CDTController(dataSimulator: DataSimulator, authProvider: AuthUserProvider, client: CitizenClient) {
 
   private implicit val context = ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
   private val monixContext = Scheduler(context)
@@ -27,6 +30,10 @@ class CDTController(authProvider: AuthUserProvider, client: CitizenClient) {
   private var internalState: Map[DataCategory, Data] = Map()
 
   val state: Observable[Seq[Data]] = _state
+
+  dataSimulator.simulatedData.foreach {
+    data => updateState(Seq(data))
+  }(monixContext)
 
   def canObserveCitizen: Boolean = authProvider.currentUser().role != "citizen"
 
@@ -52,8 +59,8 @@ class CDTController(authProvider: AuthUserProvider, client: CitizenClient) {
     }, identity).toFutureService
   }
 
-  def observe(category: DataCategory): FutureService[_] = {
-    client.observeState(authProvider.currentToken(), category).future.transform({
+  def observe(categoryName: String): FutureService[_] = {
+    client.observeState(authProvider.currentToken(), LeafCategory(categoryName, -1)).future.transform({
       case Response(content) => bindToUpdateStateObservable(content); Response()
       case f: Fail[_] => f
     }, identity).toFutureService

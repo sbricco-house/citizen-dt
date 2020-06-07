@@ -38,14 +38,14 @@
       "username" : "stefano",
       "email" : "stefano@unibo.it",
       "password" : "12345678",
-      "role" : "medical"
+      "role" : "medic"
     },
     {
       "identifier" : "francesco",
       "username" : "francesco",
       "email" : "francesco@unibo.it",
       "password" : "12345678",
-      "role" : "medical"
+      "role" : "medic"
     }
   ],
   "authorization" : {

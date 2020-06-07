@@ -1,7 +1,8 @@
-package it.unibo.client.demo
+package it.unibo.client.demo.frame
 
 import java.awt.GridLayout
 
+import it.unibo.client.demo.{AuthUserProvider, SwingExecutionContext}
 import it.unibo.core.authentication.Resources.AuthenticationInfo
 import it.unibo.core.authentication.{SystemUser, TokenIdentifier}
 import it.unibo.core.microservice.{Fail, Response}
@@ -42,6 +43,7 @@ class LoginFrame(authenticationClient: AuthenticationClient, implicit val swingE
     val citizenId = if(authInfo.user.role == "citizen") authInfo.user.identifier else promptCitizenSelection()
 
     val dashboard = new DashboardFrame(provider, citizenId)
+    dashboard.setSize(500, 200)
     dashboard.setVisible(true)
     setVisible(false)
   }

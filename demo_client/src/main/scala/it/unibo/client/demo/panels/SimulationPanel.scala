@@ -2,11 +2,10 @@ package it.unibo.client.demo.panels
 
 import java.awt.{GridLayout, Label}
 
-import it.unibo.client.demo.CDTController
-import it.unibo.core.data.{Data, LeafCategory, Sensor}
+import it.unibo.client.demo.controller.DataSimulator
 import javax.swing.{JButton, JPanel, JTextField}
 
-class SimulationPanel(controller: CDTController) extends JPanel {
+class SimulationPanel(dataSimulator: DataSimulator) extends JPanel {
 
   val tickField = new JTextField("2000")
   val startSimulation = new JButton("Start simulation")
@@ -18,21 +17,11 @@ class SimulationPanel(controller: CDTController) extends JPanel {
   add(startSimulation)
   add(stopSimulation)
 
-
-
   startSimulation.addActionListener(e => {
-    new Thread(() => {
-      println("Started!")
-      while (true) {
-        println("NEw data sent")
-        controller.updateState(Seq(Data("34534635", Sensor("mi_band_4"), LeafCategory("spo2", 10), 43, System.currentTimeMillis())))
-        Thread.sleep(2000)
-      }
-    })  .start()
+    dataSimulator.start(tickField.getText.toInt)
   })
 
-
-  private def onSimulationTick(): Unit = {
-  }
-
+  stopSimulation.addActionListener(e => {
+    dataSimulator.stop()
+  })
 }

@@ -2,6 +2,7 @@ package it.unibo.client.demo
 
 import java.net.URI
 
+import it.unibo.client.demo.frame.LoginFrame
 import it.unibo.service.authentication.client.AuthenticationClient
 
 object Application extends App {

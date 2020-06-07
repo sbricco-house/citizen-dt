@@ -1,9 +1,11 @@
-package it.unibo.client.demo
+package it.unibo.client.demo.frame
 
 import java.awt.{GridBagConstraints, GridBagLayout}
 
 import io.vertx.core.json.JsonArray
+import it.unibo.client.demo.controller.{CDTController, DataSimulator}
 import it.unibo.client.demo.panels.{DashboardState, SimulationPanel, StateManagementPanel}
+import it.unibo.client.demo.{AuthUserProvider, SwingExecutionContext}
 import it.unibo.covid.data.Parsers
 import it.unibo.service.citizen.client.CitizenClient
 import javax.swing.JFrame
@@ -16,9 +18,9 @@ class DashboardFrame(authUserProvider: AuthUserProvider, citizenId: String) exte
   val registry = Parsers.configureRegistryFromJson(new JsonArray(Source.fromResource("categories.json").mkString))
   val client = new CitizenClient(citizenId, registry)
 
-  val controller = new CDTController(authUserProvider, client)
+  val dataSimulator = DataSimulator()
+  val controller = new CDTController(dataSimulator, authUserProvider, client)
 
-  setSize(500, 200)
   setLayout(new GridBagLayout())
   val constraint = new GridBagConstraints()
   constraint.fill = GridBagConstraints.HORIZONTAL
@@ -35,5 +37,5 @@ class DashboardFrame(authUserProvider: AuthUserProvider, citizenId: String) exte
   constraint.gridx = 2
   constraint.gridy = 0
   constraint.weightx = 1
-  add(new SimulationPanel(controller), constraint)
+  add(new SimulationPanel(dataSimulator), constraint)
 }

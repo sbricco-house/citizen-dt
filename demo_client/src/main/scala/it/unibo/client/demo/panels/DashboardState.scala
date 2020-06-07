@@ -5,7 +5,8 @@ import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import it.unibo.client.demo.{CDTController, SwingExecutionContext}
+import it.unibo.client.demo.SwingExecutionContext
+import it.unibo.client.demo.controller.CDTController
 import it.unibo.core.data.{Data, Resource, Sensor}
 import javax.swing.{DefaultListModel, JList, JPanel}
 import monix.execution.Scheduler
