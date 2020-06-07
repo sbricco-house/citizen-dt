@@ -7,17 +7,39 @@ import io.vertx.scala.ext.auth.jwt.{JWTAuth, JWTAuthOptions}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-//TODO add documentation
+/**
+ * Factory to simplify the creation of vertx JWT Authentication provider.
+ */
 object VertxJWTProvider {
 
+  /**
+   * Create a JWT Provider using a symmetric key
+   * @param key The symmetric key
+   * @param vertx Vertx instance
+   * @return
+   */
   def fromSymmetric(key: String, vertx: Vertx): JWTAuth = {
     JWTAuth.create(vertx, symmetricOptions(key))
   }
 
+  /**
+   * Create a JWT Provider using a pair of key (asymmetric).
+   * Used by backend authentication server which known the secret (private key)
+   * @param privateKey The secret
+   * @param publicKey The public key
+   * @param vertx Vertx instance
+   * @return
+   */
   def fromAsymmetric(privateKey: String, publicKey: String, vertx: Vertx): JWTAuth = {
     JWTAuth.create(vertx, asymmetricOptions(privateKey, publicKey))
   }
 
+  /**
+   * Create a JWT Provider from a public key used in [fromAsymmetric]. Typically used by the client counterpart.
+   * @param publicKey Public key
+   * @param vertx Vertx instance.
+   * @return
+   */
   def fromPublicKey(publicKey: String, vertx: Vertx): JWTAuth = {
     JWTAuth.create(vertx, publicKeyOptions(publicKey))
   }
