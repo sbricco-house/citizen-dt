@@ -6,7 +6,7 @@ import it.unibo.core.data.InMemoryStorage
 import it.unibo.core.microservice.vertx._
 import it.unibo.covid.bootstrap.HttpCoapRuntime
 import it.unibo.covid.data.Parsers
-import it.unibo.service.citizen.CitizenDigitalTwin
+import it.unibo.service.citizen.{CitizenDigitalTwin, HistoryStorage}
 import it.unibo.service.citizen.authentication.MockAuthenticationClient
 import it.unibo.service.permission.mock.MockAuthorization
 
@@ -35,7 +35,7 @@ object MockDemo extends App {
   val vertx = Vertx.vertx()
   val mockAuth = MockAuthenticationClient(Seq(token -> user))
   val mockAutho = MockAuthorization.acceptAll(registry)
-  val citizen = CitizenDigitalTwin.fromVertx(mockAuth, mockAutho, id, InMemoryStorage(), vertx)
+  val citizen = CitizenDigitalTwin.fromVertx(mockAuth, mockAutho, id, HistoryStorage.fromInMemory(), vertx)
   val runtime = new HttpCoapRuntime(httpPort, coapPort, vertx, citizen, registry)
   runtime.start()
 

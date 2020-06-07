@@ -25,10 +25,16 @@ import scala.util.Success
 class BackendCitizenDigitalTwin(authenticationService : AuthenticationService,
                                 authorizationService: AuthorizationService,
                                 override val citizenIdentifier : String,
-                                dataStorage : Storage[Data, String],
+                                dataStorage : HistoryStorage,
                                 private var state: State = State.empty,
                             )(implicit val executionContext: ExecutionContext) extends CitizenDigitalTwin {
   self =>
+
+  //load the state of citizen from data storage if the state is empty
+  dataStorage.extractState() match {
+    case Success(state) if(state != State.empty) => this.state = state
+    case _ =>
+  }
 
   private val observableState = PublishSubject[Data]()
   private var channels : Map[PhysicalLink, TokenIdentifier] = Map.empty

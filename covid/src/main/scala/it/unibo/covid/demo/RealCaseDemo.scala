@@ -11,12 +11,13 @@ import it.unibo.covid.data.Parsers
 import it.unibo.covid.demo.ClientParsers.{authenticationParser, authorizationParser}
 import it.unibo.service.authentication.app.MockUserStorage
 import it.unibo.service.authentication.bootstrap.AuthenticationBootstrap
+import it.unibo.service.citizen.HistoryStorage
 import it.unibo.service.permission.mock.{MockAuthorization, MockAuthorizationBootstrap, MockRoleBasedAuthorization}
 
 import scala.util.{Failure, Success}
 object RealCaseDemo extends App {
-  private val storageUserParser = ParserLike.decodeOnly[JsonObject, Storage[Data,String]] {
-    (_ : JsonObject) => Some(InMemoryStorage[Data, String]())
+  private val storageUserParser = ParserLike.decodeOnly[JsonObject, HistoryStorage] {
+    (_ : JsonObject) => Some(HistoryStorage.fromInMemory())
   }
 
   val default = jsonObjectFromFile("default-demo.json")
