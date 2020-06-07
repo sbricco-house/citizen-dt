@@ -11,10 +11,16 @@ import monix.reactive.subjects.PublishSubject
 
 import scala.concurrent.ExecutionContext
 
+/**
+ * This controller provide the gui a unique state point of view through the observable.
+ * It use a citizen client to make request and other things
+ * @param authProvider
+ * @param client
+ */
 class CDTController(authProvider: AuthUserProvider, client: CitizenClient) {
 
-  implicit val context = ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
-  val monixContext = Scheduler(context)
+  private implicit val context = ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
+  private val monixContext = Scheduler(context)
 
   private var physicalLink: Option[CDTController.this.client.PhysicalLink] = None
   private val _state: PublishSubject[Seq[Data]] = PublishSubject()
@@ -24,16 +30,11 @@ class CDTController(authProvider: AuthUserProvider, client: CitizenClient) {
 
   def canObserveCitizen: Boolean = authProvider.currentUser().role != "citizen"
 
-  def fetchState(): Unit = {
-    client.readState(authProvider.currentToken()).whenComplete {
-      case Response(content) => updateCurrentState(content)
-      case Fail(error) =>
-    }
-  }
-
-  private def updateCurrentState(data: Seq[Data]): Unit = {
-    internalState ++= data.map(d => (d.category, d)).toMap
-    _state.onNext(internalState.values.toSeq)
+  def fetchState(): FutureService[_] = {
+    client.readState(authProvider.currentToken()).future.transform({
+      case Response(content) => updateCurrentState(content); Response()
+      case f: Fail[_] => f
+    }, identity).toFutureService
   }
 
   def updateState(data: Seq[Data]): FutureService[Seq[String]] = {
@@ -56,6 +57,11 @@ class CDTController(authProvider: AuthUserProvider, client: CitizenClient) {
       case Response(content) => bindToUpdateStateObservable(content); Response()
       case f: Fail[_] => f
     }, identity).toFutureService
+  }
+
+  private def updateCurrentState(data: Seq[Data]): Unit = {
+    internalState ++= data.map(d => (d.category, d)).toMap
+    _state.onNext(internalState.values.toSeq)
   }
 
   private def bindPhysicalLink(link: CDTController.this.client.PhysicalLink): Unit = {
