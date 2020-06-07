@@ -1,18 +1,21 @@
 package it.unibo.covid.demo
 
+import java.net.URI
+
 import io.vertx.lang.scala.json.{Json, JsonObject}
 import io.vertx.scala.core.Vertx
-import it.unibo.core.authentication.VertxJWTProvider
-import it.unibo.core.data.{Data, InMemoryStorage, Storage}
+import it.unibo.core.authentication.{SystemUser, VertxJWTProvider}
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.ParserLike
 import it.unibo.covid.Personalnfo
 import it.unibo.covid.bootstrap.CitizenBootstrap
 import it.unibo.covid.data.Parsers
-import it.unibo.covid.demo.ClientParsers.{authenticationParser, authorizationParser}
+import it.unibo.covid.demo.ClientParsers._
 import it.unibo.service.authentication.app.MockUserStorage
 import it.unibo.service.authentication.bootstrap.AuthenticationBootstrap
-import it.unibo.service.permission.mock.{MockAuthorization, MockAuthorizationBootstrap, MockRoleBasedAuthorization}
+import it.unibo.service.citizen.HistoryStorage
+import it.unibo.service.permission.client.AuthorizationClient
+import it.unibo.service.permission.mock.MockAuthorizationBootstrap
 
 import scala.util.{Failure, Success}
 object RealCaseDemo extends App {
@@ -20,6 +23,8 @@ object RealCaseDemo extends App {
     (json : JsonObject) =>
       val info = json.getAsObject("personal_info").map(info => Personalnfo.fromJson(info)).getOrElse(Seq())
       Some(info.foldRight(InMemoryStorage[Data, String]())((data, store) => { store.store(data.identifier, data); store }))
+  private val storageUserParser = ParserLike.decodeOnly[JsonObject, HistoryStorage] {
+    (_ : JsonObject) => Some(HistoryStorage.fromInMemory())
   }
 
   val default = jsonObjectFromFile("default-demo.json")
@@ -49,7 +54,7 @@ object RealCaseDemo extends App {
     case _ => throw new IllegalArgumentException("wrong configuration for authentication")
   }
 
-  val citizenBootstrapper = new CitizenBootstrap(authorizationParser, authenticationParser, registry, storageUserParser)
+  val citizenBootstrapper = new CitizenBootstrap(createAuthorizationParser(registry), authenticationParser, registry, storageUserParser)
   citizensPart.map(citizenBootstrapper.runtimeFromJson).foreach {
     case Success(runtime) => runtime.start()
     case Failure(exception) => throw exception

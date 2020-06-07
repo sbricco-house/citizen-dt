@@ -6,6 +6,7 @@ import it.unibo.core.parser.ParserLike
 import it.unibo.covid.bootstrap.CitizenBootstrap
 import it.unibo.covid.data.Parsers
 import it.unibo.covid.demo.ClientParsers._
+import it.unibo.service.citizen.HistoryStorage
 
 import scala.util.{Failure, Success}
 
@@ -16,10 +17,10 @@ object DemoFromJson extends App {
     case Some(file) => Parsers.configureRegistryFromJson(jsonArrayFromFile(file))
   }
 
-  private val storageParser = ParserLike.decodeOnly[JsonObject, Storage[Data,String]] {
-    (json : JsonObject) => Some(InMemoryStorage[Data, String]())
+  private val storageParser = ParserLike.decodeOnly[JsonObject, HistoryStorage] {
+    (json : JsonObject) => Some(HistoryStorage.fromInMemory())
   }
-  val bootstrapper = new CitizenBootstrap(authorizationParser, authenticationParser, registry, storageParser)
+  val bootstrapper = new CitizenBootstrap(createAuthorizationParser(registry), authenticationParser, registry, storageParser)
 
   bootstrapper.runtimeFromJson(json) match {
     case Success(runtime) => runtime.start()

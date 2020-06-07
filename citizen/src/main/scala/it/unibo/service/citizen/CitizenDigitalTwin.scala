@@ -122,7 +122,7 @@ object CitizenDigitalTwin {
   def apply(authenticationService : AuthenticationService,
             authorizationService: AuthorizationService,
             citizenId : String,
-            dataStorage: Storage[Data, String]): CitizenDigitalTwin = {
+            dataStorage: HistoryStorage): CitizenDigitalTwin = {
     implicit val execution = ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
     new BackendCitizenDigitalTwin(authenticationService, authorizationService, citizenId, dataStorage)
   }
@@ -139,8 +139,9 @@ object CitizenDigitalTwin {
   def fromVertx(authenticationService : AuthenticationService,
             authorizationService: AuthorizationService,
             citizenId : String,
-            dataStorage: Storage[Data, String],
+            dataStorage: HistoryStorage,
             vertx: Vertx): CitizenDigitalTwin = {
+
     implicit val execution = VertxExecutionContext(vertx.getOrCreateContext())
     new BackendCitizenDigitalTwin(authenticationService, authorizationService, citizenId, dataStorage)
   }

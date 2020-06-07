@@ -8,6 +8,7 @@ import io.vertx.lang.scala.json.JsonObject
 import io.vertx.scala.core.Vertx
 import io.vertx.scala.ext.web.client.{HttpRequest, HttpResponse, WebClient, WebClientOptions}
 import it.unibo.core.authentication.TokenIdentifier
+import it.unibo.core.authentication.middleware.UserMiddleware
 import it.unibo.core.client.{RestApiClient, RestClientServiceResponse}
 import it.unibo.core.data.DataCategory
 import it.unibo.core.microservice.FutureService
@@ -62,7 +63,7 @@ class AuthorizationClient(uri : URI, dataParserRegistry: DataParserRegistry[Json
   }
 
   private def prepareWebClient(path : String, who : TokenIdentifier) : HttpRequest[Buffer] = {
-    webClient.get(path).putHeader(AUTHORIZATION_HEADER, who.token)
+    webClient.get(path).putHeader(AUTHORIZATION_HEADER, UserMiddleware.asToken(who.token))
   }
 
   private def manageSingleCategoryResponse(future : Future[HttpResponse[Buffer]], category : DataCategory) : FutureService[DataCategory] = {

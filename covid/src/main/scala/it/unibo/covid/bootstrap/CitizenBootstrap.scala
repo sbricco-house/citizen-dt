@@ -8,14 +8,14 @@ import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.DataParserRegistry
 import it.unibo.core.parser.ParserLike.MismatchableParser
 import it.unibo.service.authentication.AuthenticationService
-import it.unibo.service.citizen.CitizenDigitalTwin
+import it.unibo.service.citizen.{CitizenDigitalTwin, HistoryStorage}
 import it.unibo.service.permission.AuthorizationService
 
 import scala.util.{Failure, Success, Try}
 class CitizenBootstrap(authorizationServiceParser : MismatchableParser[JsonObject, AuthorizationService],
                        authenticationServiceParser : MismatchableParser[JsonObject, AuthenticationService],
                        dataRegistryParser: DataParserRegistry[JsonObject],
-                       storageParser : MismatchableParser[JsonObject, Storage[Data, String]]) extends ServiceBootstrap[JsonObject] {
+                       storageParser : MismatchableParser[JsonObject, HistoryStorage]) extends ServiceBootstrap[JsonObject] {
   def runtimeFromJson(json : JsonObject) : Try[ServiceRuntime] = {
     val vertx = Vertx.vertx()
     val authorizationTry = tryCreate(json, authorizationServiceParser, "wrong string for authorization")
@@ -39,7 +39,7 @@ class CitizenBootstrap(authorizationServiceParser : MismatchableParser[JsonObjec
                        json: JsonObject,
                        authenticationService: AuthenticationService,
                        authorizationService: AuthorizationService,
-                       storage: Storage[Data, String]) : Try[CitizenDigitalTwin] = {
+                       storage: HistoryStorage) : Try[CitizenDigitalTwin] = {
     json.getAsString("id")
       .map(CitizenDigitalTwin.fromVertx(authenticationService, authorizationService, _, storage, vertx))
       .map(citizen => Success(citizen))
