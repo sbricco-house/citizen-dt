@@ -2,7 +2,7 @@ package it.unibo.core.microservice
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
-
+//TODO add documentation
 object FutureService {
   def apply[A](response: ServiceResponse[A]): FutureService[A] = Future.successful(response).toFutureService
   def response[A](content: A): FutureService[A] = apply(Response(content))

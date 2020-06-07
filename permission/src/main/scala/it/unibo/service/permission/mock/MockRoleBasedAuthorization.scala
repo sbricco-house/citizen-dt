@@ -23,12 +23,19 @@ object MockRoleBasedAuthorization {
   type PermissionMap = Map[Role, Set[DataCategory]]
 
   /**
-   *
-   * @param authProvider
-   * @param allCategories
-   * @param citizenWriteCategories
-   * @param readPermissionMap
-   * @param writePermissionMap
+   * create a role based authorization using multiple permission map.
+   * First of all, citizens has special authorization, they can read all their data. Some data category can't
+   * be written (e.g. personal data). For this reason, a Set of write data category is passed.
+   * For other stakeholder that want to access to a specific used, the permission follow two mop:
+   *  readPermissionMap: tells if a specify role can read or not a set of cetegories
+   *  writePermissionMap: tells if a specify role can write or not a set of cetegories
+   * To access at Role, the service need to decode JWT token. For this reason a authProvider is
+   * passed to decode tokens.
+   * @param authProvider The provider used to decode jwt token
+   * @param allCategories All categories supported by this authorization service
+   * @param citizenWriteCategories All categories that a citizen can write
+   * @param readPermissionMap The permission map that tells, for each role, what categories can be read from a citizen
+   * @param writePermissionMap The permission map that tells, for each role, what categories can be write from a citizen
    * @param c The execution context used internally to manage the authorization request
    * @return the role based mock created.
    */
@@ -88,6 +95,28 @@ object MockRoleBasedAuthorization {
     override def toString: Role = s"RoleBased ${allCategories}, ${citizenWriteCategories}, ${readPermissionMap}, ${writePermissionMap}"
   }
 
+  /**
+   * create a role based authorization service from a json. The json must follow this structure :
+   * {
+   *  "read_map_permission" : [
+   *    {
+   *      "role" : "...", "categories" : ["..."]
+   *    }
+   *  ]
+   *  "write_map_permission" : [
+   *    {
+   *      "role" : "...", "categories" : ["..."]
+   *    }
+   *  ],
+   *  "categories" : ["..."],
+   *  "write_citizen_permission" : ["..."]
+   * }
+   *
+   * @param json The json the specify the authorization configuration
+   * @param authProvider The provider used to decode jwt token
+   * @param dataParserRegistry The parser used to decode the category name
+   * @return the mock authorization service created.
+   */
   def fromJson(json : JsonObject, authProvider : JWTAuth, dataParserRegistry: DataParserRegistry[_]) : Option[AuthorizationService] = {
     implicit val ctx = scala.concurrent.ExecutionContext.global
     def decodeCategories(categories : Seq[String]) : Set[DataCategory] = categories
@@ -119,6 +148,4 @@ object MockRoleBasedAuthorization {
       writeCitizenFetched <- writeCitizen.getAsStringSeq
     } yield MockRoleBasedAuthorization(authProvider, decodeCategories(allCategoriesFetched), decodeCategories(writeCitizenFetched), readMapFetched, writeMapFetched)
   }
-
-  override def toString = s"MockRoleBasedAuthorization()"
 }

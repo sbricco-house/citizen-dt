@@ -15,6 +15,11 @@ trait State {
    */
   def get(category : DataCategory) : Seq[Data]
 
+  /**
+   * get the data associated to a sequence of data category.
+   * @param dataCategories
+   * @return Seq.empty if there are data linked to the category, Seq(..) of linked data otherwise
+   */
   def get(dataCategories: Seq[DataCategory]): Seq[Data] = dataCategories.flatMap(this.get).distinct
 
   /**
@@ -23,7 +28,6 @@ trait State {
    * @return a new snapshot of the state.
    */
   def update(data : Data) : State
-  //TODO pensa se toglierlo o meno
   /**
    * get entire view of the digital twin state
    * @return
@@ -47,5 +51,9 @@ object State {
     }
     override def snapshot: Seq[Data] = map.values.toSeq
   }
+
+  /**
+   * an empty state.
+   */
   val empty : State = MapLikeState(Map.empty)
 }

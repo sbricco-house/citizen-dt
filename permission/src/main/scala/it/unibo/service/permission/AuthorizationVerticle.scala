@@ -13,15 +13,29 @@ import it.unibo.core.parser.DataParserRegistry
 import it.unibo.core.utils.HttpCode
 import it.unibo.core.utils.ServiceError.MissingParameter
 
+/**
+ * The http interface to interact with authorization service logic.
+ * the endpoints are:
+ *  - host:/authorization/{citezenId}/write
+ *  - host:/authorization/{citezenId}/write?data_category=x
+ *  - host:/authorization/{citizenId}/read
+ *  - host:/authorization/{citezenId}/write?data_category=y
+ *
+ * this implementation is based on vertx.
+ * @param authorization The main authorization logic
+ * @param parser The parser used to decode/encode categories
+ * @param port The http port where the http server starts
+ * @param host The host where the http server starts
+ */
 class AuthorizationVerticle(authorization : AuthorizationService,
                             protected val parser : DataParserRegistry[JsonObject],
                             port : Int = 8080,
                             host : String = "localhost") extends BaseVerticle(port, host) with RestApi with RestServiceResponse {
 
-  val pathCitizenId = "citizenId"
-  val categoryParamName = "data_category"
-  val authorizationEndpointWrite = s"/authorization/:$pathCitizenId/write"
-  val authorizationEndpointRead = s"/authorization/:$pathCitizenId/read"
+  private val pathCitizenId = "citizenId"
+  private val categoryParamName = "data_category"
+  private val authorizationEndpointWrite = s"/authorization/:$pathCitizenId/write"
+  private val authorizationEndpointRead = s"/authorization/:$pathCitizenId/read"
   private val options = JWTAuthOptions().addPubSecKey(PubSecKeyOptions().setAlgorithm("HS256").setPublicKey("blabla").setSymmetric(true))
 
   lazy val provider = JWTAuth.create(vertx, options)

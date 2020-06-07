@@ -7,6 +7,7 @@ import io.vertx.scala.ext.auth.jwt.{JWTAuth, JWTAuthOptions}
 
 import scala.concurrent.{ExecutionContext, Future}
 
+//TODO add documentation
 object VertxJWTProvider {
 
   def fromSymmetric(key: String, vertx: Vertx): JWTAuth = {

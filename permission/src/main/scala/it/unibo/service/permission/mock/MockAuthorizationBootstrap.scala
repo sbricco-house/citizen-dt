@@ -1,20 +1,17 @@
 package it.unibo.service.permission.mock
 
-import io.vertx.core.json.JsonObject
 import io.vertx.lang.scala.json.JsonObject
 import io.vertx.scala.core.Vertx
-import io.vertx.scala.ext.auth.AuthProvider
 import io.vertx.scala.ext.auth.jwt.JWTAuth
-import it.unibo.core.microservice.ServiceRuntime
-import it.unibo.core.microservice.vertx.ServiceBootstrap
+import it.unibo.core.microservice.MicroserviceRuntime
+import it.unibo.core.microservice.vertx.{MicroserviceBootstrap, _}
 import it.unibo.core.parser.DataParserRegistry
 import it.unibo.service.permission.{AuthorizationService, AuthorizationVerticle}
-import it.unibo.core.microservice.vertx._
 
 import scala.util.{Success, Try}
 
-class MockAuthorizationBootstrap(provider : JWTAuth, vertx: Vertx, registry : DataParserRegistry[JsonObject], defaultPort : Int = 8081) extends ServiceBootstrap[JsonObject] {
-  override def runtimeFromJson(config: JsonObject): Try[ServiceRuntime] = {
+class MockAuthorizationBootstrap(provider : JWTAuth, vertx: Vertx, registry : DataParserRegistry[JsonObject], defaultPort : Int = 8081) extends MicroserviceBootstrap[JsonObject] {
+  override def runtimeFromJson(config: JsonObject): Try[MicroserviceRuntime] = {
     val authorization : AuthorizationService = extractServiceFromConfig(config)
     println("AUTHORIZATION MOCK = " + authorization)
     val host = config.getString("api.rest.host", "localhost")

@@ -5,23 +5,37 @@ import io.vertx.scala.core.http.{HttpServerResponse, ServerWebSocket}
 import it.unibo.core.utils.HttpCode
 
 package object vertx {
+  protected[vertx] def tryOrNone[E](some : => E) : Option[E] = try {
+    Some(some)
+  } catch {
+    case e : Exception => None
+  }
+
+  protected[vertx] def getOrNone[E](string : String, jsonObject: JsonObject)(some : => E) = if(jsonObject.containsKey(string)) {
+    tryOrNone(some)
+  } else {
+    None
+  }
+
+  /**
+   * other conversion that wrap the result of Json.fromObjectString and Json.fromArrayString with Option.
+   */
   object JsonConversion {
+    /**
+     * create a json object from a string, if it possibile
+     * @param buffer The json string
+     * @return Some(object) if the decoding fails None otherwise
+     */
     def objectFromString(buffer : String) : Option[JsonObject] = tryOrNone(Json.fromObjectString(buffer))
 
+    /**
+     * create a json array from a string, if it possibile
+     * @param buffer The json string
+     * @return Some(array) if the decoding fails None otherwise
+     */
     def arrayFromString(buffer : String) : Option[JsonArray] = tryOrNone(Json.fromArrayString(buffer))
-
-    protected[vertx] def tryOrNone[E](some : => E) : Option[E] = try {
-      Some(some)
-    } catch {
-      case e : Exception => None
-    }
-
-    protected[vertx] def getOrNone[E](string : String, jsonObject: JsonObject)(some : => E) = if(jsonObject.containsKey(string)) {
-      tryOrNone(some)
-    } else {
-      None
-    }
   }
+
   implicit class RichJson(json : JsonObject) {
     import JsonConversion._
     def getAsString(s : String) : Option[String] = getOrNone(s, json){ json.getString(s) }

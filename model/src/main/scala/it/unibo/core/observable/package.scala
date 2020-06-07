@@ -24,6 +24,11 @@ package object observable {
     }
   }
 
+  /**
+   * an utility fuction that allow to create an observable from a vertx webscoekt
+   * @param webSocket the websocket to observe
+   * @return the observable linked to the websocket
+   */
   def observableFromWebSocket(webSocket : WebSocketBase) : Observable[String]  = {
     val source = PublishSubject[String]()
     webSocket.textMessageHandler(text => source.onNext(text))

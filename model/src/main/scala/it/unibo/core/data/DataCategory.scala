@@ -43,6 +43,11 @@ object LeafCategory {
 }
 
 object DataCategoryOps {
+  /**
+   * extract all child categories from a DataCategory. If the DataCategories is Leaf, returns itself.
+   * @param dataCategory the data category to expand
+   * @return all child starting form data category
+   */
   def allChild(dataCategory: DataCategory) : Set[LeafCategory] = dataCategory match {
     case value : LeafCategory => Set(value)
     case GroupCategory(name, categories) => categories.flatMap(allChild)

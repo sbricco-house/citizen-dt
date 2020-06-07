@@ -2,7 +2,7 @@ package it.unibo.service.permission.mock
 
 import it.unibo.core.authentication.TokenIdentifier
 import it.unibo.core.data.{DataCategory, DataCategoryOps, GroupCategory, LeafCategory}
-import it.unibo.core.microservice.{Fail, FutureService, Response, ServiceRuntime}
+import it.unibo.core.microservice.{Fail, FutureService, Response, MicroserviceRuntime}
 import it.unibo.core.parser.DataParserRegistry
 import it.unibo.core.utils.ServiceError.Unauthorized
 import it.unibo.service.permission.AuthorizationService

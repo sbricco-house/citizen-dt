@@ -3,7 +3,7 @@ package it.unibo.covid.bootstrap
 import io.vertx.lang.scala.json.JsonObject
 import io.vertx.scala.core.Vertx
 import it.unibo.core.data.{Data, Storage}
-import it.unibo.core.microservice.ServiceRuntime
+import it.unibo.core.microservice.MicroserviceRuntime
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.DataParserRegistry
 import it.unibo.core.parser.ParserLike.MismatchableParser
@@ -15,8 +15,8 @@ import scala.util.{Failure, Success, Try}
 class CitizenBootstrap(authorizationServiceParser : MismatchableParser[JsonObject, AuthorizationService],
                        authenticationServiceParser : MismatchableParser[JsonObject, AuthenticationService],
                        dataRegistryParser: DataParserRegistry[JsonObject],
-                       storageParser : MismatchableParser[JsonObject, HistoryStorage]) extends ServiceBootstrap[JsonObject] {
-  def runtimeFromJson(json : JsonObject) : Try[ServiceRuntime] = {
+                       storageParser : MismatchableParser[JsonObject, HistoryStorage]) extends MicroserviceBootstrap[JsonObject] {
+  def runtimeFromJson(json : JsonObject) : Try[MicroserviceRuntime] = {
     val vertx = Vertx.vertx()
     val authorizationTry = tryCreate(json, authorizationServiceParser, "wrong string for authorization")
     val authenticationTry = tryCreate(json, authenticationServiceParser, "wrong string for authentication")
@@ -46,7 +46,7 @@ class CitizenBootstrap(authorizationServiceParser : MismatchableParser[JsonObjec
       .getOrElse(Failure(new IllegalArgumentException("wrong citizen option")))
   }
 
-  def createRuntime(json: JsonObject, vertx: Vertx, citizen : CitizenDigitalTwin, dataParserRegistry: DataParserRegistry[JsonObject]) : ServiceRuntime = {
+  def createRuntime(json: JsonObject, vertx: Vertx, citizen : CitizenDigitalTwin, dataParserRegistry: DataParserRegistry[JsonObject]) : MicroserviceRuntime = {
     val httpPort = json.getAsInt("http_port").getOrElse(8080)
     json.getAsInt("coap_port") match {
       case None => new HttpOnlyRuntime(httpPort, vertx, citizen, dataParserRegistry)

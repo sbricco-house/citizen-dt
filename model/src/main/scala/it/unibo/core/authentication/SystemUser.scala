@@ -1,5 +1,8 @@
 package it.unibo.core.authentication
 
+/**
+ *
+ */
 trait SystemUser {
   def email: String
   def username: String

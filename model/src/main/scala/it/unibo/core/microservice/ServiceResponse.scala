@@ -1,5 +1,5 @@
 package it.unibo.core.microservice
-
+//TODO need documentation
 sealed trait ServiceResponse[+T] {
   def flatMap[U](f: T => ServiceResponse[U]): ServiceResponse[U]
   def map[U](f: T => U): ServiceResponse[U]

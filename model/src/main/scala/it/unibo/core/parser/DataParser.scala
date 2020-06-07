@@ -9,6 +9,10 @@ import it.unibo.core.parser.ParserLike.MismatchableParser
  * @tparam External the type of codification used to store data externally (e.g. Json, Xml,String,..)
  */
 trait DataParser[External] extends MismatchableParser[External, Data] {
+  /**
+   *
+   * @return
+   */
   def supportedCategories : Seq[LeafCategory]
 }
 
