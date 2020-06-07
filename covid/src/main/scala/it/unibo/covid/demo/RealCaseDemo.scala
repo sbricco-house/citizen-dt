@@ -9,7 +9,7 @@ import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.ParserLike
 import it.unibo.covid.bootstrap.CitizenBootstrap
 import it.unibo.covid.data.Parsers
-import it.unibo.covid.demo.ClientParsers.{authenticationParser, authorizationParser}
+import it.unibo.covid.demo.ClientParsers._
 import it.unibo.service.authentication.app.MockUserStorage
 import it.unibo.service.authentication.bootstrap.AuthenticationBootstrap
 import it.unibo.service.citizen.HistoryStorage
@@ -49,7 +49,7 @@ object RealCaseDemo extends App {
     case _ => throw new IllegalArgumentException("wrong configuration for authentication")
   }
 
-  val citizenBootstrapper = new CitizenBootstrap(authorizationParser, authenticationParser, registry, storageUserParser)
+  val citizenBootstrapper = new CitizenBootstrap(createAuthorizationParser(registry), authenticationParser, registry, storageUserParser)
   citizensPart.map(citizenBootstrapper.runtimeFromJson).foreach {
     case Success(runtime) => runtime.start()
     case Failure(exception) => throw exception
