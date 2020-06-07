@@ -40,7 +40,7 @@ class CitizenWebsocketApiTest extends AnyFlatSpec with BeforeAndAfterEach with M
         val stringRequest = CitizenProtocol.requestParser.encode(request)
         channel.writeTextMessage(stringRequest)
         whenReady(awaitResponse(1, channel)) {
-          case WebsocketResponse(_, Ok) => succeed
+          case WebsocketResponse(_, Ok(_)) => succeed
           case _ => fail()
         }
         channel.close()
@@ -79,7 +79,7 @@ class CitizenWebsocketApiTest extends AnyFlatSpec with BeforeAndAfterEach with M
         val stringRequest = CitizenProtocol.requestParser.encode(request)
         channel.writeTextMessage(stringRequest)
         whenReady(awaitResponse(1, channel)) {
-          case WebsocketResponse(_, Ok) => succeed
+          case WebsocketResponse(_, Ok(_)) => succeed
           case _ => fail()
         }
         channel.close()

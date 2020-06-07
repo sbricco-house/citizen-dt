@@ -19,7 +19,7 @@ class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with 
   implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(25, Seconds), interval = Span(100, Millis))
   import ObservableCoapCitizenApi._
   "citizen microservice" should " support coap protocol" in {
-    val coapClient = new CoapClient(s"localhost:${CoapScope.currentPort}/citizen/50/state")
+    val coapClient = new CoapClient(s"localhost:${CoapScope.currentPort}/citizens/50/state")
     assert(coapClient.ping())
     coapClient.shutdown()
   }
@@ -176,7 +176,7 @@ class ObservableCoapCitizenApi extends AnyFlatSpec with BeforeAndAfterEach with 
   }
   "citizen resources " should " NOT being observable from unkwon category" in {
     val aData = Data("10", Resource("bi"), Categories.heartBeatCategory, 10, 10)
-    val coapClient = new CoapClient(s"""localhost:${CoapScope.currentPort}/citizen/50/state?data_category=unkwon""")
+    val coapClient = new CoapClient(s"""localhost:${CoapScope.currentPort}/citizens/50/state?data_category=unkwon""")
     val result = coapClient.observeWithTokenAndWait("jwt1", (data : CoapResponse) => {})
     assert(result.isCanceled)
     coapClient.shutdown()

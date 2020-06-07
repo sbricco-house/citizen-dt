@@ -42,6 +42,8 @@ trait RestCitizenApi extends RestApi with RestServiceResponse {
       .handler(userMiddleware)
       .handler(handleGetHistoryData)
     router
+
+    router.errorHandler(404, handler => println(handler.normalisedPath()))
   }
 
   private def handleGetState(context: RoutingContext): Unit = {
