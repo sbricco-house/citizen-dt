@@ -1,6 +1,8 @@
 package it.unibo.core.authentication
 
-protected abstract class TokenValue(token: String)
+protected abstract class TokenValue(token: String) {
+  def bearer : String = s"Bearer $token"
+}
 
 /**
  * Token identifier used by the user for make request.
