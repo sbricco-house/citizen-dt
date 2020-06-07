@@ -142,7 +142,7 @@ class CitizenClient(override val citizenIdentifier : String,
       case (None, Some(WebsocketResponse(id, status))) =>
         val promise = promiseMap.get(id)
         status match {
-          case Ok => promise.success(Response(Seq.empty[String])) //TODO FIX
+          case Ok(seq) => promise.success(Response(seq)) //TODO FIX
           case Failed(reason) => promise.failure(new Exception(reason))
         }
       case _ =>
