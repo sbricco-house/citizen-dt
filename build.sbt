@@ -57,3 +57,6 @@ lazy val authentication_service = (project in file("authentication"))
 
 lazy val covid = project
   .dependsOn(macros, model, citizen_service, permission_service, authentication_service)
+
+lazy val demo_client = (project in file("demo_client"))
+  .dependsOn(model, covid, citizen_service, authentication_service)

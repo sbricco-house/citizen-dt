@@ -54,7 +54,7 @@ object MockUserStorage {
       email <- json.getAsString("email")
       pass <- json.getAsString("password")
       role <- json.getAsString("role")
-    } yield SystemUser(email, user, pass, id, role)
+    } yield SystemUser(email, user, Hash.SHA256.digest(pass), id, role)
 
     ParserLike.decodeOnly[JsonArray, Storage[SystemUser, String]](
       decodeFunction = json => json.getAsObjectSeq match {
