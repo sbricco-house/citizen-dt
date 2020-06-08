@@ -17,11 +17,37 @@ case class GroupCategory(name : String, dataCategory: Set[DataCategory]) extends
 /**
  * a leaf category, described an "atomic" information depending on domain (e.g. HeartBeatCategory)
  * @param name
- * @param TTL: a temporal information to the lifespan.
+ * @param TTL: a temporal information to the lifespan, default -1 -> unlimited.
  */
-case class LeafCategory(name : String, TTL : Long) extends DataCategory
+class LeafCategory(val name : String, val TTL : Long = -1) extends DataCategory {
+  def isLimited : Boolean = TTL > 0
+
+  def canEqual(other: Any): Boolean = other.isInstanceOf[LeafCategory]
+
+  override def equals(other: Any): Boolean = other match {
+    case that: LeafCategory =>
+      (that canEqual this) &&
+        name == that.name
+    case _ => false
+  }
+
+  override def hashCode(): Int = {
+    val state = Seq(name)
+    state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
+  }
+}
+
+object LeafCategory {
+  def apply(name : String, TTL : Long = -1) : LeafCategory = new LeafCategory(name, TTL)
+  def unapply(arg: LeafCategory): Option[(String, Long)] = Some((arg.name, arg.TTL))
+}
 
 object DataCategoryOps {
+  /**
+   * extract all child categories from a DataCategory. If the DataCategories is Leaf, returns itself.
+   * @param dataCategory the data category to expand
+   * @return all child starting form data category
+   */
   def allChild(dataCategory: DataCategory) : Set[LeafCategory] = dataCategory match {
     case value : LeafCategory => Set(value)
     case GroupCategory(name, categories) => categories.flatMap(allChild)

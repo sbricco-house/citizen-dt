@@ -6,7 +6,7 @@ import io.vertx.lang.scala.json.{Json, JsonObject}
 import it.unibo.core.data.{Data, Feeder, LeafCategory}
 import it.unibo.core.parser.VertxJsonParser
 import org.scalatest._
-
+import org.scalatest.matchers.should.Matchers
 
 class VertxParserTest extends FlatSpec with Matchers {
 

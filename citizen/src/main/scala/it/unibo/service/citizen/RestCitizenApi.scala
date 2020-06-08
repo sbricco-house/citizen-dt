@@ -2,19 +2,28 @@ package it.unibo.service.citizen
 
 import io.vertx.scala.ext.web.handler.BodyHandler
 import io.vertx.scala.ext.web.{Router, RoutingContext}
+import it.unibo.core.authentication.middleware.UserMiddleware
 import it.unibo.core.microservice.vertx.{RestApi, _}
-import it.unibo.core.microservice.{Fail, FutureService, Response}
-import it.unibo.core.utils.HttpCode
-import it.unibo.core.utils.ServiceError.{MissingParameter, MissingResource, Unauthorized}
-import it.unibo.service.citizen.middleware.UserMiddleware
+import it.unibo.core.microservice.{FutureService, Response}
+import it.unibo.core.utils.{HttpCode, ServiceError}
+import it.unibo.core.utils.ServiceError.MissingParameter
 
+/**
+ * HTTP REST API decoration for Citizen Verticle.
+ * an example of usage (a là Cake pattern) follows:
+ *
+ * new CitizenVerticle(...) with RestCitizenApi
+ *
+ */
 trait RestCitizenApi extends RestApi with RestServiceResponse {
-  self : RestCitizenVerticle =>
-  import RestCitizenVerticle._
+  self : CitizenVerticle =>
+  import CitizenVerticle._
 
   override def createRouter: Router = {
     val router = Router.router(vertx)
     val userMiddleware = UserMiddleware()
+
+//    CorsSupport.enableTo(router)
 
     router.get(self.citizenStateEndpoint)
       .handler(userMiddleware)
@@ -33,12 +42,20 @@ trait RestCitizenApi extends RestApi with RestServiceResponse {
       .handler(userMiddleware)
       .handler(handleGetHistoryData)
     router
+
+    router.errorHandler(404, handler => println(handler.normalisedPath()))
   }
 
   private def handleGetState(context: RoutingContext): Unit = {
     val token = context.getToken(UserMiddleware.JWT_TOKEN)
+    val getOperation = context.queryParams().get(categoryParamName) match {
+      case None => citizenDT.readState(token)
+      case Some(category) => parser.decodeCategory(category)
+        .map(citizenDT.readStateByCategory(token, _))
+        .getOrElse(FutureService.fail(MissingParameter(s"Invalid query value")))
+    }
 
-    sendServiceResponseWhenComplete(context, citizenService.readState(token, citizenIdentifier)) {
+    sendServiceResponseWhenComplete(context, getOperation) {
       case Response(data) => (HttpCode.Ok, stateToJson(data).encode())
     }
   }
@@ -47,11 +64,12 @@ trait RestCitizenApi extends RestApi with RestServiceResponse {
     val token = context.getToken(UserMiddleware.JWT_TOKEN)
     val pending = context.getBodyAsJson()
       .map(jsonToState)
-      .map(newState => citizenService.updateState(token, citizenIdentifier, newState))
+      .collect { case Some(data) => data }
+      .map(newState => citizenDT.updateState(token, newState))
       .getOrElse(FutureService.fail(MissingParameter(s"Invalid json body")))
 
     sendServiceResponseWhenComplete(context, pending) {
-      case Response(newData) => (HttpCode.Created, stateToJson(newData).encode())
+      case Response(newData) => (HttpCode.Ok, seqToJsonArray(newData).encode())
     }
   }
 
@@ -59,20 +77,18 @@ trait RestCitizenApi extends RestApi with RestServiceResponse {
     val token = context.getToken(UserMiddleware.JWT_TOKEN)
     val dataIdentifier = context.pathParam("data_id").get
 
-    sendServiceResponseWhenComplete(context, citizenService.readHistoryData(token, citizenIdentifier, dataIdentifier)) {
+    sendServiceResponseWhenComplete(context, citizenDT.readHistoryData(token, dataIdentifier)) {
       case Response(data) => (HttpCode.Ok, parser.encode(data).get.encode())
     }
   }
 
   private def handleGetHistoryDataFromCategory(context: RoutingContext): Unit = {
     val token = context.getToken(UserMiddleware.JWT_TOKEN)
-    val dataCategory = context.queryParams().get("data_category")
+    val dataCategory = context.queryParams().get(categoryParamName)
     val limit = context.queryParams().get("limit").getOrElse("1").toInt
-    println(parser.supportedCategories)
-    println(dataCategory)
     val pending = dataCategory
       .flatMap(parser.decodeCategory)
-      .map(citizenService.readHistory(token, citizenIdentifier, _, limit))
+      .map(citizenDT.readHistory(token, _, limit))
       .getOrElse(FutureService.fail(MissingParameter(s"Missing or invalid data_category query parameter")))
 
     sendServiceResponseWhenComplete(context, pending) {

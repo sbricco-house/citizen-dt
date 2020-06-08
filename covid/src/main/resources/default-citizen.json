@@ -1,0 +1,6 @@
+{
+  "id" : "citizen1",
+  "coap_port" : 5683,
+  "authentication_client_uri" : "http://localhost:8081",
+  "authorization_client_uri" : "http://localhost:8082"
+}

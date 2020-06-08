@@ -2,10 +2,9 @@ name := "citizen-system"
 
 version := "0.1"
 
-val scalaBase = "2.12.1"
+val scalaBase = "2.12.8"
 
-val circeVersion = "0.7.0"
-val vertxVersion = "3.9.0"
+val vertxVersion = "3.9.1"
 val monixVersion = "3.2.1"
 
 lazy val coreSetting = Seq(
@@ -21,7 +20,11 @@ lazy val commonSetting = Seq(
     "io.monix" %% "monix-reactive" % monixVersion,
     "io.vertx" %% "vertx-lang-scala" % vertxVersion,
     "io.vertx" %% "vertx-web-scala" % vertxVersion,
-    "io.vertx" %% "vertx-web-client-scala" % vertxVersion
+    "io.vertx" %% "vertx-auth-jwt-scala" % vertxVersion,
+    "io.lemonlabs" %% "scala-uri" % "2.2.2",
+    "io.vertx" %% "vertx-web-client-scala" % vertxVersion,
+    "org.eclipse.californium" % "californium-core" % "2.2.2",
+    //"org.slf4j" % "slf4j-simple" % "1.7.30" //TODO use this to check coap errors
   )
 ) ++ coreSetting
 
@@ -36,13 +39,6 @@ lazy val testSetting = Seq(
   )
 )
 
-lazy val authenticationSettings = Seq(
-  libraryDependencies ++= Seq(
-    "io.vertx" %% "vertx-auth-jwt-scala" % vertxVersion
-  )
-)
-
-
 lazy val model = (project in file("model"))
   .dependsOn(macros)
   .settings(commonSetting)
@@ -53,7 +49,14 @@ lazy val citizen_service = (project in file("citizen"))
 
 lazy val permission_service = (project in file("permission"))
   .dependsOn(macros, model)
+  .settings(testSetting)
 
 lazy val authentication_service = (project in file("authentication"))
   .dependsOn(macros, model)
-  .settings(authenticationSettings, testSetting)
+  .settings(testSetting)
+
+lazy val covid = project
+  .dependsOn(macros, model, citizen_service, permission_service, authentication_service)
+
+lazy val demo_client = (project in file("demo_client"))
+  .dependsOn(model, covid, citizen_service, authentication_service)

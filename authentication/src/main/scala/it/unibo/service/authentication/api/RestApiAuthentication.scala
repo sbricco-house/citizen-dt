@@ -2,11 +2,13 @@ package it.unibo.service.authentication.api
 
 import io.vertx.scala.ext.web.handler.BodyHandler
 import io.vertx.scala.ext.web.{Router, RoutingContext}
+import it.unibo.core.authentication.AuthenticationParsers.{AuthInfoParser, SystemUserParser, TokenParser}
+import it.unibo.core.authentication.Resources.AuthenticationInfo
+import it.unibo.core.authentication.{Token, TokenIdentifier}
 import it.unibo.core.microservice.vertx.{RestApi, _}
 import it.unibo.core.microservice.{FutureService, Response}
 import it.unibo.core.utils.HttpCode
 import it.unibo.core.utils.ServiceError.MissingParameter
-import it.unibo.service.authentication.TokenIdentifier
 
 object RestApiAuthentication {
   val LOGIN_ENDPOINT = "/login"
@@ -17,12 +19,17 @@ object RestApiAuthentication {
   val TOKEN_QUERY = "token"
 }
 
+/**
+ * Expose the [[it.unibo.service.authentication.AuthenticationService]] through HTTP Rest API.
+ * Work as decoration of [[it.unibo.service.authentication.api.RestApiAuthenticationVerticle]].
+ */
 trait RestApiAuthentication extends RestApi with RestServiceResponse {
   self : RestApiAuthenticationVerticle =>
   import RestApiAuthentication._
 
   override def createRouter: Router = {
     val router = Router.router(vertx)
+    //CorsSupport.enableTo(router)
 
     router.post(LOGIN_ENDPOINT)
       .handler(BodyHandler.create())
@@ -47,7 +54,7 @@ trait RestApiAuthentication extends RestApi with RestServiceResponse {
       .getOrElse(FutureService.fail(MissingParameter(s"Missing or malformed request body")))
 
     sendServiceResponseWhenComplete(context, login) {
-      case Response(TokenIdentifier(token)) => (HttpCode.Created, token)
+      case Response(e: AuthenticationInfo) => (HttpCode.Created, AuthInfoParser.encode(e).encode())
     }
   }
 
@@ -58,7 +65,7 @@ trait RestApiAuthentication extends RestApi with RestServiceResponse {
       .getOrElse(FutureService.fail(MissingParameter(s"Missing token")))
 
     sendServiceResponseWhenComplete(context, verify) {
-      case Response(content) => (HttpCode.Ok, userToJson(content).encode())
+      case Response(content) => (HttpCode.Ok, SystemUserParser.encode(content).encode())
     }
   }
 
@@ -80,7 +87,7 @@ trait RestApiAuthentication extends RestApi with RestServiceResponse {
       .getOrElse(FutureService.fail(MissingParameter(s"Missing authorization header")))
 
     sendServiceResponseWhenComplete(context, refresh) {
-      case Response(TokenIdentifier(token)) => (HttpCode.Created, token)
+      case Response(t : Token) => (HttpCode.Created, TokenParser.encode(t).encode())
     }
   }
 

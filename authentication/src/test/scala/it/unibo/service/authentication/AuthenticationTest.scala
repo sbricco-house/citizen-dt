@@ -1,12 +1,14 @@
 package it.unibo.service.authentication
 
-import io.vertx.scala.ext.web.client.{HttpRequest, WebClient}
+import io.vertx.core.buffer.Buffer
+import io.vertx.scala.ext.web.client.{HttpRequest, HttpResponse, WebClient}
 import it.unibo.service.authentication.AuthBootstrap._
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
+import it.unibo.core.authentication.AuthenticationParsers._
 
 class AuthenticationTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with ScalaFutures {
 
@@ -32,7 +34,7 @@ class AuthenticationTest extends AnyFlatSpec with BeforeAndAfterAll with Matcher
     whenReady(client.post(LOGIN_ENDPOINT).sendJsonObjectFuture(Users.Citizen1.loginBodyJson)) {
       result =>
         result.statusCode() shouldBe 201
-        val token = result.bodyAsString().get
+        val token = getTokenFromLoginResponse(result)
         whenReady(client.get(VERIFY_ENDPOINT.format(token)).sendFuture()) {
           result =>
             result.statusCode() shouldBe 200
@@ -43,7 +45,7 @@ class AuthenticationTest extends AnyFlatSpec with BeforeAndAfterAll with Matcher
 
   "User " can " logout" in {
     whenReady(client.post(LOGIN_ENDPOINT).sendJsonObjectFuture(Users.Citizen1.loginBodyJson)) {
-      result => val token = result.bodyAsString().get
+      result => val token = getTokenFromLoginResponse(result)
         whenReady(client.get(LOGOUT_ENDPOINT).putHeader(getAuthorizationHeader(token)).sendFuture()) {
           result => result.statusCode() shouldBe 204
         }
@@ -52,7 +54,7 @@ class AuthenticationTest extends AnyFlatSpec with BeforeAndAfterAll with Matcher
 
   "User logged out " can " not verify token" in {
     whenReady(client.post(LOGIN_ENDPOINT).sendJsonObjectFuture(Users.Citizen1.loginBodyJson)) {
-      result => val token = result.bodyAsString().get
+      result => val token = getTokenFromLoginResponse(result)
         whenReady(client.get(LOGOUT_ENDPOINT).putHeader(getAuthorizationHeader(token)).sendFuture()) {
           result => result.statusCode() shouldBe 204
             whenReady(client.get(VERIFY_ENDPOINT.format(token)).sendFuture()) {
@@ -64,7 +66,7 @@ class AuthenticationTest extends AnyFlatSpec with BeforeAndAfterAll with Matcher
 
   "User logged " can "refresh his token" in {
     whenReady(client.post(LOGIN_ENDPOINT).sendJsonObjectFuture(Users.Citizen1.loginBodyJson)) {
-      result => val token = result.bodyAsString().get
+      result => val token = getTokenFromLoginResponse(result)
         whenReady(client.post(REFRESH_ENDPOINT).putHeader(getAuthorizationHeader(token)).sendFuture()) {
           result =>
             result.statusCode() shouldBe 201
@@ -76,7 +78,7 @@ class AuthenticationTest extends AnyFlatSpec with BeforeAndAfterAll with Matcher
 
   "User logged out" can  " not refresh his token" in {
     whenReady(client.post(LOGIN_ENDPOINT).sendJsonObjectFuture(Users.Citizen1.loginBodyJson)) {
-      result => val token = result.bodyAsString().get
+      result => val token = getTokenFromLoginResponse(result)
         whenReady(client.get(LOGOUT_ENDPOINT).putHeader(getAuthorizationHeader(token)).sendFuture()) {
           result => result.statusCode() shouldBe 204
             whenReady(client.post(REFRESH_ENDPOINT).putHeader(getAuthorizationHeader(token)).sendFuture()) {
@@ -93,10 +95,14 @@ class AuthenticationTest extends AnyFlatSpec with BeforeAndAfterAll with Matcher
   }
 
   override def afterAll(): Unit = {
+    client.close()
     AuthBootstrap.teardown()
   }
 
   implicit class RichHttpRequest[T](request: HttpRequest[T]) {
     def putHeader(value: (String, String)): HttpRequest[T] = request.putHeader(value._1, value._2)
   }
+
+  private def getTokenFromLoginResponse(response: HttpResponse[Buffer]): String =
+    AuthInfoParser.decode(response.bodyAsJsonObject().get).get.token.token
 }

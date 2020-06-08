@@ -2,7 +2,7 @@ package it.unibo.service.citizen
 
 import io.vertx.core.json.JsonObject
 import io.vertx.scala.ext.web.client.WebClient
-import it.unibo.service.citizen.HttpBootstrap._
+import it.unibo.service.citizen.HttpScope._
 import it.unibo.service.citizen.matcher.DataJsonMatcher
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
@@ -23,7 +23,7 @@ class RestApiTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with 
 
   "Citizen state" should " be update by himself" in {
     whenReady(client.patch(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER).sendJsonObjectFuture(Useful.postState)) {
-      result => println(result.bodyAsString()); result.statusCode() shouldBe 201
+      result => println(result.bodyAsString()); result.statusCode() shouldBe 200
     }
   }
 
@@ -34,7 +34,29 @@ class RestApiTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with 
         result.bodyAsJsonObject().get.getJsonArray("data") should sameArrayData(Useful.postState.getJsonArray("data"))
     }
   }
+  "Citizen state" should " be filtered by category" in {
+    val getByCategory = client.get(STATE_ENDPOINT)
+        .putHeader(CITIZEN_AUTHORIZED_HEADER)
+        .addQueryParam("data_category", HEARTHBEAT_CATEGORY)
+        .sendFuture()
 
+    whenReady(getByCategory) {
+      result =>
+        result.statusCode() shouldBe 200
+        result.bodyAsJsonObject().get.getJsonArray("data") should sameArrayData(Useful.heartbeatDataCategory.getJsonArray("data"))
+    }
+  }
+  "Citizen state" should " be NOT filtered by wrong category" in {
+    val getByCategory = client.get(STATE_ENDPOINT)
+      .putHeader(CITIZEN_AUTHORIZED_HEADER)
+      .addQueryParam("data_category", UNKNOWN)
+      .sendFuture()
+
+    whenReady(getByCategory) {
+      result =>
+        result.statusCode() shouldBe 400
+    }
+  }
   "Citizen state" should " be hidden by unauthorized stakeholder" in {
     whenReady(client.get(STATE_ENDPOINT).putHeader(STAKEHOLDER_AUTHENTICATED_HEADER).sendFuture()) {
       result => result.statusCode() shouldBe 403
@@ -68,12 +90,12 @@ class RestApiTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with 
   "History" should " be readable from citizen" in {
     whenReady(client.get(HISTORY_ENDPOINT)
       .putHeader(CITIZEN_AUTHORIZED_HEADER)
-      .addQueryParam("data_category", HISTORY_CATEGORY)
+      .addQueryParam("data_category", HEARTHBEAT_CATEGORY)
       .addQueryParam("limit", HISTORY_LIMIT.toString).sendFuture())
     {
       result =>
         result.statusCode() shouldBe 200
-        result.bodyAsJsonArray().get should sameArrayData(Useful.historyDataCategory.getJsonArray("data"))
+        result.bodyAsJsonArray().get should sameArrayData(Useful.heartbeatDataCategory.getJsonArray("data"))
     }
   }
 
@@ -111,12 +133,12 @@ class RestApiTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with 
     }
   }
 
-  "Single history data " should " readable from citizen" in {
+  "Single history data" should " readable from citizen" in {
     whenReady(client.patch(STATE_ENDPOINT).putHeader(CITIZEN_AUTHORIZED_HEADER).sendJsonObjectFuture(Useful.postState)) {
       result =>
-        result.statusCode() shouldBe 201
-        val response = result.bodyAsJsonObject().get
-        val dataIdentifier = response.getJsonArray("data").getJsonObject(0).getString("id")
+        result.statusCode() shouldBe 200
+        val response = result.bodyAsJsonArray().get
+        val dataIdentifier = response.getString(0)
         whenReady(client.get(s"$HISTORY_ENDPOINT/$dataIdentifier").putHeader(CITIZEN_AUTHORIZED_HEADER).sendFuture()) {
           result =>
             result.statusCode() shouldBe 200
@@ -135,12 +157,12 @@ class RestApiTest extends AnyFlatSpec with BeforeAndAfterAll with Matchers with 
   }
 
   override def beforeAll(): Unit = {
-    HttpBootstrap.boot()
-    client = HttpBootstrap.webClient()
+    HttpScope.boot()
+    client = HttpScope.webClient()
   }
 
   override def afterAll(): Unit = {
-    HttpBootstrap.teardown()
+    HttpScope.teardown()
     client.close()
   }
 }
@@ -199,7 +221,7 @@ object Useful {
         ]
       }
       """)
-  val historyDataCategory = new JsonObject(
+  val heartbeatDataCategory = new JsonObject(
     """
       {
         "data": [

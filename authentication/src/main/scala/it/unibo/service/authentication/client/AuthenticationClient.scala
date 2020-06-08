@@ -6,13 +6,16 @@ import io.vertx.lang.scala.VertxExecutionContext
 import io.vertx.lang.scala.json.{Json, JsonObject}
 import io.vertx.scala.core.Vertx
 import io.vertx.scala.ext.web.client.{WebClient, WebClientOptions}
-import it.unibo.core.authentication.SystemUser
+import it.unibo.core.authentication.Resources.AuthenticationInfo
+import it.unibo.core.authentication.{AuthenticationParsers, SystemUser, Token, TokenIdentifier}
 import it.unibo.core.client.{RestApiClient, _}
 import it.unibo.core.microservice.FutureService
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.utils.HttpCode
 import it.unibo.service.authentication.client.AuthenticationClient._
-import it.unibo.service.authentication.{AuthenticationService, TokenIdentifier}
+import it.unibo.service.authentication.AuthenticationService
+
+import scala.concurrent.Future
 
 object AuthenticationClient {
   val LOGIN = s"/login"
@@ -20,11 +23,27 @@ object AuthenticationClient {
   val LOGOUT = s"/logout"
   val REFRESH = s"/refreshToken"
 
-  def apply(serviceUri: URI): AuthenticationService = new AuthenticationClient(serviceUri)
-  def apply(host: String, port: Int = 8080): AuthenticationService = new AuthenticationClient(URI.create(s"http://$host:$port"))
+  /**
+   * Create an AuthenticationService proxy client using the same interface of the service.
+   * @param serviceUri Uri where the real Authentication Service is located
+   * @return AuthenticationService instance
+   */
+  def apply(serviceUri: URI): AuthenticationClient = new AuthenticationClient(serviceUri)
+
+  /**
+   * Create an AuthenticationService proxy client using the same interface of the service.
+   * @param host The http host where the real Authentication Service is located
+   * @param port The http port where the real Authentication Service is located
+   * @return AuthenticationService instance
+   */
+  def apply(host: String, port: Int = 8080): AuthenticationClient = new AuthenticationClient(URI.create(s"http://$host:$port"))
 }
 
-private class AuthenticationClient(serviceUri: URI) extends AuthenticationService with RestApiClient with RestClientServiceResponse {
+/**
+ * Authentication client implementation based on vertx webclient. It follow the [[AuthenticationService]] contract.
+ * @param serviceUri  Uri where the real Authentication Service is located.
+ */
+class AuthenticationClient(serviceUri: URI) extends AuthenticationService with RestApiClient with RestClientServiceResponse {
 
   private val vertx = Vertx.vertx()
   private val clientOptions =  WebClientOptions()
@@ -35,11 +54,11 @@ private class AuthenticationClient(serviceUri: URI) extends AuthenticationServic
 
   private implicit val executionContext: VertxExecutionContext = VertxExecutionContext(vertx.getOrCreateContext())
 
-  override def login(email: String, password: String): FutureService[TokenIdentifier] = {
+  override def login(email: String, password: String): FutureService[AuthenticationInfo] = {
     val request = s"${serviceUri.toString}$LOGIN"
     val requestBody = Json.emptyObj().put("email", email).put("password", password)
     parseServiceResponseWhenComplete(webClient.post(request).sendJsonObjectFuture(requestBody)) {
-      case (HttpCode.Created, token) => TokenIdentifier(token)
+      case (HttpCode.Created, authenticationInfo) => parseAuthenticationInfo(new JsonObject(authenticationInfo))
     }.toFutureService
   }
 
@@ -50,10 +69,10 @@ private class AuthenticationClient(serviceUri: URI) extends AuthenticationServic
     }.toFutureService
   }
 
-  override def refresh(identifier: TokenIdentifier): FutureService[TokenIdentifier] = {
+  override def refresh(identifier: TokenIdentifier): FutureService[Token] = {
     val request = s"${serviceUri.toString}$REFRESH"
     parseServiceResponseWhenComplete(webClient.post(request).putHeader(getAuthorizationHeader(identifier)).sendFuture()) {
-      case (HttpCode.Created, newToken) => TokenIdentifier(newToken)
+      case (HttpCode.Created, newToken) => parseToken(new JsonObject(newToken))
     }.toFutureService
   }
 
@@ -64,28 +83,22 @@ private class AuthenticationClient(serviceUri: URI) extends AuthenticationServic
     }.toFutureService
   }
 
+  def close(): Future[Unit] = {
+    webClient.close()
+    vertx.closeFuture()
+  }
+
   private def getAuthorizationHeader(token: TokenIdentifier): (String, String) = "Authorization" -> s"Bearer ${token.token}"
 
+  protected def parseAuthenticationInfo(jsonObject: JsonObject): AuthenticationInfo = {
+    AuthenticationParsers.AuthInfoParser.decode(jsonObject).get
+  }
+
+  protected def parseToken(jsonObject: JsonObject): Token = {
+    AuthenticationParsers.TokenParser.decode(jsonObject).get
+  }
+
   protected def parseUser(jsonObject: JsonObject): SystemUser = {
-    SystemUser(
-      jsonObject.getAsString("email").getOrElse(""),
-      jsonObject.getAsString("username").getOrElse(""),
-      jsonObject.getAsString("password").getOrElse(""),
-      jsonObject.getAsString("identifier").getOrElse(""),
-      jsonObject.getAsString("role").getOrElse("")
-    )
+    AuthenticationParsers.SystemUserParser.decode(jsonObject).get
   }
-
-  protected def parseLoginUser(jsonObject: JsonObject): Option[SystemUser] = {
-    val emailOption = jsonObject.getAsString("email")
-    val username = jsonObject.getAsString("username")
-    val passwordOption = jsonObject.getAsString("password")
-    val identifierOption = jsonObject.getAsString("identifier")
-    val roleOption = jsonObject.getAsString("role")
-    for {
-      email <- emailOption
-      password <- passwordOption
-    } yield SystemUser(email, username.getOrElse(""), password, identifierOption.getOrElse(""), roleOption.getOrElse(""))
-  }
-
 }

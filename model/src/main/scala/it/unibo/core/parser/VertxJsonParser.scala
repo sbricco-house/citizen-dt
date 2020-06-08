@@ -3,6 +3,7 @@ package it.unibo.core.parser
 import io.vertx.lang.scala.json.JsonObject
 import it.unibo.core.data.{Data, Feeder, LeafCategory, Resource, Sensor}
 import it.unibo.core.microservice.vertx._
+import it.unibo.core.parser.ValueParser.ValueParser
 
 trait VertxJsonParser extends DataParser[JsonObject]{
   def supportedCategories : Seq[LeafCategory]
@@ -23,6 +24,7 @@ trait VertxJsonParser extends DataParser[JsonObject]{
 
   override def encode(data: Data): Option[JsonObject] = {
     Some(data)
+      .filter(data => supportedCategories.contains(data.category))
       .flatMap(_ => encodeStrategy(data.value).map {
         obj => obj
           .put("category", data.category.name)

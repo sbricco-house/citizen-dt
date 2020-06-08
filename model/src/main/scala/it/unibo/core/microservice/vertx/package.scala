@@ -5,62 +5,62 @@ import io.vertx.scala.core.http.{HttpServerResponse, ServerWebSocket}
 import it.unibo.core.utils.HttpCode
 
 package object vertx {
+  protected[vertx] def tryOrNone[E](some : => E) : Option[E] = try {
+    Some(some)
+  } catch {
+    case e : Exception => None
+  }
+
+  protected[vertx] def getOrNone[E](string : String, jsonObject: JsonObject)(some : => E) = if(jsonObject.containsKey(string)) {
+    tryOrNone(some)
+  } else {
+    None
+  }
+
+  /**
+   * other conversion that wrap the result of Json.fromObjectString and Json.fromArrayString with Option.
+   */
   object JsonConversion {
+    /**
+     * create a json object from a string, if it possibile
+     * @param buffer The json string
+     * @return Some(object) if the decoding fails None otherwise
+     */
     def objectFromString(buffer : String) : Option[JsonObject] = tryOrNone(Json.fromObjectString(buffer))
 
-    protected[vertx] def tryOrNone[E](some : => E) : Option[E] = try {
-      Some(some)
-    } catch {
-      case e : Exception => None
-    }
+    /**
+     * create a json array from a string, if it possibile
+     * @param buffer The json string
+     * @return Some(array) if the decoding fails None otherwise
+     */
+    def arrayFromString(buffer : String) : Option[JsonArray] = tryOrNone(Json.fromArrayString(buffer))
   }
+
   implicit class RichJson(json : JsonObject) {
     import JsonConversion._
-    def getAsString(s : String) : Option[String] = if(json.containsKey(s)) {
-      tryOrNone { json.getString(s) }
-    } else {
-      None
-    }
-
-    def getAsObject(s : String) : Option[JsonObject] = if(json.containsKey(s)) {
-      tryOrNone { json.getJsonObject(s) }
-    } else {
-      None
-    }
-
-    def getAsLong(s : String) : Option[Long] = if(json.containsKey(s)) {
-      tryOrNone { json.getLong(s) }
-    } else {
-      None
-    }
-
-    def getAsInt(s : String) : Option[Int] = if(json.containsKey(s)) {
-      tryOrNone { json.getInteger(s) }
-    } else {
-      None
-    }
-
-    def getAsBoolean(s : String) : Option[Boolean] = if(json.containsKey(s)) {
-      tryOrNone { json.getBoolean(s)}
-    } else {
-      None
-    }
-
-    def getAsArray(s : String) : Option[JsonArray] = if(json.containsKey(s)) {
-      tryOrNone { json.getJsonArray(s)}
-    } else {
-      None
-    }
-
+    def getAsString(s : String) : Option[String] = getOrNone(s, json){ json.getString(s) }
+    def getAsObject(s : String) : Option[JsonObject] = getOrNone(s, json){ json.getJsonObject(s) }
+    def getAsLong(s : String) : Option[Long] = getOrNone(s, json){ json.getLong(s) }
+    def getAsInt(s : String) : Option[Int] = getOrNone(s, json){ json.getInteger(s) }
+    def getAsDouble(s : String) : Option[Double] = getOrNone(s, json){ json.getDouble(s) }
+    def getAsBoolean(s : String) : Option[Boolean] = getOrNone(s, json){ json.getBoolean(s)}
+    def getAsArray(s : String) : Option[JsonArray] = getOrNone(s, json) { json.getJsonArray(s)}
   }
 
   implicit class RichJsonArray(json : JsonArray) {
     def getAsObjectSeq : Option[Seq[JsonObject]] = {
       val elems = json.size() - 1
       try {
-        val objects = (0 to elems).map {
-          json.getJsonObject
-        }
+        val objects = (0 to elems).map (json.getJsonObject)
+        Some(objects)
+      } catch {
+        case exception: Exception => None
+      }
+    }
+    def getAsStringSeq : Option[Seq[String]] = {
+      val elems = json.size() - 1
+      try {
+        val objects = (0 to elems).map(json.getString)
         Some(objects)
       } catch {
         case exception: Exception => None

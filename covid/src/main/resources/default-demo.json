@@ -1,0 +1,78 @@
+{
+  "citizen" : [
+    {
+      "id" : "gianluca",
+      "coap_port" : 5683,
+      "authentication_client_uri" : "http://localhost:8081",
+      "authorization_client_uri" : "http://localhost:8082",
+      "personal_info" : {
+        "name": "Gianluca",
+        "surname": "Aguzzi",
+        "birthdate": "22/01/1996",
+        "cf": "AGEI39323ALBIBO23"
+      }
+    }
+  ],
+  "authentication" : {
+    "api.rest.host": "localhost",
+    "api.rest.port": 8081,
+    "jwt.key": "paggandpedr"
+  },
+  "users" : [
+    {
+      "identifier" : "gianluca",
+      "username" : "gianluca",
+      "email" : "gianluca@unibo.it",
+      "password" : "12345678",
+      "role" : "citizen"
+    },
+    {
+      "identifier" : "andrea",
+      "username" : "pedro",
+      "email" : "andrea@unibo.it",
+      "password" : "12345678",
+      "role" : "policeman"
+    },
+    {
+      "identifier" : "stefano",
+      "username" : "stefano",
+      "email" : "stefano@unibo.it",
+      "password" : "12345678",
+      "role" : "medic"
+    },
+    {
+      "identifier" : "francesco",
+      "username" : "francesco",
+      "email" : "francesco@unibo.it",
+      "password" : "12345678",
+      "role" : "medic"
+    }
+  ],
+  "authorization" : {
+    "api.rest.host": "localhost",
+    "api.rest.port": 8082,
+    "type" : "role_based",
+    "read_map_permission" : [
+      {
+        "role" : "medic",
+        "categories" : ["medicalData", "personal"]
+      },
+      {
+        "role" : "policeman",
+        "categories" : ["location", "personal"]
+      }
+    ],
+    "write_map_permission" : [
+      {
+        "role" : "medic",
+        "categories" : ["medicalData", "personal"]
+      },
+      {
+        "role" : "policeman",
+        "categories" : ["location", "personal"]
+      }
+    ],
+    "categories" : ["medicalData", "personal", "location"],
+    "write_citizen_permission" : ["medicalData", "location"]
+  }
+}
