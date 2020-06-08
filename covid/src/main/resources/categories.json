@@ -2,7 +2,7 @@
   {
     "name": "bodyTemperature",
     "ttl": 10,
-    "type": "string[]",
+    "type": "temperature",
     "groups": ["medicalData"]
   },
   {

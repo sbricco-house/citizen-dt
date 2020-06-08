@@ -8,6 +8,7 @@ import it.unibo.client.demo.panels.{DashboardState, SimulationPanel, StateManage
 import it.unibo.client.demo.{AuthUserProvider, SwingExecutionContext}
 import it.unibo.covid.data.Parsers
 import it.unibo.service.citizen.client.CitizenClient
+import it.unibo.service.permission.client.AuthorizationClient
 import javax.swing.JFrame
 
 import scala.io.Source
@@ -18,7 +19,6 @@ class DashboardFrame(authUserProvider: AuthUserProvider, citizenId: String) exte
   val executionContext = new SwingExecutionContext()
   val registry = Parsers.configureRegistryFromJson(new JsonArray(Source.fromResource("categories.json").mkString))
   val client = new CitizenClient(citizenId, registry)
-
   val dataSimulator = DataSimulator()
   val controller = new CDTController(dataSimulator, authUserProvider, client)
 

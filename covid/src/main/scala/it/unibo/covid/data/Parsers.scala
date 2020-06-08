@@ -50,8 +50,9 @@ object Parsers {
     .registerParser(VertxJsonParser(ValueParser.Json.stringParser, nameCategory, surnameCategory, birthdateCategory, fiscalCodeCategory))
     .registerGroupCategory(personalDataCategory)
     //medical data
-    .registerParser(VertxJsonParser(ValueParser.Json.doubleParser, bodyTemperatureCategory, bloodOxygenCategory))
     .registerParser(VertxJsonParser(ValueParser.Json.intParser, heartbeatCategory))
+    .registerParser(VertxJsonParser(ValueParser.Json.doubleParser, bloodOxygenCategory))
+    .registerParser(VertxJsonParser(temperatureParser, bodyTemperatureCategory))
     .registerParser(VertxJsonParser(seqStringParser, medicalRecordCategory))
     .registerGroupCategory(medicalDataCategory)
     //location data

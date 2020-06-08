@@ -52,6 +52,7 @@ class CitizenClient(override val citizenIdentifier : String,
     val jsonData = data.map(registry.encode).collect { case Some(data) => data }
     val jsonArray = Json.arr(jsonData:_*)
     val jsonPayload = Json.obj("data" -> jsonArray)
+    println("LOG : payload to sent = " + jsonPayload)
     val request = webClient.patch(httpStateEndpoint).putHeader(authorizationHeader(who)).sendJsonObjectFuture(jsonPayload)
 
     parseServiceResponseWhenComplete(request) {
