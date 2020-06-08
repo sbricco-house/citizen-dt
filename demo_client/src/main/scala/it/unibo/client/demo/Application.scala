@@ -5,7 +5,7 @@ import java.net.URI
 import it.unibo.client.demo.frame.LoginFrame
 import it.unibo.service.authentication.client.AuthenticationClient
 
-object Application extends App {git
+object Application extends App {
   val context = new SwingExecutionContext()
   val authenticationClient = AuthenticationClient(URI.create("http://localhost:8081"))
 
