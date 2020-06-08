@@ -1,19 +1,42 @@
 package it.unibo.core.parser
-import it.unibo.core.data.{Data, DataCategory, LeafCategory}
+import it.unibo.core.data.{Data, DataCategory, GroupCategory, LeafCategory}
 
-// TODO: review this component
-trait DataParserRegistry[Raw] extends DataParser[Raw] {
-  def registryParser(parser: DataParser[Raw]): Unit
+trait DataParserRegistry[External] extends DataParser[External] {
+  def registerGroupCategory(groupCategory : GroupCategory) : DataParserRegistry[External]
+
+  def registerParser(dataParser : DataParser[External]) : DataParserRegistry[External]
+
+  def decodeCategory(category : String) : Option[DataCategory]
 }
 
 object DataParserRegistry {
-  def apply[Raw](parsers: DataParser[Raw]*): DataParserRegistry[Raw] = new DefaultDataParserRegistry(parsers.toList)
+  def apply[External](): DataParserRegistry[External] = DataParserRegistryImpl[External]()
 
-  class DefaultDataParserRegistry[Raw](private var parserRegistry: List[DataParser[Raw]]) extends DataParserRegistry[Raw] {
-    def registryParser(parser: DataParser[Raw]): Unit = parserRegistry ++= List(parser)
-    override def decode(rawData: Raw): Option[Data] = parserRegistry.map(_.decode(rawData)).collectFirst { case Some(value) => value }
-    override def encode(data: Data): Option[Raw] = parserRegistry.map(_.encode(data)).collectFirst { case Some(value) => value }
-    override def target: LeafCategory = LeafCategory("all", -1) // TODO: replace it
+  private case class DataParserRegistryImpl[External](categoryEncoder : Map[String, DataCategory] = Map.empty[String, DataCategory],
+                                                      dataParserRegistry : Seq[DataParser[External]] = Seq.empty[DataParser[External]]) extends DataParserRegistry[External] {
+
+    override def decode(rawData: External): Option[Data] = dataParserRegistry
+      .map(_.decode(rawData))
+      .collectFirst { case Some(value) => value}
+
+
+    override def encode(data: Data): Option[External] = dataParserRegistry
+      .map(_.encode(data))
+      .collectFirst { case Some(value) => value }
+
+    override def registerGroupCategory(groupCategory: GroupCategory): DataParserRegistry[External] = {
+      val categoryEncoderUpdated = this.categoryEncoder + (groupCategory.name -> groupCategory)
+      this.copy(categoryEncoder = categoryEncoderUpdated)
+    }
+
+    def registerParser(dataParser : DataParser[External]) : DataParserRegistry[External] = {
+      val categoryEncoderUpdated = this.categoryEncoder ++ dataParser.supportedCategories.map(category => category.name -> category)
+      this.copy(categoryEncoderUpdated, dataParserRegistry = this.dataParserRegistry :+ dataParser)
+    }
+
+    override def decodeCategory(category: String): Option[DataCategory] = this.categoryEncoder.get(category)
+
+    override def supportedCategories: Seq[LeafCategory] = this.categoryEncoder.values.collect { case cat : LeafCategory => cat }.toSeq
   }
 }
 

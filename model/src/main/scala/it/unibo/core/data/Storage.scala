@@ -19,17 +19,21 @@ trait Storage[D, ID] {
   /**
    * get the data associated to an ID in the storage, if it is already stored.
    * @param id
-   * @return Left(Some(_)) if the data is present, Right(Failure(_)) otherwise
+   * @return Success(Some(_)) if the data is present, Failure(_) otherwise
    */
   def get(id : ID) : Try[Option[D]]
 
   /**
    * get a data that satisfy some logic
    * @param policy: the policy used to find a data
-   * @return Left(Some(_)) if there is a data that satisfy the policy, Right(Failure(_)) otherwise
+   * @return Success(Some(_)) if there is a data that satisfy the policy, Failure(_) otherwise
    */
   def find(policy : D => Boolean) : Try[Option[D]]
-
-  def findMany(policy : D => Boolean, maxElements: Option[Int] = None) : Try[Seq[D]]
+  /**
+   * get a set of data that satisfy some logic
+   * @param policy: the policy used to find a data
+   * @return Success(Seq) if there are data that satisfy the policy, Failure(_) otherwise
+   */
+  def findMany(policy : D => Boolean, maxElements: Int) : Try[Seq[D]]
 }
 
