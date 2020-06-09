@@ -1,15 +1,40 @@
 package it.unibo.core.parser
+import io.vertx.lang.scala.json.JsonObject
 import it.unibo.core.data.{Data, DataCategory, GroupCategory, LeafCategory}
 
+/**
+ * this is a registry that contains DataParser used to encode / decode multiple Data categories.
+ * This registry allow also to marshall and unmarshall DataCategory objects.
+ * @tparam External the type of codification used to store data externally (e.g. Json, Xml,String,..)
+ */
 trait DataParserRegistry[External] extends DataParser[External] {
+  /**
+   * Add a group category in the registry
+   * @param groupCategory
+   * @return A new DataParserRegistry enabled to parser groupCategory
+   */
   def registerGroupCategory(groupCategory : GroupCategory) : DataParserRegistry[External]
 
+  /**
+   * Add a dataParser in the registry
+   * @param dataParser
+   * @return a new DataParserRegistry that used dataParser to decode/encode Data.
+   */
   def registerParser(dataParser : DataParser[External]) : DataParserRegistry[External]
 
+  /**
+   * decode a category from a string. To encode a category it search:
+   *  - from all data category group registered
+   *  - from all dataParser supported category
+   * @param category : The category name
+   * @return Some(category) if the registry find the category, None otherwise
+   */
   def decodeCategory(category : String) : Option[DataCategory]
 }
 
 object DataParserRegistry {
+  val emptyJson : DataParserRegistry[JsonObject] = DataParserRegistryImpl()
+
   def apply[External](): DataParserRegistry[External] = DataParserRegistryImpl[External]()
 
   private case class DataParserRegistryImpl[External](categoryEncoder : Map[String, DataCategory] = Map.empty[String, DataCategory],

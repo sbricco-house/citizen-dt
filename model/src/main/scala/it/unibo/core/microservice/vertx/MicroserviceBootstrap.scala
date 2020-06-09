@@ -9,9 +9,9 @@ import scala.util.Try
  */
 trait MicroserviceBootstrap[CONFIG] {
   /**
-   *
+   * create a service runtime from a configuration object
    * @param config
-   * @return
+   * @return Success(runtime) if the configuration is valid, Failure(exc) otherwise
    */
   def runtimeFromJson(config: CONFIG): Try[MicroserviceRuntime]
 }

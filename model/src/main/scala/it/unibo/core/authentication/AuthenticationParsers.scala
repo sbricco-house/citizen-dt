@@ -11,9 +11,6 @@ import it.unibo.core.microservice.vertx._
  */
 object AuthenticationParsers {
 
-  /**
-   *
-   */
   object TokenParser extends Parser[JsonObject, Token] {
     override def encode(rawData: Token): JsonObject = new JsonObject()
       .put("token", rawData.token)
@@ -26,9 +23,6 @@ object AuthenticationParsers {
     }
   }
 
-  /**
-   *
-   */
   object AuthInfoParser extends Parser[JsonObject, AuthenticationInfo] {
     override def encode(rawData: AuthenticationInfo): JsonObject = new JsonObject()
       .mergeIn(TokenParser.encode(rawData.token))
@@ -40,9 +34,6 @@ object AuthenticationParsers {
       } yield AuthenticationInfo(token, user)
   }
 
-  /**
-   *
-   */
   object SystemUserParser extends Parser[JsonObject, SystemUser] {
     override def encode(user: SystemUser): JsonObject = new JsonObject()
       .put("email", user.email)

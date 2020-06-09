@@ -34,7 +34,7 @@ class CitizenBootstrap(authorizationServiceParser : MismatchableParser[JsonObjec
       .getOrElse(Failure(new IllegalArgumentException(errorString)))
   }
 
-  def tryCreateCitizen(vertx: Vertx,
+  private def tryCreateCitizen(vertx: Vertx,
                        json: JsonObject,
                        authenticationService: AuthenticationService,
                        authorizationService: AuthorizationService,
@@ -45,7 +45,7 @@ class CitizenBootstrap(authorizationServiceParser : MismatchableParser[JsonObjec
       .getOrElse(Failure(new IllegalArgumentException("wrong citizen option")))
   }
 
-  def createRuntime(json: JsonObject, vertx: Vertx, citizen : CitizenDigitalTwin, dataParserRegistry: DataParserRegistry[JsonObject]) : MicroserviceRuntime = {
+  private def createRuntime(json: JsonObject, vertx: Vertx, citizen : CitizenDigitalTwin, dataParserRegistry: DataParserRegistry[JsonObject]) : MicroserviceRuntime = {
     val httpPort = json.getAsInt("http_port").getOrElse(8080)
     json.getAsInt("coap_port") match {
       case None => new HttpOnlyRuntime(httpPort, vertx, citizen, dataParserRegistry)

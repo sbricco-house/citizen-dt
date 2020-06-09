@@ -11,6 +11,11 @@ object UserMiddleware {
   def apply() = new UserMiddleware()
   private val bearer = "Bearer"
 
+  /**
+   * It tries to extract the token to the authorization header expressed in string from.
+   * @param authorizationHeader
+   * @return If authorizationHeader is : Bearer token, it returns Some(token), None otherwise
+   */
   def extractToken(authorizationHeader: String): Option[String] = {
     Some(authorizationHeader)
       .filter(_.contains(bearer))
@@ -18,9 +23,17 @@ object UserMiddleware {
       .flatMap(sequence => sequence.find(_ != bearer))
   }
 
+  /**
+   * It wraps a token with Bearer
+   * @param token The token expressed under string encoding
+   * @return The string "Bearer $token"
+   */
   def asToken(token : String) : String =  s"$bearer $token"
 }
 
+/**
+ * a middleware used to verify the presence of authorization token in http request (in vertx),
+ */
 class UserMiddleware private() extends Handler[RoutingContext] {
   import UserMiddleware._
   override def handle(context: RoutingContext): Unit = {
