@@ -5,9 +5,10 @@ import it.unibo.core.data.{Data, Feeder, LeafCategory, Resource, Sensor}
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.ValueParser.ValueParser
 
+/**
+ * a skeleton on DataParser used to manage JsonObject external representation
+ */
 trait VertxJsonParser extends DataParser[JsonObject]{
-  def supportedCategories : Seq[LeafCategory]
-
   override def decode(rawData: JsonObject): Option[Data] = {
     val categoryOption = rawData.getAsString("category").flatMap(extractCategory)
     val timestampOption = rawData.getAsLong("timestamp")
@@ -57,6 +58,13 @@ trait VertxJsonParser extends DataParser[JsonObject]{
 }
 
 object VertxJsonParser {
+  /**
+   * create a VertxJsonParser from a ValueParser (i.e. a parser that encode/decode value part of Data) and
+   * a seq of LeafCategory supported by this DataParser
+   * @param valueJsonParser The value parser used to encode/decode json
+   * @param categories The category supported by this DataParser
+   * @return A new instance of VertxJsonParser
+   */
   def apply(valueJsonParser : ValueParser[JsonObject], categories : LeafCategory *) : VertxJsonParser = new VertxJsonParser {
     override def supportedCategories: Seq[LeafCategory] = categories
 

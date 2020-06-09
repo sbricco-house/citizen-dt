@@ -7,7 +7,7 @@ import it.unibo.core.parser.ParserLike.Parser
 import it.unibo.core.parser.ValueParser.ValueParser
 import it.unibo.core.parser.{DataParserRegistry, VertxJsonParser}
 import it.unibo.covid.data.DataParserRegistryParser.ValueParserMap
-
+//TODO documentation
 object DataParserRegistryParser {
   type ValueParserMap = String => Option[ValueParser[JsonObject]]
   def apply(valueParserMap: ValueParserMap) = new DataParserRegistryParser(valueParserMap)

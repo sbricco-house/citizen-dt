@@ -11,8 +11,9 @@ sealed trait Feeder
  */
 case class Resource(URI : String) extends Feeder
 
+//TODO add owned by in sensor.
 /**
  * a feeder can be a generic sensor that produce some information
- * @param name
+ * @param name 
  */
 case class Sensor(name : String) extends Feeder

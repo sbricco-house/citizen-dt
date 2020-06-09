@@ -10,6 +10,13 @@ import it.unibo.service.permission.{AuthorizationService, AuthorizationVerticle}
 
 import scala.util.{Success, Try}
 
+/**
+ * create a authorization bootstrap from a Json configuration
+ * @param provider JWTAuth provider used to decode JWT token. It must be the same provider used by the authentication service
+ * @param vertx The vertx instance used to boo authorization
+ * @param registry Used to encode / decode categories by authorization service
+ * @param defaultPort the port used by default by the boostrapper
+ */
 class MockAuthorizationBootstrap(provider : JWTAuth, vertx: Vertx, registry : DataParserRegistry[JsonObject], defaultPort : Int = 8081) extends MicroserviceBootstrap[JsonObject] {
   override def runtimeFromJson(config: JsonObject): Try[MicroserviceRuntime] = {
     val authorization : AuthorizationService = extractServiceFromConfig(config)

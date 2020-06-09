@@ -5,14 +5,14 @@ import it.unibo.core.authentication.{SystemUser, TokenIdentifier}
 import it.unibo.core.data.{Data, GroupCategory, InMemoryStorage, LeafCategory, Storage}
 import it.unibo.core.parser.{DataParserRegistry, ValueParser, VertxJsonParser}
 import it.unibo.service.authentication.AuthenticationService
-import it.unibo.service.citizen.authentication.MockAuthenticationClient
+import it.unibo.service.authentication.mock.MockAuthenticationClient
 import it.unibo.service.permission.AuthorizationService
 import it.unibo.service.permission.mock.MockAuthorization
 
 object CitizenMicroservices {
   val integerDataParser = VertxJsonParser(ValueParser.Json.intParser, Categories.bloodPressureCategory)
   val doubleDataParser = VertxJsonParser(ValueParser.Json.intParser, Categories.heartBeatCategory)
-  val parserRegistry = DataParserRegistry()
+  val parserRegistry = DataParserRegistry.emptyJson
     .registerParser(integerDataParser)
     .registerParser(doubleDataParser)
     .registerGroupCategory(Categories.medicalDataCategory)
