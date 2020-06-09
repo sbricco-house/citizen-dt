@@ -16,11 +16,29 @@ import it.unibo.core.utils.ServiceError.MissingParameter
 /**
  * The http interface to interact with authorization service logic.
  * the endpoints are:
- *  - host:/authorization/{citezenId}/write
- *  - host:/authorization/{citezenId}/write?data_category=x
- *  - host:/authorization/{citizenId}/read
- *  - host:/authorization/{citezenId}/write?data_category=y
+ *  - GET host:/authorization/{citizenId}/write
+ *  o OK(200) : [categories..]
+ *  # STANDARD_ERRORS
  *
+ *  - GET host:/authorization/{citizenId}/write?data_category=x
+ *  o OK(200) : [category]
+ *  # STANDARD_ERRORS
+ *
+ *  - GET host:/authorization/{citizenId}/read
+ *  o OK(200) : [categories..]
+ *  # STANDARD_ERRORS
+ *
+ *  - GET host:/authorization/{citizenId}/write?data_category=y
+ *  o OK(200) : [category]
+ *  # STANDARD_ERRORS
+ *  # STANDARD_ERRORS
+ *  x UNAUTHORIZED(401)
+ *  x FORBIDDEN(403)
+ *  x INTERNAL_ERROR(500)
+ *  x BAD_CONTENT(400)
+ *
+ * each request must set Authorization header as follow:
+ *  Authorization -> Bearer #authToken
  * this implementation is based on vertx.
  * @param authorization The main authorization logic
  * @param parser The parser used to decode/encode categories

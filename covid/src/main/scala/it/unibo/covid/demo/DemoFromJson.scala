@@ -10,6 +10,16 @@ import it.unibo.service.citizen.HistoryStorage
 
 import scala.util.{Failure, Success}
 
+/**
+ * create a citizen from a json that has:
+ * {
+ *  "id" : "the citizen id..",
+ *  "coap_port" : #DEFAUTL 5683,
+ *  "http_port" : #DEFAULT 8080
+ *  "authentication_client_uri" : "#URI authentication",
+ *  "authorization_client_uri" : "#URI authorization"
+ * }
+ */
 object DemoFromJson extends App {
   val json = args.headOption.orElse(Some("default-citizen.json")).map(jsonObjectFromFile).get
   val registry = args.lift(1) match {

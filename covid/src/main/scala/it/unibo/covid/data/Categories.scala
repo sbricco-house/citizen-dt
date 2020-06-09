@@ -2,8 +2,9 @@ package it.unibo.covid.data
 
 import it.unibo.core.data.{GroupCategory, LeafCategory}
 
-//TODO categories could be loaded from a JSON file
-//TODO put a TTL
+/**
+ * a set of standard categories used in the covid domain.
+ */
 object Categories {
   //medical data
   val bodyTemperatureCategory = LeafCategory("bodyTemperature")

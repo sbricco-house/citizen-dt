@@ -10,6 +10,14 @@ import it.unibo.service.authentication.client.AuthenticationClient
 import it.unibo.service.permission.AuthorizationService
 import it.unibo.service.permission.client.AuthorizationClient
 import it.unibo.core.microservice.vertx._
+
+/**
+ * parsers used to create a microservice client from a json configuration.
+ * for specify authorization microservice:
+ *  authorization_client_uri : #URI
+ * for specifiy authentication microservice:
+ *  authentication_client_uri : #URI
+ */
 object ClientParsers {
   def createAuthorizationParser(registry : DataParserRegistry[JsonObject]) = ParserLike.decodeOnly[JsonObject, AuthorizationService] {
     (json : JsonObject) => json.getAsString("authorization_client_uri").map(new URI(_)).map(AuthorizationClient(_, registry))

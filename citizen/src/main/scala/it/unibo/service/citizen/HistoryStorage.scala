@@ -5,16 +5,24 @@ import it.unibo.core.dt.State
 
 import scala.util.{Success, Try}
 
+/**
+ * this class is a specialization of Storage used to store historical data.
+ * It enable to extract state from the history.
+ */
 trait HistoryStorage extends Storage[Data, String] {
+  /**
+   * try to extract current citizen state from the history
+   * @return Success(State) if the storage can fetch the state, Fail(reason) otherwise
+   */
   def extractState() : Try[State]
 }
 
 object HistoryStorage {
   /**
    * USING THIS OBJECT ONLY FOR DEMO APPLICATION
-   *
-   * @param storage
-   * @return
+   * create a history storage from a in memory storage.
+   * @param storage The storage wrapped from this concepts
+   * @return an in memory history storage created.
    */
   def fromInMemory(storage : InMemoryStorage[Data, String] = InMemoryStorage()) : HistoryStorage = new HistoryStorage {
     override def extractState(): Try[State] = {

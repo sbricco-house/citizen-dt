@@ -6,8 +6,17 @@ import io.vertx.lang.scala.json.JsonObject
 import it.unibo.core.data.{Data, LeafCategory, Resource}
 import it.unibo.core.microservice.vertx._
 
+/**
+ * utility function used to load a system user from json file.
+ * the json must have:
+ * {
+ *    "name": ..
+ *    "surname" : ..
+ *    "birthdate" : ..
+ *    "cf" : ..
+ * }
+ */
 object Personalnfo {
-
   def fromJson(json: JsonObject): Seq[Data] = {
     val personalInfo = for {
       name <- json.getAsString("name").flatMap(Personalnfo.toData("name", _))

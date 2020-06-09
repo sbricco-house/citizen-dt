@@ -1,7 +1,13 @@
 package it.unibo.core.authentication
 
 /**
- *
+ * the representation of an user logged in the system.
+ * It has:
+ *  - an email
+ *  - an username used to logged in
+ *  - a secret password
+ *  - a global identifier
+ *  - a role
  */
 trait SystemUser {
   def email: String

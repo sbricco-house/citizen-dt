@@ -1,6 +1,13 @@
 package it.unibo.core.authentication
 
+/**
+ * Common structure of a token, it wraps a token value string (e.g. JWT)
+ * @param token The token wrapped by this class
+ */
 protected abstract class TokenValue(token: String) {
+  /**
+   * @return a "Brearer" version of token : "Bearer $token"
+   */
   def bearer : String = s"Bearer $token"
 }
 
