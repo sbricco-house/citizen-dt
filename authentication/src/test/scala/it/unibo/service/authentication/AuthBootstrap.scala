@@ -38,7 +38,7 @@ object AuthBootstrap {
 
   var vertx: Vertx = _
   val config = new JsonObject(Source.fromResource("testconfig.json").mkString)
-  val port: Integer = config.getInteger("api.rest.port")
+  val port: Integer = config.getInteger("http_port")
 
   val LOGIN_ENDPOINT = s"http://localhost:$port/login"
   val VERIFY_ENDPOINT = s"http://localhost:$port/verify?token=%s"
