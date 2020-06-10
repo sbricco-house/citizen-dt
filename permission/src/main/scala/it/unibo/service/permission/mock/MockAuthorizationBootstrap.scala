@@ -21,8 +21,8 @@ class MockAuthorizationBootstrap(provider : JWTAuth, vertx: Vertx, registry : Da
   override def runtimeFromJson(config: JsonObject): Try[MicroserviceRuntime] = {
     val authorization : AuthorizationService = extractServiceFromConfig(config)
     println("AUTHORIZATION MOCK = " + authorization)
-    val host = config.getString("api.rest.host", "localhost")
-    val port = config.getInteger("api.rest.port", defaultPort)
+    val host = config.getString("host", "localhost")
+    val port = config.getInteger("http_port", defaultPort)
     Success(new VertxRuntime(vertx, () => new AuthorizationVerticle(authorization, registry, port, host)))
   }
 

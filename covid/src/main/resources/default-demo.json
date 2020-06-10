@@ -3,6 +3,9 @@
     {
       "id" : "gianluca",
       "coap_port" : 5683,
+      "coap_port" : 5683,
+      "http_port" : 8080,
+      "host" : "0.0.0.0",
       "authentication_client_uri" : "http://localhost:8081",
       "authorization_client_uri" : "http://localhost:8082",
       "personal_info" : {
@@ -14,8 +17,8 @@
     }
   ],
   "authentication" : {
-    "api.rest.host": "localhost",
-    "api.rest.port": 8081,
+    "host": "localhost",
+    "http_port": 8081,
     "jwt.key": "paggandpedr"
   },
   "users" : [
@@ -49,8 +52,8 @@
     }
   ],
   "authorization" : {
-    "api.rest.host": "localhost",
-    "api.rest.port": 8082,
+    "host": "localhost",
+    "http_port": 8082,
     "type" : "role_based",
     "read_map_permission" : [
       {

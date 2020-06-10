@@ -8,18 +8,20 @@ import it.unibo.service.citizen.coap.CoapObservableApi
 import it.unibo.service.citizen.websocket.WebSocketCitizenApi
 import it.unibo.service.citizen.{CitizenDigitalTwin, CitizenVerticle, RestCitizenApi}
 
-class HttpOnlyRuntime(httpPort : Int,
+class HttpOnlyRuntime(host : String,
+                      httpPort : Int,
                       vertx: Vertx,
                       citizen : CitizenDigitalTwin,
                       parserRegistry: DataParserRegistry[JsonObject])
-  extends VertxRuntime(vertx, () => new CitizenVerticle(citizen, parserRegistry, httpPort) with RestCitizenApi with WebSocketCitizenApi)
+  extends VertxRuntime(vertx, () => new CitizenVerticle(citizen, parserRegistry, httpPort, host) with RestCitizenApi with WebSocketCitizenApi)
 
 
-class HttpCoapRuntime(httpPort : Int,
+class HttpCoapRuntime(host : String,
+                      httpPort : Int,
                       coapPort : Int,
                       vertx: Vertx,
                       citizen : CitizenDigitalTwin,
-                      parserRegistry: DataParserRegistry[JsonObject]) extends HttpOnlyRuntime(httpPort, vertx, citizen, parserRegistry) {
+                      parserRegistry: DataParserRegistry[JsonObject]) extends HttpOnlyRuntime(host, httpPort, vertx, citizen, parserRegistry) {
   val coap = CoapObservableApi(citizen, parserRegistry, coapPort)
   override def start(): Unit = {
     super.start()
