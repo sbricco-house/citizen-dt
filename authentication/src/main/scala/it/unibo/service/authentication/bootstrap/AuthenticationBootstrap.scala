@@ -30,8 +30,8 @@ class AuthenticationBootstrap(userStorage: Storage[SystemUser, String]) extends 
 
   private val configParser = ParserLike.decodeOnly[JsonObject, AuthenticationConfig] {
     json =>
-      val host = json.getString("api.rest.host", "localhost")
-      val port = json.getInteger("api.rest.port", 8123)
+      val host = json.getString("host", "localhost")
+      val port = json.getInteger("http_port", 8123)
       json.getAsString("jwt.key")
         .map(VertxJWTProvider.symmetricOptions)
         .map(AuthenticationConfig(host, port, _))
