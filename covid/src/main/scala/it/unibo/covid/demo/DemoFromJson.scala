@@ -32,7 +32,7 @@ object DemoFromJson extends App {
   }
   val bootstrapper = new CitizenBootstrap(createAuthorizationParser(registry), authenticationParser, registry, storageParser)
 
-  bootstrapper.runtimeFromJson(json) match {
+  bootstrapper.runtimeFromConfiguration(json) match {
     case Success(runtime) => runtime.start()
     case Failure(exception) => println(exception)
   }

@@ -2,7 +2,7 @@ package it.unibo.covid.bootstrap
 
 import io.vertx.lang.scala.json.JsonObject
 import io.vertx.scala.core.Vertx
-import it.unibo.core.microservice.MicroserviceRuntime
+import it.unibo.core.microservice.{MicroserviceBootstrap, MicroserviceRuntime}
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.DataParserRegistry
 import it.unibo.core.parser.ParserLike.MismatchableParser
@@ -15,7 +15,7 @@ class CitizenBootstrap(authorizationServiceParser : MismatchableParser[JsonObjec
                        authenticationServiceParser : MismatchableParser[JsonObject, AuthenticationService],
                        dataRegistryParser: DataParserRegistry[JsonObject],
                        storageParser : MismatchableParser[JsonObject, HistoryStorage]) extends MicroserviceBootstrap[JsonObject] {
-  def runtimeFromJson(json : JsonObject) : Try[MicroserviceRuntime] = {
+  def runtimeFromConfiguration(json : JsonObject) : Try[MicroserviceRuntime] = {
     val vertx = Vertx.vertx()
     val authorizationTry = tryCreate(json, authorizationServiceParser, "wrong string for authorization")
     val authenticationTry = tryCreate(json, authenticationServiceParser, "wrong string for authentication")

@@ -10,7 +10,7 @@ object Run extends App {
   // should be read directly from a file wooooooow
   val config = Json.fromObjectString(Source.fromResource("defaultconfig.json").mkString)
   val storage = MockUserStorage.generateDefault()
-  new AuthenticationBootstrap(storage).runtimeFromJson(config) match {
+  new AuthenticationBootstrap(storage).runtimeFromConfiguration(config) match {
     case Failure(exception) => println(exception)
     case Success(runtime) => runtime.start()
   }

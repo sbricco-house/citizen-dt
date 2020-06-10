@@ -35,6 +35,7 @@ import scala.util.{Failure, Success}
  * {
  *  "id" : #citizen id,
  *  "host" : #default localhost
+ *
  *  "coap_port" : #default 5683,
  *  "http_port" : #default 8080
  *  "authentication_client_uri" : #URI authentication,
@@ -112,14 +113,14 @@ object RealCaseDemo extends App {
     case Some(some) => some
   }
 
-  val authenticationRuntime = new AuthenticationBootstrap(storage).runtimeFromJson(authenticationPart)
+  val authenticationRuntime = new AuthenticationBootstrap(storage).runtimeFromConfiguration(authenticationPart)
   authenticationRuntime match {
     case Success(runtime) => runtime.start()
     case _ => throw new IllegalArgumentException("wrong configuration for authentication")
   }
 
   val citizenBootstrapper = new CitizenBootstrap(createAuthorizationParser(registry), authenticationParser, registry, storageUserParser)
-  citizensPart.map(citizenBootstrapper.runtimeFromJson).foreach {
+  citizensPart.map(citizenBootstrapper.runtimeFromConfiguration).foreach {
     case Success(runtime) => runtime.start()
     case Failure(exception) => throw exception
   }
@@ -130,7 +131,7 @@ object RealCaseDemo extends App {
 
   val authorizationBootstrapper = new MockAuthorizationBootstrap(authProvider, vertx, registry)
 
-  authorizationBootstrapper.runtimeFromJson(authorizationPart) match {
+  authorizationBootstrapper.runtimeFromConfiguration(authorizationPart) match {
     case Success(runtime) => runtime.start()
     case Failure(exc) => throw exc
   }

@@ -3,8 +3,8 @@ package it.unibo.service.permission.mock
 import io.vertx.lang.scala.json.JsonObject
 import io.vertx.scala.core.Vertx
 import io.vertx.scala.ext.auth.jwt.JWTAuth
-import it.unibo.core.microservice.MicroserviceRuntime
-import it.unibo.core.microservice.vertx.{MicroserviceBootstrap, _}
+import it.unibo.core.microservice.{MicroserviceBootstrap, MicroserviceRuntime}
+import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.DataParserRegistry
 import it.unibo.service.permission.{AuthorizationService, AuthorizationVerticle}
 
@@ -18,7 +18,7 @@ import scala.util.{Success, Try}
  * @param defaultPort the port used by default by the boostrapper
  */
 class MockAuthorizationBootstrap(provider : JWTAuth, vertx: Vertx, registry : DataParserRegistry[JsonObject], defaultPort : Int = 8081) extends MicroserviceBootstrap[JsonObject] {
-  override def runtimeFromJson(config: JsonObject): Try[MicroserviceRuntime] = {
+  override def runtimeFromConfiguration(config: JsonObject): Try[MicroserviceRuntime] = {
     val authorization : AuthorizationService = extractServiceFromConfig(config)
     println("AUTHORIZATION MOCK = " + authorization)
     val host = config.getString("host", "localhost")

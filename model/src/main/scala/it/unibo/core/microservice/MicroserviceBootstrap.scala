@@ -1,6 +1,4 @@
-package it.unibo.core.microservice.vertx
-
-import it.unibo.core.microservice.MicroserviceRuntime
+package it.unibo.core.microservice
 
 import scala.util.Try
 
@@ -13,5 +11,5 @@ trait MicroserviceBootstrap[CONFIG] {
    * @param config
    * @return Success(runtime) if the configuration is valid, Failure(exc) otherwise
    */
-  def runtimeFromJson(config: CONFIG): Try[MicroserviceRuntime]
+  def runtimeFromConfiguration(config: CONFIG): Try[MicroserviceRuntime]
 }

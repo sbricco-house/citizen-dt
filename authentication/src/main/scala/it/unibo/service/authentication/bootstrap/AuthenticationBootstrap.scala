@@ -5,7 +5,7 @@ import io.vertx.scala.core.Vertx
 import io.vertx.scala.ext.auth.jwt.{JWTAuth, JWTAuthOptions}
 import it.unibo.core.authentication.{SystemUser, VertxJWTProvider}
 import it.unibo.core.data.Storage
-import it.unibo.core.microservice.MicroserviceRuntime
+import it.unibo.core.microservice.{MicroserviceBootstrap, MicroserviceRuntime}
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.ParserLike
 import it.unibo.service.authentication.AuthenticationService
@@ -39,7 +39,7 @@ class AuthenticationBootstrap(userStorage: Storage[SystemUser, String]) extends 
 
   private case class AuthenticationConfig(host: String, port: Int, jwtAuthOptions: JWTAuthOptions)
 
-  override def runtimeFromJson(json: JsonObject): Try[MicroserviceRuntime] = {
+  override def runtimeFromConfiguration(json: JsonObject): Try[MicroserviceRuntime] = {
     val vertx = Vertx.vertx()
     configParser.decode(json) match {
       case Some(AuthenticationConfig(host, port, jwtOptions)) =>
