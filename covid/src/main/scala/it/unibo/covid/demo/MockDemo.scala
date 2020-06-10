@@ -36,7 +36,7 @@ object MockDemo extends App {
   val mockAuth = MockAuthenticationClient(Seq(token -> user))
   val mockAutho = MockAuthorization.acceptAll(registry)
   val citizen = CitizenDigitalTwin.fromVertx(mockAuth, mockAutho, id, HistoryStorage.fromInMemory(), vertx)
-  val runtime = new HttpCoapRuntime(httpPort, coapPort, vertx, citizen, registry)
+  val runtime = new HttpCoapRuntime("0.0.0.0", httpPort, coapPort, vertx, citizen, registry)
   runtime.start()
 
 }

@@ -49,8 +49,8 @@ class CitizenBootstrap(authorizationServiceParser : MismatchableParser[JsonObjec
     val httpPort = json.getAsInt("http_port").getOrElse(8080)
     val host = json.getAsString("host").getOrElse("localhost")
     json.getAsInt("coap_port") match {
-      case None => new HttpOnlyRuntime(httpPort, vertx, citizen, dataParserRegistry)
-      case Some(coapPort) => new HttpCoapRuntime(httpPort, coapPort, vertx, citizen, dataParserRegistry)
+      case None => new HttpOnlyRuntime(host, httpPort, vertx, citizen, dataParserRegistry)
+      case Some(coapPort) => new HttpCoapRuntime(host, httpPort, coapPort, vertx, citizen, dataParserRegistry)
     }
   }
 }

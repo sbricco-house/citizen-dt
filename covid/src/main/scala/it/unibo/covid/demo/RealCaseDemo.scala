@@ -34,6 +34,7 @@ import scala.util.{Failure, Success}
  * #Citizen object schema
  * {
  *  "id" : #citizen id,
+ *  "host" : #default localhost
  *  "coap_port" : #default 5683,
  *  "http_port" : #default 8080
  *  "authentication_client_uri" : #URI authentication,
@@ -57,15 +58,15 @@ import scala.util.{Failure, Success}
  *
  * #Authentication object schema
  * {
- *    "api.rest.host": ..,
- *    "api.rest.port": ..,
+ *    "host": ..,
+ *    "http_port": ..,
  *    "jwt.key": ".." #the secret shared among servers
  * }
  *
  * #Authorization object schema
  * {
- *    "api.rest.host": ..
- *    "api.rest.port": ..,
+ *    "host": ..
+ *    "http_port": ..,
  *    "type" : "role_based", # only supported
  *    "read_map_permission" : [
  *      {
