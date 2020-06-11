@@ -45,10 +45,10 @@ object Parsers {
   }
 
   val seqStringParser = ValueParser.Json {
-    case seq : Seq[String] => Some(Json.obj("elements" -> Json.arr(seq:_*)))
+    case seq : Seq[String] => Some(Json.obj("value" -> Json.arr(seq:_*)))
     case _ => None
   } {
-    json => json.getAsArray("elements").flatMap(_.getAsStringSeq)
+    json => json.getAsArray("value").flatMap(_.getAsStringSeq)
   }
 
   /**

@@ -96,7 +96,6 @@ trait RestCitizenApi extends RestApi with RestServiceResponse {
     router.get(s"$historyEndpoint/:data_id")
       .handler(userMiddleware)
       .handler(handleGetHistoryData)
-    router
 
     router.errorHandler(404, handler => println(handler.normalisedPath()))
   }
