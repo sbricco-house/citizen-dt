@@ -4,7 +4,7 @@ import io.vertx.scala.core.Vertx
 import it.unibo.core.authentication.{SystemUser, TokenIdentifier}
 import it.unibo.core.data.InMemoryStorage
 import it.unibo.core.microservice.vertx._
-import it.unibo.covid.bootstrap.HttpCoapRuntime
+import it.unibo.service.citizen.bootstrap.HttpCoapRuntime
 import it.unibo.covid.data.Parsers
 import it.unibo.service.authentication.mock.MockAuthenticationClient
 import it.unibo.service.citizen.{CitizenDigitalTwin, HistoryStorage}

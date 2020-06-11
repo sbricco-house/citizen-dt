@@ -37,7 +37,7 @@ object FutureService {
   def fail[A](error: A): FutureService[Nothing] = apply(Fail(error))
 }
 
-case class FutureService[+A](future: Future[ServiceResponse[A]]) {
+case class  FutureService[+A](future: Future[ServiceResponse[A]]) {
   def flatMap[U](f: A => FutureService[U])(implicit executionContext: ExecutionContext): FutureService[U] =
     FutureService(this.future.flatMap {
       case Response(content) => f(content).future

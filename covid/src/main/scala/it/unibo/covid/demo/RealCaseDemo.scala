@@ -6,7 +6,7 @@ import it.unibo.core.authentication.VertxJWTProvider
 import it.unibo.core.microservice.vertx._
 import it.unibo.core.parser.ParserLike
 import it.unibo.covid.Personalnfo
-import it.unibo.covid.bootstrap.CitizenBootstrap
+import it.unibo.service.citizen.bootstrap.CitizenBootstrap
 import it.unibo.covid.data.Parsers
 import it.unibo.covid.demo.ClientParsers._
 import it.unibo.service.authentication.app.MockUserStorage

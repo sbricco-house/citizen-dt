@@ -1,4 +1,4 @@
-package it.unibo.covid.bootstrap
+package it.unibo.service.citizen.bootstrap
 
 import io.vertx.lang.scala.json.JsonObject
 import io.vertx.scala.core.Vertx

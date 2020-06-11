@@ -3,7 +3,7 @@ package it.unibo.covid.demo
 import io.vertx.lang.scala.json.JsonObject
 import it.unibo.core.data.{Data, InMemoryStorage, Storage}
 import it.unibo.core.parser.ParserLike
-import it.unibo.covid.bootstrap.CitizenBootstrap
+import it.unibo.service.citizen.bootstrap.CitizenBootstrap
 import it.unibo.covid.data.Parsers
 import it.unibo.covid.demo.ClientParsers._
 import it.unibo.service.citizen.HistoryStorage

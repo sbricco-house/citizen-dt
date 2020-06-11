@@ -1,9 +1,5 @@
 package it.unibo.core.data
 
-import java.util.UUID
-
-import monix.catnap.CircuitBreaker.Timestamp
-
 /**
  * main abstraction to store information about a citizen, institution or someone else.
  * It is piece of information characterized by
