@@ -36,8 +36,12 @@ class DashboardState(controller: CDTController, implicit val swingExecutionConte
       case Resource(uri) => uri
       case Sensor(name) => name
     }
+    val valueFormat = data.value match {
+      case it : Iterable[_] => it.mkString(";")
+      case other => other.toString
+    }
     val date = timestampToDate(data.timestamp)
-    Seq(data.identifier, data.category.name, feeder, date, data.value.toString).asJava.toArray()
+    Seq(data.identifier, data.category.name, feeder, date, valueFormat).asJava.toArray()
   }
 
   private val dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S")
