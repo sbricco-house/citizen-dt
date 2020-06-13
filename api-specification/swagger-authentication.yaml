@@ -1,0 +1,128 @@
+swagger: "2.0"
+info:
+  description: "Simple server that provides authentication for CDT System"
+  version: "1.0.0"
+  title: "CDT Authentication"
+  termsOfService: "http://swagger.io/terms/"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "localhost"
+basePath: "/citizens"
+tags:
+- name: "user api"
+  description: "Api designed to be user by the final user"
+- name: "admin api"
+  description: "Api desinged to be used by other microservices"
+schemes:
+  - "https"
+  - "http"
+
+securityDefinitions:
+  Bearer:
+    type: "apiKey"
+    name: "Authorization"
+    in: "header"
+    
+paths:
+  /login:
+    post:
+      tags:
+        - "user api"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Data for login"
+          required: true
+          schema:
+            $ref: "#/definitions/LoginUser"
+      responses:
+        "201":
+          description: "The JWT Token"
+          schema:
+            $ref: "#/definitions/JWT"
+        "400": &400
+          description: "Bad request, malformed content"
+        "401": &401
+          description: "Not authenticated, bad credentials"
+        "500": &500
+          description: "Internal error"
+          
+  /refreshToken:
+    post:
+      tags:
+        - "user api"
+      responses:
+        "201":
+          description: "The JWT token refreshed"
+          schema:
+            $ref: "#/definitions/JWT"
+        "400": *400
+        "401": *401
+        "500": *500
+      security:
+        - Bearer: []
+  
+  /logout:
+    get:
+      tags:
+        - "user api"
+      responses:
+        "204":
+          description: "Successfully logged out"
+        "400": *400
+        "401": *401
+        "500": *500
+      security:
+        - Bearer: []
+        
+  /verify:
+    get:  
+      tags:
+        - "admin api"
+      parameters:
+        - in: "query"
+          name: "token"
+          type: "string"
+      responses:
+        "200":
+          description: "The user authenticated"
+          schema:
+            $ref: "#/definitions/SystemUser"
+        "400": *400
+        "401": *401
+        "500": *500
+      security:
+        - Bearer: []
+        
+definitions:
+  JWT:
+    type: "string"
+  
+  
+  SystemUser:
+    type: "object"
+    properties:
+      email:
+        type: "string"
+      username:
+        type: "string"
+      identifier:
+        type: "string"
+      role:
+        type: "string"
+    
+    
+  LoginUser:
+    type: "object"
+    properties:
+      email: 
+        type: "string"
+      password:
+        type: "string"
+    required:
+      - email
+      - password
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"

@@ -1,0 +1,284 @@
+swagger: "2.0"
+info:
+  description: "This is a sample server of Citizen Digital Twin server."
+  version: "1.0.0"
+  title: "Citizen Digital Twin"
+  termsOfService: "http://swagger.io/terms/"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "localhost"
+basePath: "/citizens"
+tags:
+- name: "state"
+  description: "Everything about citizen state"
+- name: "history"
+  description: "Access to citizen historic information"
+schemes:
+- "https"
+- "http"
+paths:
+  /{citizen_id}/state:
+    parameters:
+      - in: "path"
+        name: "citizen_id"
+        description: "A identification of a digital citizen"
+        required: true
+        type: string
+      - in: "query"
+        name: "data_category"
+        description: "Datecategory used to filter the state"
+        required: false
+        type: string
+        
+    get:
+      tags:
+      - "state"
+      summary: "Get current state of citizen specified with the id."
+      description: "It returns a view of the state depending on the authenticated user"
+      operationId: "getState"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      
+      responses:
+        "200":
+          description: "The state of citizen"
+          schema: 
+            $ref: "#/definitions/State"
+        "400":
+          description: "Bad request, DataCategory invalid or invalid body"
+        "401": &401
+          description: "Not authenticated"
+        "404":
+          description: "The specified citizen doesn't exist"
+        "403": &403
+          description: "User is not authorized to do this"
+        "500": &500
+          description: "Some internal error"
+        
+      security:
+      - petstore_auth:
+        - "write:pets"
+        - "read:pets"
+    
+    patch:
+      tags:
+        - "state"
+      summary: "Update the state of citizen"
+      description: "alter the state of citizen with specified data. It create new resource (data)."
+      operationId : "updateState"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Partial state update"
+        required: true
+        schema:
+          $ref: "#/definitions/State"
+          
+      responses:
+        "200":
+          description: "The data created"
+          schema:
+            type: "array"
+            items:
+              type: "string"
+              example: "e1e69d55-4324-4739-b8f4-41b6b078073d"
+        "400":
+          description: "Invalid Datacategory or malformed Data"
+        "404":
+          description: "The specified citizen doesn't exist"
+        "403": *403
+        "401": *401
+        "500": *500
+      security:
+      - petstore_auth:
+        - "write:pets"
+        - "read:pets"
+    
+  /{citizen_id}/history:
+    parameters:
+      - in: "path"
+        name: "citizen_id"
+        description: "A identification of a digital citizen"
+        required: true
+        type: string
+    get:
+      parameters:
+        - in: "query"
+          name : "limit"
+          description: "The maxiumum number of data"
+          required: true
+          type: integer
+          default: 1
+        - in: "query"
+          name : "data_category"
+          description: "The data category selected"
+          required: true
+          type: "string"
+      tags:
+      - "history"
+      summary: "Get the citizen's history data"
+      description: "It returns a view of the data evolution based of limit and data category filter"
+      operationId: "getHistory"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      
+      responses:
+        "200":
+          description: "returns the state of citizen"
+          schema: 
+            $ref: "#/definitions/DataArray"
+        "400":
+          description: "Invalid data_category or malformed request"
+        "401": *401
+        "403": *403
+        "404":
+          description: "The specified citizen doesn't exist"
+        "500": *500
+      security:
+      - petstore_auth:
+        - "write:pets"
+        - "read:pets"
+    
+  /{citizen_id}/history/{data_id}:
+    parameters:
+      - in: "path"
+        name: "citizen_id"
+        description: "A identification of a digital citizen"
+        required: true
+        type: string
+      
+      - in: "path"
+        name: "data_id"
+        description: "A data identification"
+        required: true
+        type: string
+    get:
+      parameters:
+        - in: "query"
+          name : "limit"
+          description: "The maxiumum number of data"
+          required: true
+          type: integer
+          default: 1
+      tags:
+      - "history"
+      summary: "Get the citizen's history data"
+      description: "It returns a specific historic data"
+      operationId: "getDataHistory"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      
+      responses:
+        "200":
+          description: "returns the selected data"
+          schema: 
+            $ref: "#/definitions/Data"
+        "400":
+          description: "Malformed request"
+        "401": *401
+        "403": *403
+        "404":
+          description: "The specified citizen or data doesn't exist"
+        "500": *500
+      security:
+      - petstore_auth:
+        - "write:pets"
+        - "read:pets"
+    
+securityDefinitions:
+  petstore_auth:
+    type: "oauth2"
+    authorizationUrl: "http://petstore.swagger.io/oauth/dialog"
+    flow: "implicit"
+    scopes:
+      write:pets: "modify pets in your account"
+      read:pets: "read your pets"
+  api_key:
+    type: "apiKey"
+    name: "api_key"
+    in: "header"
+definitions:
+  DataArray:
+    type : "array"
+    items: 
+      $ref: "#/definitions/Data"
+  State:
+    type: "object"
+    properties:
+      data: 
+        type: "array"
+        items:
+          $ref: "#/definitions/Data"
+          
+    required: 
+      - data
+  Data:
+    type: "object"
+    properties:
+      identifier:
+        type: "string"
+      feeder:
+        type: "object"
+      timestamp:
+        type: "integer"
+        format: "int64"
+      data_category:
+         $ref: "#/definitions/LeafCategory"
+      value:
+        type: "object"
+    example:
+      identifier: "e1e69d55-4324-4739-b8f4-41b6b078073d"
+      feeder:
+        isResource: false
+        name: mi band 4
+      timestamp: 95324029323
+      data_category:
+        name: heartbeat
+      value:
+        bpm: 100
+    required: 
+      - uri
+      - feeder
+      - timestamp
+      - data_category
+      - value
+    
+  LeafCategory:
+    type: "object"
+    properties:
+      TTL:
+        type : "integer"
+        format : "int64"
+      name: 
+        type : "string"
+    required: 
+      - name
+      
+  Feeder:
+    type: "object"
+    properties:
+      isResource: 
+        type: "boolean"
+      name : 
+        type: "string"
+      uri:
+        type: "string"
+    required: 
+      - isResource
+      - name
+      
+  
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"

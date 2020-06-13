@@ -29,7 +29,7 @@ trait RestApiAuthentication extends RestApi with RestServiceResponse {
 
   override def createRouter: Router = {
     val router = Router.router(vertx)
-    //CorsSupport.enableTo(router)
+    CorsSupport.enableTo(router)
 
     router.post(LOGIN_ENDPOINT)
       .handler(BodyHandler.create())
