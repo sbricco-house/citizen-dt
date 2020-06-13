@@ -14,7 +14,8 @@ object JsonElements {
     """
       {
         "feeder" : {
-          "name" : "health"
+          "name" : "health",
+          "isResource" : false
         },
         "id" : "4ea103ea-0edb-4994-8fa6-e2609b7f610d",
         "timestamp" : 102,

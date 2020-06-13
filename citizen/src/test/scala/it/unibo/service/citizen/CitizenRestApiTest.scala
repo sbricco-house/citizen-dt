@@ -177,7 +177,8 @@ object Useful {
                 "category": "heartbeat",
                 "timestamp": 134034600,
                 "feeder": {
-                    "name": "mi_band_3"
+                    "name": "mi_band_3",
+                    "isResource" : false
                 }
             },
             {
@@ -186,7 +187,8 @@ object Useful {
                 "category": "blood_pressure",
                 "timestamp": 126034600,
                 "feeder": {
-                    "name": "mi_band_4"
+                    "name": "mi_band_4",
+                    "isResource" : false
                 }
             }
         ]
@@ -200,7 +202,8 @@ object Useful {
                 "category": "unsupported",
                 "timestamp": 134034600,
                 "feeder": {
-                    "name": "mi_band_3"
+                    "name": "mi_band_3",
+                    "isResource" : false
                 }
             }
         ]
@@ -215,7 +218,8 @@ object Useful {
                 "category": "medial",
                 "timestamp": 134034600,
                 "feeder": {
-                    "name": "mi_band_3"
+                    "name": "mi_band_3",
+                    "isResource" : false
                 }
             }
         ]
@@ -231,7 +235,8 @@ object Useful {
               "category": "heartbeat",
               "timestamp": 134034600,
               "feeder": {
-                  "name": "mi_band_3"
+                  "name": "mi_band_3",
+                   "isResource" : false
                 }
             }
         ]

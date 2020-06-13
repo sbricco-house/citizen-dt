@@ -42,14 +42,14 @@ trait VertxJsonParser extends DataParser[JsonObject]{
 
   private def extractFeeder(jsonObject: JsonObject) : Option[Feeder] = {
     jsonObject.getAsBoolean("isResource") match {
-      case None => jsonObject.getAsString("name").map(Sensor)
+      case None | Some(false) => jsonObject.getAsString("name").map(Sensor)
       case Some(true) =>jsonObject.getAsString("uri").map(Resource)
       case _ => None
     }
   }
 
   private def encodeFeeder(feeder: Feeder) : JsonObject = feeder match {
-    case Sensor(name) => new JsonObject().put("name", name)
+    case Sensor(name) => new JsonObject().put("name", name).put("isResource", false)
     case Resource(uri) => new JsonObject().put("uri", uri).put("isResource", true)
   }
 

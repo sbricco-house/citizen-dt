@@ -154,7 +154,8 @@ object CitizenWebsocketApiTest {
       |    "category": "heartbeat",
       |    "timestamp": 134034640,
       |    "feeder": {
-      |      "name": "mi_band_3"
+      |      "name": "mi_band_3",
+      |      "isResource" : false
       |    }
       |}
       |""".stripMargin
@@ -168,7 +169,8 @@ object CitizenWebsocketApiTest {
     | "category": "blood_pressure",
     | "timestamp": 126034600,
     | "feeder": {
-    |  "name": "mi_band_4"
+    |  "name": "mi_band_4",
+    |  "isResource" : false
     | }
     |}""".stripMargin
   )
@@ -181,7 +183,8 @@ object CitizenWebsocketApiTest {
       | "category": "unkwon",
       | "timestamp": 126034600,
       | "feeder": {
-      |  "name": "mi_band_4"
+      |  "name": "mi_band_4",
+      |  "isResource" : false
       | }
       |}""".stripMargin
   )
