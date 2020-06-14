@@ -35,6 +35,9 @@ class LeafCategory(val name : String, val TTL : Long = -1) extends DataCategory 
     val state = Seq(name)
     state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
   }
+
+
+  override def toString = s"LeafCategory($name)"
 }
 
 object LeafCategory {

@@ -22,7 +22,7 @@ class LoginFrame(authenticationClient: AuthenticationClient, implicit val swingE
   add(new JLabel("Password"))
   add(passwordField)
   add(loginButton)
-
+  this.pack()
   loginButton.addActionListener(e => {
     if(!emailField.getText.isEmpty && !passwordField.getText.isEmpty) {
       authenticationClient.login(emailField.getText, passwordField.getText).whenComplete {

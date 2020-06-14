@@ -104,8 +104,8 @@ object RealCaseDemo extends App {
     case None => throw new IllegalArgumentException("citizens part must be an array")
   }
   val registry = args.lift(1) match {
-    case None => Parsers.configureRegistry()
-    case Some(json) => Parsers.configureRegistryFromJson(Json.fromArrayString(json))
+    case None => Parsers.configureRegistryFromJson(jsonArrayFromFile("categories.json"))
+    case Some(json) => Parsers.configureRegistryFromJson(jsonArrayFromFile(json))
   }
 
   val storage = json.getAsArray("users").flatMap(MockUserStorage.userStorageParser.decode) match {

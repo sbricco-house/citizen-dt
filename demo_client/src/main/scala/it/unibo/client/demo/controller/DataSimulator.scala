@@ -24,6 +24,7 @@ object DataSimulator {
     case "heartbeat" => generateBetween(60, 120)
     case "medicalRecord" => Seq("covid")
     case "position" => generateTupleBetween(0, 1000)
+    case _ => generateBetween(60, 120)
   }
 
   def apply() = new DataSimulator(categories, valueSim, feederSim)

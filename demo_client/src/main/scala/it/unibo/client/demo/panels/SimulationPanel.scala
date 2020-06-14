@@ -3,11 +3,10 @@ package it.unibo.client.demo.panels
 import java.awt.{GridLayout, Label}
 
 import it.unibo.client.demo.controller.DataSimulator
-import it.unibo.core.data.DataCategoryOps
-import it.unibo.covid.data.Categories
+import it.unibo.core.data.DataCategory
 import javax.swing.{JButton, JCheckBox, JPanel, JTextField}
 
-class SimulationPanel(dataSimulator: DataSimulator) extends JPanel {
+class SimulationPanel(dataSimulator: DataSimulator, categories: Seq[DataCategory]) extends JPanel {
 
   val tickField = new JTextField("2000")
   val startSimulation = new JButton("Start simulation")
@@ -18,9 +17,7 @@ class SimulationPanel(dataSimulator: DataSimulator) extends JPanel {
   add(tickField)
   add(startSimulation)
   add(stopSimulation)
-  val categories = DataCategoryOps.allChild(Categories.medicalDataCategory) + Categories.positionCategory
-
-  val jboxList = createJboxList(categories.map(_.name).toSeq)
+  val jboxList = createJboxList(categories.map(_.name))
   jboxList.foreach(box => {
     box.setBounds(0,0,100,20)
     add(box)

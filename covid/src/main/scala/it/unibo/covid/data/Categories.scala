@@ -9,9 +9,9 @@ object Categories {
   //medical data
   val bodyTemperatureCategory = LeafCategory("bodyTemperature")
   val bloodOxygenCategory = LeafCategory("spo2")
-  val heartbeatCategory = LeafCategory("heartbeat")
+  val heartrateCategory = LeafCategory("heartrate")
   val medicalRecordCategory  = LeafCategory("medicalRecord")
-  val medicalDataCategory = GroupCategory("medicalData", Set(bodyTemperatureCategory, bloodOxygenCategory, medicalRecordCategory, heartbeatCategory))
+  val medicalDataCategory = GroupCategory("medicalData", Set(bodyTemperatureCategory, bloodOxygenCategory, medicalRecordCategory, heartrateCategory))
   //personal data
   val nameCategory = LeafCategory("name")
   val surnameCategory = LeafCategory("surname")

@@ -12,7 +12,7 @@
     "groups": ["medicalData"]
   },
   {
-    "name": "heartbeat",
+    "name": "heartrate",
     "ttl": 10,
     "type": "double",
     "groups": ["medicalData"]

@@ -21,7 +21,7 @@ import scala.concurrent.Future
 
 object AuthorizationClient {
   val READ = "/authorization/%s/read"
-  val WRITE = "/authorization/%s/read"
+  val WRITE = "/authorization/%s/write"
 
   def apply(uri : URI, dataParserRegistry: DataParserRegistry[JsonObject]) : AuthorizationClient = new AuthorizationClient(uri, dataParserRegistry)
 }
@@ -62,7 +62,7 @@ class AuthorizationClient(uri : URI, dataParserRegistry: DataParserRegistry[Json
   }
 
   override def authorizedWriteCategories(who: TokenIdentifier, citizen: String): FutureService[Seq[DataCategory]] = {
-    val request = prepareWebClient(stringPath + READ.format(citizen), who).sendFuture()
+    val request = prepareWebClient(stringPath + WRITE.format(citizen), who).sendFuture()
     manageMultipleCategoryResponse(request)
   }
 

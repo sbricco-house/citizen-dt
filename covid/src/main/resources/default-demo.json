@@ -67,11 +67,11 @@
     "write_map_permission" : [
       {
         "role" : "medic",
-        "categories" : ["medicalData", "personal"]
+        "categories" : ["medicalData"]
       },
       {
         "role" : "policeman",
-        "categories" : ["location", "personal"]
+        "categories" : ["location"]
       }
     ],
     "categories" : ["medicalData", "personal", "location"],
