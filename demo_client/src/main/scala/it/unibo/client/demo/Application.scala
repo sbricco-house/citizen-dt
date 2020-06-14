@@ -13,7 +13,4 @@ object Application extends App {
   val loginFrame = new LoginFrame(authenticationClient, context)
   loginFrame.setSize(500, 200)
   loginFrame.setVisible(true)
-  new LoginFrame(authenticationClient, context).setVisible(true)
-
-  new LoginFrame(authenticationClient, context).setVisible(true)
 }
