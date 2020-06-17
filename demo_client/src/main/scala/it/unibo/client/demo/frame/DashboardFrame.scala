@@ -13,7 +13,7 @@ import it.unibo.service.permission.client.AuthorizationClient
 import javax.swing.JFrame
 
 import scala.io.Source
-import it.unibo.client.demo.ServicePorts._
+import it.unibo.client.demo.ServiceConfiguration._
 import it.unibo.core.data.DataCategoryOps
 import it.unibo.core.microservice.Response
 class DashboardFrame(authUserProvider: AuthUserProvider, citizenId: String) extends JFrame {
@@ -21,8 +21,8 @@ class DashboardFrame(authUserProvider: AuthUserProvider, citizenId: String) exte
 
   val executionContext = new SwingExecutionContext()
   val registry = Parsers.configureRegistryFromJson(new JsonArray(Source.fromResource("categories.json").mkString))
-  val client = new CitizenClient(citizenId, registry)
-  val authorizationClient = AuthorizationClient(URI.create(s"http://localhost:$authorizationPort"), registry)
+  val client = new CitizenClient(citizenId, registry, host = host)
+  val authorizationClient = AuthorizationClient(URI.create(s"http://$host:$authorizationPort"), registry)
 
   val dataSimulator = DataSimulator()
   val controller = new CDTController(dataSimulator, authUserProvider, client)

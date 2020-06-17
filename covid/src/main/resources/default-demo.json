@@ -16,7 +16,7 @@
     }
   ],
   "authentication" : {
-    "host": "localhost",
+    "host": "0.0.0.0",
     "http_port": 8081,
     "jwt.key": "paggandpedr"
   },
@@ -51,7 +51,7 @@
     }
   ],
   "authorization" : {
-    "host": "localhost",
+    "host": "0.0.0.0",
     "http_port": 8082,
     "type" : "role_based",
     "read_map_permission" : [

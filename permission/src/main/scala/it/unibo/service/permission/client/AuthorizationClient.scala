@@ -40,6 +40,7 @@ class AuthorizationClient(uri : URI, dataParserRegistry: DataParserRegistry[Json
   private val clientOptions =  WebClientOptions()
     .setFollowRedirects(true)
     .setDefaultPort(uri.getPort)
+    .setDefaultHost(uri.getHost)
 
   override val webClient: WebClient = WebClient.create(vertx, clientOptions)
   private implicit val executionContext: VertxExecutionContext = VertxExecutionContext(vertx.getOrCreateContext())

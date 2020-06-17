@@ -49,6 +49,7 @@ class AuthenticationClient(serviceUri: URI) extends AuthenticationService with R
   private val clientOptions =  WebClientOptions()
     .setFollowRedirects(true)
     .setDefaultPort(serviceUri.getPort)
+    .setDefaultHost(serviceUri.getHost)
 
   override val webClient: WebClient = WebClient.create(vertx, clientOptions)
 
