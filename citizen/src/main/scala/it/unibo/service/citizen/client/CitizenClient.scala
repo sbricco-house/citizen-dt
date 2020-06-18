@@ -40,7 +40,7 @@ class CitizenClient(override val citizenIdentifier : String,
   private def stateEndpoint(port : Int) = s"${host}:${port}/citizens/$citizenIdentifier/state"
   private val httpStateEndpoint = s"/citizens/$citizenIdentifier/state"
   private val coapStateEndpoint = s"coap://${stateEndpoint(coapPort)}"
-  private val historyEndpoint = s"${host}:${httpPort}/citizens/$citizenIdentifier/history"
+  private val historyEndpoint = s"/citizens/$citizenIdentifier/history"
 
   override val webClient: WebClient = WebClient.create(vertx, WebClientOptions().setDefaultHost(host).setDefaultPort(httpPort))
 
@@ -72,9 +72,17 @@ class CitizenClient(override val citizenIdentifier : String,
     }.toFutureService
   }
   override def readHistory(who: TokenIdentifier, dataCategory: DataCategory, maxSize: Int): FutureService[History] = {
-    val request = webClient.get(enrichPathWithCategory(historyEndpoint, dataCategory)).putHeader(authorizationHeader(who)).sendFuture()
+    val limitEndpoint = enrichPathWithCategory(historyEndpoint, dataCategory) + s"&limit=$maxSize"
+    val request = webClient.get(limitEndpoint).putHeader(authorizationHeader(who)).sendFuture()
+    def parseArrayToSequence(data : String) : Seq[Data] = {
+      val obj = JsonConversion.arrayFromString(data).getOrElse(Json.emptyArr())
+      obj.getAsObjectSeq match {
+        case None => Seq.empty
+        case Some(elements) => elements.map(registry.decode).collect { case Some(data) => data}
+      }
+    }
     parseServiceResponseWhenComplete(request) {
-      case (HttpCode.Ok, data) => parseToSequence(data)
+      case (HttpCode.Ok, data) => parseArrayToSequence(data)
     }.toFutureService
   }
   override def readHistoryData(who: TokenIdentifier, dataIdentifier: String): FutureService[Data] = {

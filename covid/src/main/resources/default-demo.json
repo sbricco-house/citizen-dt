@@ -5,8 +5,8 @@
       "coap_port" : 5683,
       "http_port" : 8080,
       "host" : "0.0.0.0",
-      "authentication_client_uri" : "http://localhost:8081",
-      "authorization_client_uri" : "http://localhost:8082",
+      "authentication_client_uri" : "http://localhost:80",
+      "authorization_client_uri" : "http://localhost:10000",
       "personal_info" : {
         "name": "Gianluca",
         "surname": "Aguzzi",
@@ -17,7 +17,7 @@
   ],
   "authentication" : {
     "host": "0.0.0.0",
-    "http_port": 8081,
+    "http_port": 80,
     "jwt.key": "paggandpedr"
   },
   "users" : [
@@ -52,7 +52,7 @@
   ],
   "authorization" : {
     "host": "0.0.0.0",
-    "http_port": 8082,
+    "http_port": 10000,
     "type" : "role_based",
     "read_map_permission" : [
       {
